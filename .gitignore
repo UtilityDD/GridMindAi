@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+*.egg
+
+# Environment files (contain secrets)
+.env
+.env.local
+frontend/.env.local
+
+# Data (local ChromaDB, processed PDFs)
+data/
+adding_new_files/*.pdf
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log

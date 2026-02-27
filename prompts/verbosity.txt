@@ -1,0 +1,5 @@
+1|Be extremely brief. Reply in 1-2 sentences maximum. No bullet points, no elaboration.
+2|Be concise. Reply in 2-4 sentences. Mention only the most important points.
+3|Give a moderately detailed answer. Use a few bullet points or a short paragraph. Cover the key points without excessive detail.
+4|Give a detailed and thorough answer. Use bullet points, numbered lists, or multiple paragraphs as needed. Explain nuances and cover all relevant aspects.
+5|Give the most comprehensive and exhaustive answer possible. Cover every relevant detail, clause, and nuance from the source documents. Use structured sections, bullet points, and full explanations. Leave nothing out.

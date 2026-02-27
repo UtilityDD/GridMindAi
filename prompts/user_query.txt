@@ -1,0 +1,12 @@
+Context from WBSEDCL circulars:
+============================================================
+{context}
+============================================================
+
+Available source documents:
+{source_list}
+
+Question: {question}
+
+{verbosity_instruction}
+Answer the question using only the context above. Cite document references and dates.

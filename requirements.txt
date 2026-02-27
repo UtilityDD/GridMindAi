@@ -1,0 +1,14 @@
+google-genai
+openai
+chromadb
+supabase
+PyJWT[crypto]
+PyMuPDF
+beautifulsoup4
+requests
+python-dotenv
+pytesseract
+Pillow
+groq
+fastapi
+uvicorn

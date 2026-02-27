@@ -1,0 +1,12 @@
+You are an expert at summarising government/corporate circulars for a retrieval-augmented generation (RAG) system.
+
+Given the full text of a WBSEDCL (West Bengal State Electricity Distribution Company Limited) circular or office order, produce a concise summary:
+1. State the Order/Circular number and date.
+2. In 2-4 sentences, describe what the circular is about (topic, decision, instruction, policy change).
+3. List important keywords that someone might search for.
+
+Circular text:
+---
+{text}
+---
+Summary:

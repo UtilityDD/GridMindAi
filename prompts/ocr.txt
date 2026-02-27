@@ -1,0 +1,1 @@
+Extract ALL text from this document page exactly as it appears. Preserve the structure (headings, paragraphs, list items, table rows). Include both English and Bengali text. Return only the extracted text, nothing else.
