@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BrainCircuit, Mail, Lock, Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -24,17 +24,17 @@ export default function LoginPage() {
 
     try {
       if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { error } = await getSupabase().auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
       } else if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { error } = await getSupabase().auth.signUp({ email, password });
         if (error) throw error;
         setMessage("Check your email for a confirmation link.");
       } else {
-        const { error } = await supabase.auth.resetPasswordForEmail(email);
+        const { error } = await getSupabase().auth.resetPasswordForEmail(email);
         if (error) throw error;
         setMessage("Password reset email sent.");
       }
@@ -86,15 +86,15 @@ export default function LoginPage() {
                 {mode === "login"
                   ? "Welcome back"
                   : mode === "signup"
-                  ? "Create account"
-                  : "Reset password"}
+                    ? "Create account"
+                    : "Reset password"}
               </h2>
               <p className="text-sm text-neutral-500 mb-6">
                 {mode === "login"
                   ? "Sign in to access your circulars"
                   : mode === "signup"
-                  ? "Sign up to get started"
-                  : "We'll send you a reset link"}
+                    ? "Sign up to get started"
+                    : "We'll send you a reset link"}
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -188,8 +188,8 @@ export default function LoginPage() {
                       {mode === "login"
                         ? "Sign in"
                         : mode === "signup"
-                        ? "Create account"
-                        : "Send reset link"}
+                          ? "Create account"
+                          : "Send reset link"}
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
