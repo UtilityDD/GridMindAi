@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+console.log("BUILD_TRACE_SYNC_VERIFIED_V1");
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/AuthProvider";
