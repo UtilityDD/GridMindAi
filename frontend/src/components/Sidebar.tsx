@@ -10,14 +10,15 @@ interface SidebarProps {
     onHistoryClick: (question: string) => void;
     open: boolean;
     onClose: () => void;
+    userTier?: string;
 }
 
-export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick, open, onClose }: SidebarProps) {
+export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick, open, onClose, userTier = "free" }: SidebarProps) {
     return (
         <>
             {/* Desktop: always visible */}
             <aside className="w-64 bg-slate-900/50 border-r border-white/5 flex flex-col h-screen sticky top-0 shrink-0 hidden md:flex">
-                <SidebarContent userEmail={userEmail} onSignOut={onSignOut} history={history} onHistoryClick={onHistoryClick} onClose={onClose} showClose={false} />
+                <SidebarContent userEmail={userEmail} onSignOut={onSignOut} history={history} onHistoryClick={onHistoryClick} onClose={onClose} showClose={false} userTier={userTier} />
             </aside>
 
             {/* Mobile: sliding overlay */}
@@ -41,7 +42,7 @@ export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick,
                             transition={{ type: "spring", damping: 30, stiffness: 300 }}
                             className="fixed top-0 left-0 h-full w-72 z-50 bg-[#060d1f] border-r border-white/5 flex flex-col md:hidden shadow-2xl shadow-black"
                         >
-                            <SidebarContent userEmail={userEmail} onSignOut={onSignOut} history={history} onHistoryClick={onHistoryClick} onClose={onClose} showClose={true} />
+                            <SidebarContent userEmail={userEmail} onSignOut={onSignOut} history={history} onHistoryClick={onHistoryClick} onClose={onClose} showClose={true} userTier={userTier} />
                         </motion.aside>
                     </>
                 )}
@@ -51,7 +52,7 @@ export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick,
 }
 
 function SidebarContent({
-    userEmail, onSignOut, history, onHistoryClick, onClose, showClose
+    userEmail, onSignOut, history, onHistoryClick, onClose, showClose, userTier
 }: SidebarProps & { showClose: boolean }) {
     return (
         <>
@@ -120,7 +121,15 @@ function SidebarContent({
                         {userEmail[0]?.toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-white truncate">{userEmail.split('@')[0]}</p>
+                        <div className="flex items-center gap-1.5">
+                            <p className="text-xs font-semibold text-white truncate">{userEmail.split('@')[0]}</p>
+                            <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-md border ${userTier === 'pro' ? 'bg-indigo-500/10 border-indigo-400 text-indigo-400' :
+                                    userTier === 'basic' ? 'bg-blue-500/10 border-blue-400 text-blue-400' :
+                                        'bg-slate-500/10 border-slate-500 text-slate-500'
+                                }`}>
+                                {userTier}
+                            </span>
+                        </div>
                         <p className="text-[10px] text-slate-500 truncate">{userEmail}</p>
                     </div>
                 </div>

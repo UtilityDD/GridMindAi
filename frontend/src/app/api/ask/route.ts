@@ -24,6 +24,53 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ detail: "Auth failed" }, { status: 401 });
   }
 
+  // Enforce Tiered Limits
+  if (userId) {
+    const { data: profileData, error: profileError } = await getSupabaseAdmin()
+      .from("profiles")
+      .select("tier_id, user_tiers(daily_limit, monthly_limit)")
+      .eq("id", userId)
+      .single();
+
+    if (!profileError && profileData) {
+      const tierInfo = profileData.user_tiers as unknown as { daily_limit: number; monthly_limit: number };
+      const { daily_limit, monthly_limit } = tierInfo;
+
+      // 1. Check daily limit
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { count: dailyCount } = await getSupabaseAdmin()
+        .from("user_analytics")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .gte("created_at", today.toISOString());
+
+      if (dailyCount !== null && dailyCount >= daily_limit) {
+        return NextResponse.json(
+          { detail: `Daily limit of ${daily_limit} queries reached for your ${profileData.tier_id} account. Upgrade for higher intelligence bandwidth.` },
+          { status: 429 }
+        );
+      }
+
+      // 2. Check monthly limit
+      const firstOfMonth = new Date();
+      firstOfMonth.setDate(1);
+      firstOfMonth.setHours(0, 0, 0, 0);
+      const { count: monthlyCount } = await getSupabaseAdmin()
+        .from("user_analytics")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .gte("created_at", firstOfMonth.toISOString());
+
+      if (monthlyCount !== null && monthlyCount >= monthly_limit) {
+        return NextResponse.json(
+          { detail: `Monthly limit of ${monthly_limit} queries reached for your ${profileData.tier_id} account. Upgrade for higher intelligence bandwidth.` },
+          { status: 429 }
+        );
+      }
+    }
+  }
+
   const body = await req.json();
   const question: string = body.question ?? "";
   const verbosity: number = Math.max(1, Math.min(5, body.verbosity ?? 3));

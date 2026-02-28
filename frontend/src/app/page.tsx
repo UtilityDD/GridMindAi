@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import LoginPage from "@/components/LoginPage";
+import { getSupabase } from "@/lib/supabase";
 
 interface Source {
   doc_id: string;
@@ -140,12 +141,28 @@ export default function Home() {
   const [verbosity, setVerbosity] = useState(3);
   const [selectedModel, setSelectedModel] = useState("gemini-2.5-flash");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userTier, setUserTier] = useState<string>("free");
   const [history, setHistory] = useState<
     { question: string; result: QueryResult }[]
   >([]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchTier = async () => {
+      const { data, error } = await getSupabase()
+        .from("profiles")
+        .select("tier_id")
+        .eq("id", user.id)
+        .single();
+      if (!error && data) {
+        setUserTier(data.tier_id);
+      }
+    };
+    fetchTier();
+  }, [user]);
 
   // Scroll-driven search bar fade
   const [searchOpacity, setSearchOpacity] = useState(1);
@@ -259,7 +276,14 @@ export default function Home() {
         return;
       }
 
-      if (!res.ok) throw new Error(`Strategic node error: ${res.status}`);
+      if (!res.ok) {
+        let detail = `Strategic node error: ${res.status}`;
+        try {
+          const errData = await res.json();
+          detail = errData.detail || detail;
+        } catch { }
+        throw new Error(detail);
+      }
 
       const data: QueryResult = await res.json();
       setResult(data);
@@ -306,6 +330,7 @@ export default function Home() {
         }}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        userTier={userTier}
       />
 
       <div
@@ -426,8 +451,8 @@ export default function Home() {
                     onClick={() => handleSubmit()}
                     disabled={loading || !query.trim()}
                     className={`shrink-0 h-10 px-6 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-[0.98] disabled:cursor-not-allowed border ${loading
-                        ? "bg-indigo-600/20 border-indigo-500/30 text-indigo-400"
-                        : "bg-indigo-600 hover:bg-indigo-500 border-indigo-500/20 text-white shadow-indigo-600/20"
+                      ? "bg-indigo-600/20 border-indigo-500/30 text-indigo-400"
+                      : "bg-indigo-600 hover:bg-indigo-500 border-indigo-500/20 text-white shadow-indigo-600/20"
                       }`}
                   >
                     {loading ? (
