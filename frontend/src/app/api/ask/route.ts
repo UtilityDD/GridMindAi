@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { retrieve, buildContext } from "@/lib/rag";
 import { generateAnswer } from "@/lib/llm";
+import type { SourceMeta } from "@/lib/rag";
 
 export const maxDuration = 60;
 
@@ -56,9 +57,27 @@ export async function POST(req: NextRequest) {
     model
   );
 
+  // Filter sources to only those actually cited in the answer
+  const answerLower = result.answer.toLowerCase();
+  const citedSources = result.sources.filter((s: SourceMeta) => {
+    const ref = s.ref?.toLowerCase() ?? "";
+    const docId = s.doc_id?.toLowerCase() ?? "";
+    const title = s.title?.toLowerCase() ?? "";
+    return (
+      (ref && answerLower.includes(ref)) ||
+      (docId && answerLower.includes(docId)) ||
+      (title.length > 10 && answerLower.includes(title.substring(0, 20)))
+    );
+  });
+
+  // Fallback: if nothing was explicitly cited, return top 3 retrieved sources
+  const finalSources = citedSources.length > 0
+    ? citedSources
+    : result.sources.slice(0, 3);
+
   return NextResponse.json({
     answer: result.answer,
-    sources: result.sources,
+    sources: finalSources,
     model_used: result.modelUsed,
     elapsed_ms: Date.now() - t0,
     rewritten_query: retrievalResult.rewrittenQuery,

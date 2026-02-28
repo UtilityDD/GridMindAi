@@ -37,7 +37,8 @@ def ocr_page_gemini(page_image: Image.Image) -> str:
     """Send a page image to Gemini vision with retry logic."""
     import time
     client = _get_client()
-    for attempt in range(3):
+    max_retries = 10
+    for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
                 model=config.GEMINI_VISION_MODEL,
@@ -46,15 +47,21 @@ def ocr_page_gemini(page_image: Image.Image) -> str:
             text = response.text or ""
             if text.strip():
                 return text
+            # If empty text but no exception, maybe retry once
             if attempt < 2:
-                time.sleep(2 ** attempt)
+                time.sleep(5)
                 continue
         except Exception as exc:
-            if attempt < 2:
-                wait = 2 ** (attempt + 1)
+            wait = (attempt + 1) * 10.0  # Linear backoff: 10, 20, 30...
+            if "429" in str(exc) or "RESOURCE_EXHAUSTED" in str(exc):
+                # Specific handling for rate limits
+                wait = 15.0 + (attempt * 10.0) 
+            
+            if attempt < max_retries - 1:
                 logger.warning("Gemini OCR attempt %d failed (%s), retrying in %ds", attempt + 1, exc, wait)
                 time.sleep(wait)
             else:
+                logger.error("Gemini OCR failed after %d attempts: %s", max_retries, exc)
                 raise
     return ""
 

@@ -25,11 +25,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark min-h-screen">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-neutral-200`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-indigo-500/30`}
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <div className="flex min-h-screen bg-[#020617] text-slate-200">
+            {/* Sidebar Placeholder / Space for the future sidebar */}
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+              {children}
+            </div>
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );

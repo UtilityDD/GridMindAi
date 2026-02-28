@@ -33,14 +33,14 @@ SENTENCE_BOUNDARY = True  # prefer splitting on sentence boundaries
 # --- Embedding ---
 EMBEDDING_MODEL = "models/gemini-embedding-001"
 EMBEDDING_DIMENSIONS = 768
-EMBEDDING_BATCH_SIZE = 50
-EMBEDDING_RATE_LIMIT_RPM = 200  # paid tier allows much higher throughput
+EMBEDDING_BATCH_SIZE = 10
+EMBEDDING_RATE_LIMIT_RPM = 10  # free tier is very low (e.g. 15 RPM)
 
 # --- LLM ---
 GEMINI_LLM_MODEL = "gemini-2.5-flash"
 OPENAI_LLM_MODEL = "gpt-4o-mini"
-LLM_MAX_RETRIES = 3
-LLM_RETRY_DELAY = 2.0  # seconds
+LLM_MAX_RETRIES = 10
+LLM_RETRY_DELAY = 10.0  # seconds
 
 # --- OCR ---
 OCR_MIN_TEXT_LENGTH = 50  # chars; below this, page is treated as image-only
@@ -49,7 +49,7 @@ GEMINI_VISION_MODEL = "gemini-2.5-flash"
 
 # --- Parallelization ---
 DOWNLOAD_WORKERS = 10     # concurrent PDF downloads
-PIPELINE_WORKERS = 5      # concurrent document processing
+PIPELINE_WORKERS = 1      # concurrent document processing
 EXTRACT_WORKERS = 6       # concurrent text extraction (CPU-bound)
 
 # --- Retrieval ---

@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "filename": "Regulation 81.pdf",
+    "ref": "81/WBERC",
+    "date": "31/07/2025",
+    "title": "WBERC (Grid Interactive Rooftop Solar Photovoltaic System for Prosumers) Regulations, 2025 [Principal]",
+    "keywords": "",
+    "source_url": "https://wberc.gov.in/sites/default/files/Regulation%2081.pdf"
+  },
+  {
+    "filename": "Regulation 76.pdf",
+    "ref": "76/WBERC",
+    "date": "13/03/2023",
+    "title": "WBERC (Terms and Conditions of Tariff) (4th Amd) Regs, 2023 [Latest Amd]",
+    "keywords": "",
+    "source_url": "https://wberc.gov.in/sites/default/files/Regulation%2076.pdf"
+  },
+  {
+    "filename": "SOR_76.pdf",
+    "ref": "76/WBERC",
+    "date": "13/03/2023",
+    "title": "WBERC (Terms and Conditions of Tariff) (4th Amd) Regs, 2023 [SOR]",
+    "keywords": "",
+    "source_url": "https://wberc.gov.in/sites/default/files/SOR_76.pdf"
+  },
+  {
+    "filename": "sor 81.pdf",
+    "ref": "81/WBERC",
+    "date": "31/07/2025",
+    "title": "WBERC (Grid Interactive Rooftop Solar Photovoltaic System for Prosumers) Regulations, 2025 [SOR]",
+    "keywords": "",
+    "source_url": "https://wberc.gov.in/sites/default/files/sor%2081.pdf"
+  }
+]

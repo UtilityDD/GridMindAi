@@ -18,6 +18,8 @@ import {
   Share2,
   LogOut,
   Cpu,
+  Settings,
+  Menu,
 } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import LoginPage from "@/components/LoginPage";
@@ -39,13 +41,15 @@ interface QueryResult {
 }
 
 const EXAMPLE_QUERIES = [
-  "What is the latest circular about employee promotions?",
-  "What are the rules for LTC/HTC claims?",
-  "Tell me about the electricity theft detection guidelines",
-  "What is the purchase policy for WBSEDCL?",
-  "What are the office orders about Career Progression Scheme?",
-  "Rate contract for spot billing",
+  "What are the grid connectivity standards for renewable integration?",
+  "Tell me about power theft prevention and monitoring guidelines",
+  "What is the standard procedure for grid stability management?",
+  "What are the procurement policies for public utility projects?",
+  "Explain the career progression protocols in the energy sector",
+  "What are the regulatory requirements for high-tension claims?",
 ];
+
+import Sidebar from "@/components/Sidebar";
 
 export default function Home() {
   const { user, session, loading: authLoading, signOut } = useAuth();
@@ -56,11 +60,63 @@ export default function Home() {
   const [error, setError] = useState("");
   const [verbosity, setVerbosity] = useState(3);
   const [selectedModel, setSelectedModel] = useState("gemini-2.5-flash");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [history, setHistory] = useState<
     { question: string; result: QueryResult }[]
   >([]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Scroll-driven search bar fade
+  const [searchOpacity, setSearchOpacity] = useState(1);
+  const [searchFocused, setSearchFocused] = useState(false);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      // Only fade when results are showing
+      if (!result) { setSearchOpacity(1); return; }
+      const scrollY = el.scrollTop;
+      const fadeStart = 60;
+      const fadeEnd = 200;
+      const opacity = Math.max(0, Math.min(1, 1 - (scrollY - fadeStart) / (fadeEnd - fadeStart)));
+      setSearchOpacity(opacity);
+    };
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, [result]);
+
+  // Dynamic Placeholder Effect
+  const [placeholder, setPlaceholder] = useState("");
+  const [queryIndex, setQueryIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const currentQuery = EXAMPLE_QUERIES[queryIndex];
+    const typingSpeed = isDeleting ? 40 : 80;
+    const pauseDuration = 2000;
+
+    const handleTyping = () => {
+      if (!isDeleting && charIndex < currentQuery.length) {
+        setPlaceholder(currentQuery.substring(0, charIndex + 1));
+        setCharIndex((prev) => prev + 1);
+      } else if (isDeleting && charIndex > 0) {
+        setPlaceholder(currentQuery.substring(0, charIndex - 1));
+        setCharIndex((prev) => prev - 1);
+      } else if (!isDeleting && charIndex === currentQuery.length) {
+        setTimeout(() => setIsDeleting(true), pauseDuration);
+      } else if (isDeleting && charIndex === 0) {
+        setIsDeleting(false);
+        setQueryIndex((prev) => (prev + 1) % EXAMPLE_QUERIES.length);
+      }
+    };
+
+    const timer = setTimeout(handleTyping, typingSpeed);
+    return () => clearTimeout(timer);
+  }, [charIndex, isDeleting, queryIndex]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -68,8 +124,11 @@ export default function Home() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-[#020617]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+          <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-600">Initializing Core...</p>
+        </div>
       </div>
     );
   }
@@ -97,12 +156,12 @@ export default function Home() {
       });
 
       if (res.status === 401) {
-        setError("Session expired. Please sign in again.");
+        setError("Inactivity Timeout. Re-authentication required.");
         await signOut();
         return;
       }
 
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      if (!res.ok) throw new Error(`Strategic node error: ${res.status}`);
 
       const data: QueryResult = await res.json();
       setResult(data);
@@ -112,7 +171,7 @@ export default function Home() {
         resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      setError(e instanceof Error ? e.message : "Operational failure encountered.");
     } finally {
       setLoading(false);
     }
@@ -126,308 +185,254 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen noise-bg relative">
-      {/* Ambient background effects */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-blue-500/[0.03] rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-indigo-500/[0.03] rounded-full blur-[120px]" />
-      </div>
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar
+        userEmail={user.email || ""}
+        onSignOut={signOut}
+        history={history}
+        onHistoryClick={(q) => {
+          setQuery(q);
+          handleSubmit(q);
+        }}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
-      {/* Header */}
-      <header className="relative z-10 border-b border-white/[0.04]">
-        <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 flex flex-col min-w-0 relative bg-[#020617] overflow-y-auto scroll-smooth"
+      >
+        {/* Ambient background effects */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+          <div className="absolute top-[-5%] right-[-5%] w-[400px] h-[400px] bg-indigo-500/[0.02] rounded-full blur-[100px]" />
+          <div className="absolute bottom-[-5%] left-[10%] w-[500px] h-[500px] bg-blue-500/[0.02] rounded-full blur-[100px]" />
+        </div>
+
+        {/* Top Header / Bar */}
+        <header className="relative z-20 glass-panel border-b-0 sticky top-0 px-8 py-4 flex items-center justify-between shadow-lg shadow-black/20">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+            {/* Hamburger toggle – visible on mobile only */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+              aria-label="Open menu"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+            <div className="md:hidden w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
               <BrainCircuit className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h1 className="text-sm font-semibold tracking-tight text-white">
-                GridMind AI
+              <h1 className="text-xs font-bold text-white tracking-widest uppercase">
+                GridMind <span className="text-indigo-400">Tactical</span>
               </h1>
-              <p className="text-[11px] text-neutral-500 tracking-wide">
-                DECISIONS, ACCELERATED
-              </p>
+              <p className="text-[9px] text-slate-500 font-medium tracking-tight">Power Sector Strategic Intelligence v2.0</p>
             </div>
           </div>
+
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-[11px] text-neutral-600">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>{user.email}</span>
-            </div>
-            <button
-              onClick={signOut}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.04] transition-all duration-200"
-              title="Sign out"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-            </button>
+            <SettingsMenu
+              selectedModel={selectedModel}
+              setSelectedModel={setSelectedModel}
+              verbosity={verbosity}
+              setVerbosity={setVerbosity}
+            />
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main content */}
-      <main className="relative z-10 max-w-5xl mx-auto px-6">
-        {/* Hero section - only show when no results */}
-        <AnimatePresence mode="wait">
-          {!result && history.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.5 }}
-              className="pt-24 pb-8 text-center"
-            >
+        {/* Main Interface */}
+        <div className="relative z-10 w-full max-w-4xl mx-auto px-8 py-10">
+          {/* Hero section */}
+          <AnimatePresence mode="wait">
+            {!result && history.length === 0 && (
               <motion.div
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.1, duration: 0.4 }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.06] bg-white/[0.02] text-[11px] text-neutral-400 mb-6"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.6 }}
+                className="pt-14 pb-8 flex flex-col items-center text-center"
               >
-                <Sparkles className="w-3 h-3 text-blue-400" />
-                Powered by three-way RAG retrieval
-              </motion.div>
+                <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.1] mb-4 max-w-2xl">
+                  Decode Energy <br />
+                  <span className="bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent">Power Intelligence</span>
+                </h2>
 
-              <h2 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight leading-tight mb-3">
-                Faster decisions,
-                <br />
-                <span className="text-neutral-500">backed by policy</span>
-              </h2>
-
-              <p className="text-sm text-neutral-500 max-w-md mx-auto leading-relaxed">
-                Ask anything. Get accurate, source-cited answers in seconds.
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Search bar */}
-        <motion.div
-          layout
-          className={`${!result && history.length === 0 ? "pt-4" : "pt-8"} pb-6`}
-        >
-          <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 via-indigo-500/10 to-transparent rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 blur-sm" />
-            <div className="relative flex items-start gap-3 bg-[#0a0a0a] border border-white/[0.06] rounded-2xl px-5 py-4 group-focus-within:border-white/[0.1] transition-colors duration-300">
-              <Search className="w-5 h-5 text-neutral-500 mt-0.5 shrink-0" />
-              <textarea
-                ref={inputRef}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask GridMind anything..."
-                rows={1}
-                className="flex-1 bg-transparent text-sm text-white placeholder:text-neutral-600 outline-none resize-none leading-relaxed"
-                style={{ minHeight: "24px", maxHeight: "120px" }}
-                onInput={(e) => {
-                  const target = e.target as HTMLTextAreaElement;
-                  target.style.height = "24px";
-                  target.style.height = target.scrollHeight + "px";
-                }}
-              />
-              <button
-                onClick={() => handleSubmit()}
-                disabled={loading || !query.trim()}
-                className="shrink-0 px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-800 disabled:text-neutral-600 text-white text-xs font-medium transition-all duration-200 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  "Search"
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Controls row */}
-          <div className="mt-3 flex items-center gap-6">
-            <ModelSelector value={selectedModel} onChange={setSelectedModel} />
-            <div className="flex-1">
-              <VerbositySlider value={verbosity} onChange={setVerbosity} />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Example queries */}
-        <AnimatePresence>
-          {!result && history.length === 0 && !loading && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ delay: 0.3, duration: 0.4 }}
-              className="pb-12"
-            >
-              <p className="text-[11px] text-neutral-600 uppercase tracking-widest mb-3">
-                Try asking
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {EXAMPLE_QUERIES.map((eq, i) => (
-                  <motion.button
-                    key={eq}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 + i * 0.05 }}
-                    onClick={() => {
-                      setQuery(eq);
-                      handleSubmit(eq);
-                    }}
-                    className="px-3 py-1.5 rounded-lg border border-white/[0.05] bg-white/[0.02] text-xs text-neutral-400 hover:text-white hover:border-white/[0.1] hover:bg-white/[0.04] transition-all duration-200"
-                  >
-                    {eq}
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Loading state */}
-        <AnimatePresence>
-          {loading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="py-16 flex flex-col items-center gap-4"
-            >
-              <div className="relative">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-white/[0.04] flex items-center justify-center">
-                  <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
-                </div>
-                <div className="absolute -inset-3 bg-blue-500/5 rounded-3xl blur-xl animate-pulse" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-neutral-300">Searching circulars</p>
-                <p className="text-xs text-neutral-600 mt-1">
-                  Retrieving from chunks, summaries &amp; titles...
+                <p className="text-sm text-slate-500 max-w-lg mx-auto leading-relaxed mb-8">
+                  Instant access to power sector regulations, operational frameworks, and institutional knowledge.
                 </p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        {/* Error */}
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="mb-6 p-4 rounded-xl bg-red-500/5 border border-red-500/10 text-sm text-red-400"
-            >
-              {error}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Results */}
-        <AnimatePresence>
-          {result && (
-            <motion.div
-              ref={resultsRef}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="pb-20"
-            >
-              {/* Answer card */}
-              <div className="rounded-2xl border border-white/[0.06] bg-[#0a0a0a] overflow-hidden">
-                {/* Answer header */}
-                <div className="px-6 py-4 border-b border-white/[0.04] flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-blue-400" />
-                    <span className="text-xs font-medium text-neutral-300">
-                      AI Answer
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 text-[11px] text-neutral-600">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {(result.elapsed_ms / 1000).toFixed(1)}s
-                    </span>
-                    <span className="px-2 py-0.5 rounded-md bg-white/[0.03] border border-white/[0.04]">
-                      {result.model_used}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Rewritten query */}
-                {result.rewritten_query && (
-                  <div className="mx-6 mt-4 px-4 py-3 rounded-xl bg-blue-500/[0.04] border border-blue-500/[0.06]">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Wand2 className="w-3 h-3 text-blue-400/70" />
-                      <span className="text-[11px] text-blue-400/70 font-medium">
-                        Optimized search query
-                      </span>
-                    </div>
-                    <p className="text-xs text-neutral-400 leading-relaxed">
-                      {result.rewritten_query}
-                    </p>
-                  </div>
-                )}
-
-                {/* Answer body */}
-                <div className="px-6 py-5">
-                  <div className="markdown-content text-sm text-neutral-300 leading-relaxed">
-                    <ReactMarkdown>{result.answer}</ReactMarkdown>
-                  </div>
-                </div>
-
-                {/* Share bar */}
-                <ShareBar result={result} query={query} />
-
-                {/* Sources */}
-                {result.sources.length > 0 && (
-                  <SourcesSection sources={result.sources} />
-                )}
-              </div>
-
-              {/* History */}
-              {history.length > 1 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="mt-8"
+          {/* Search / Command Bar */}
+          <motion.div
+            layout
+            style={{ opacity: searchFocused ? 1 : searchOpacity, pointerEvents: searchOpacity < 0.1 ? "none" : "auto" }}
+            transition={{ opacity: { duration: 0.15 } }}
+            className={`${!result && history.length === 0 ? "" : "pt-4"} pb-8 sticky top-[80px] z-20`}
+          >
+            <div className="relative group shadow-2xl shadow-indigo-500/10">
+              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 via-blue-500/10 to-transparent rounded-[2rem] opacity-0 group-focus-within:opacity-100 transition-opacity duration-700 blur-xl" />
+              <div className="relative flex items-start gap-4 glass-panel border-white/10 rounded-[1.5rem] px-6 py-5 group-focus-within:border-indigo-500/40 group-focus-within:bg-slate-900/80 transition-all duration-300">
+                <Search className="w-5 h-5 text-slate-500 mt-1.5 shrink-0 group-focus-within:text-indigo-400 transition-colors" />
+                <textarea
+                  ref={inputRef}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={placeholder || "Initialize policy inquiry..."}
+                  rows={1}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setSearchFocused(false)}
+                  className="flex-1 bg-transparent text-base text-white placeholder:text-slate-600 outline-none resize-none leading-relaxed pt-0.5"
+                  style={{ minHeight: "28px", maxHeight: "150px" }}
+                  onInput={(e) => {
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = "28px";
+                    target.style.height = target.scrollHeight + "px";
+                  }}
+                />
+                <button
+                  onClick={() => handleSubmit()}
+                  disabled={loading || !query.trim()}
+                  className="shrink-0 h-10 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:border-white/5 disabled:text-slate-600 text-white text-sm font-bold shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98] disabled:cursor-not-allowed border border-indigo-500/20"
                 >
-                  <p className="text-[11px] text-neutral-600 uppercase tracking-widest mb-3">
-                    Previous queries
-                  </p>
-                  <div className="space-y-2">
-                    {history.slice(1, 6).map((h, i) => (
-                      <button
-                        key={i}
-                        onClick={() => {
-                          setQuery(h.question);
-                          setResult(h.result);
-                        }}
-                        className="w-full text-left px-4 py-3 rounded-xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] transition-colors duration-200 group"
-                      >
-                        <p className="text-xs text-neutral-400 group-hover:text-neutral-300 transition-colors truncate">
-                          {h.question}
-                        </p>
-                        <p className="text-[11px] text-neutral-600 mt-1">
-                          {h.result.sources.length} sources &middot;{" "}
-                          {(h.result.elapsed_ms / 1000).toFixed(1)}s
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    "Execute"
+                  )}
+                </button>
+              </div>
+            </div>
+          </motion.div>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-white/[0.04] mt-auto">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between text-[11px] text-neutral-700">
-          <span>GridMind AI &middot; Internal Use Only</span>
-          <span>Three-way RAG &middot; Gemini</span>
+          {/* Error Section */}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="mb-8 p-5 rounded-2xl bg-red-500/[0.03] border border-red-500/10 text-sm text-red-400 flex items-center gap-3 backdrop-blur-md"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Strategic Results View */}
+          <AnimatePresence>
+            {result && (
+              <motion.div
+                layout
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-12 space-y-8 pb-32"
+              >
+                {/* Strategic Result Container */}
+                <div ref={resultsRef} className="glass-panel rounded-[2rem] overflow-hidden shadow-2xl shadow-black/40">
+                  {/* Result Header */}
+                  <div className="px-8 py-5 bg-white/[0.02] border-b border-white/5 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                        <Sparkles className="w-4 h-4 text-indigo-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-bold text-white uppercase tracking-wider">Strategic Insight</h3>
+                        <p className="text-[10px] text-slate-500 font-medium">Validated by Regulatory Intelligence</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                      <div className="flex items-center gap-1.5">
+                        <Cpu className="w-3 h-3 text-indigo-500/60" />
+                        <span>{result.model_used.split('/')[1] || result.model_used}</span>
+                      </div>
+                      <div className="w-px h-3 bg-white/10" />
+                      <span>Lat: {result.elapsed_ms}ms</span>
+                    </div>
+                  </div>
+
+                  {/* Rewritten query node */}
+                  {result.rewritten_query && (
+                    <div className="mx-8 mt-6 px-5 py-4 rounded-2xl bg-indigo-500/[0.03] border border-indigo-500/10">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Wand2 className="w-3.5 h-3.5 text-indigo-400/80" />
+                        <span className="text-[10px] text-indigo-400/80 font-bold uppercase tracking-widest">
+                          Neural Query Refinement
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-400 leading-relaxed font-medium italic">
+                        &quot;{result.rewritten_query}&quot;
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Answer Content Area */}
+                  <div className="px-8 py-8">
+                    <div className="markdown-content text-[15px] text-slate-200 leading-[1.7] font-normal">
+                      <ReactMarkdown>{result.answer}</ReactMarkdown>
+                    </div>
+                  </div>
+
+                  {/* Share bar node */}
+                  <ShareBar result={result} query={query} />
+
+                  {/* Structured Sources Section */}
+                  {result.sources.length > 0 && (
+                    <SourcesSection sources={result.sources} />
+                  )}
+                </div>
+
+                {/* Collateral History (Only if no results yet, or secondary) */}
+                {history.length > 1 && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="pt-8 border-t border-white/5"
+                  >
+                    <div className="flex items-center gap-3 mb-6 px-2">
+                      <Clock className="w-4 h-4 text-slate-600" />
+                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-[0.2em]">
+                        Previous Operational Inquiries
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {history.slice(1, 4).map((h, i) => (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            setQuery(h.question);
+                            setResult(h.result);
+                          }}
+                          className="group flex flex-col gap-2 px-5 py-4 rounded-2xl glass-panel text-left hover:border-indigo-500/30 hover:bg-white/[0.02] transition-all duration-300"
+                        >
+                          <p className="text-sm text-slate-400 group-hover:text-white transition-colors truncate font-medium">
+                            {h.question}
+                          </p>
+                          <div className="flex items-center gap-3">
+                            <span className="text-[10px] text-slate-600 font-bold uppercase tracking-tighter">
+                              {h.result.sources.length} SOURCES
+                            </span>
+                            <span className="text-[10px] text-slate-600 font-bold uppercase tracking-tighter">
+                              {(h.result.elapsed_ms / 1000).toFixed(2)}s LATENCY
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </footer>
-    </div>
+
+
+      </div >
+    </div >
   );
 }
 
@@ -435,11 +440,11 @@ function ShareBar({ result, query }: { result: QueryResult; query: string }) {
   const [copied, setCopied] = useState(false);
 
   const buildShareText = () => {
-    let text = `Q: ${query}\n\n${result.answer}`;
+    let text = `Tactical Query: ${query}\n\nStrategic Synthesis:\n${result.answer}`;
     if (result.sources.length > 0) {
-      text += "\n\nSources:";
+      text += "\n\nPolicy References:";
       for (const s of result.sources) {
-        text += `\n• ${s.ref} (${s.date}): ${s.title}`;
+        text += `\n- [${s.ref}] ${s.title} (${s.date})`;
       }
     }
     return text;
@@ -455,51 +460,48 @@ function ShareBar({ result, query }: { result: QueryResult; query: string }) {
     const text = buildShareText();
     if (navigator.share) {
       try {
-        await navigator.share({ title: "GridMind AI", text });
-      } catch {}
+        await navigator.share({ title: "GridMind AI Strategy", text });
+      } catch { }
     } else {
       handleCopy();
     }
   };
 
   return (
-    <div className="px-6 py-3 border-t border-white/[0.04] flex items-center gap-1">
+    <div className="px-8 py-4 border-t border-white/5 flex items-center gap-3 bg-white/[0.01]">
       <button
         onClick={handleCopy}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.04] transition-all duration-200"
+        className="flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500/20 border border-transparent transition-all duration-200"
       >
         {copied ? (
           <>
-            <Check className="w-3 h-3 text-emerald-400" />
-            <span className="text-emerald-400">Copied</span>
+            <Check className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-emerald-400 uppercase tracking-widest">Synthesis Copied</span>
           </>
         ) : (
           <>
-            <Copy className="w-3 h-3" />
-            <span>Copy</span>
+            <Copy className="w-3.5 h-3.5" />
+            <span className="uppercase tracking-widest">Copy Intelligence</span>
           </>
         )}
       </button>
       <button
         onClick={handleShare}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.04] transition-all duration-200"
+        className="flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 border border-transparent transition-all duration-200"
       >
-        <Share2 className="w-3 h-3" />
-        <span>Share</span>
+        <Share2 className="w-3.5 h-3.5" />
+        <span className="uppercase tracking-widest">Distribute</span>
       </button>
     </div>
   );
 }
 
 const MODEL_OPTIONS = [
-  { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Gemini" },
-  { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B", provider: "Groq" },
-  { value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B", provider: "Groq" },
-  { value: "moonshotai/kimi-k2-instruct", label: "Kimi K2 Instruct", provider: "Groq" },
-  { value: "moonshotai/kimi-k2-instruct-0905", label: "Kimi K2 0905", provider: "Groq" },
-  { value: "openai/gpt-oss-120b", label: "GPT-OSS 120B", provider: "Groq" },
-  { value: "openai/gpt-oss-20b", label: "GPT-OSS 20B", provider: "Groq" },
-  { value: "qwen/qwen3-32b", label: "Qwen3 32B", provider: "Groq" },
+  { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google DeepMind" },
+  { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B", provider: "Meta/Groq" },
+  { value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B", provider: "Meta/Groq" },
+  { value: "moonshotai/kimi-k2-instruct", label: "Kimi K2 Instruct", provider: "Moonshot" },
+  { value: "qwen/qwen3-32b", label: "Qwen3 32B", provider: "Ali/Groq" },
 ];
 
 function ModelSelector({
@@ -516,30 +518,25 @@ function ModelSelector({
     <div className="relative shrink-0">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all duration-200"
+        className="group flex items-center gap-2.5 px-4 py-2 rounded-xl border border-white/5 bg-slate-900/50 hover:bg-slate-900 hover:border-white/10 transition-all duration-300 shadow-lg"
       >
-        <Cpu className="w-3.5 h-3.5 text-neutral-500" />
-        <span className="text-[11px] text-neutral-400">{current.label}</span>
-        <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.04] text-neutral-600">
-          {current.provider}
-        </span>
+        <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{current.label}</span>
         <motion.div
           animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.15 }}
+          transition={{ duration: 0.2 }}
         >
-          <ChevronDown className="w-3 h-3 text-neutral-600" />
+          <ChevronDown className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors" />
         </motion.div>
       </button>
 
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -4, scale: 0.97 }}
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.97 }}
-            transition={{ duration: 0.15 }}
-            className="absolute top-full left-0 mt-1.5 w-64 rounded-xl border border-white/[0.08] bg-[#111111] shadow-2xl shadow-black/80 overflow-hidden z-50 backdrop-blur-none"
-            style={{ backgroundColor: "#111111" }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="absolute top-full left-0 mt-2 w-64 glass-panel rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-y-auto max-h-80 z-50 p-1.5"
           >
             {MODEL_OPTIONS.map((m) => (
               <button
@@ -548,27 +545,20 @@ function ModelSelector({
                   onChange(m.value);
                   setOpen(false);
                 }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 text-left hover:bg-white/[0.04] transition-colors ${
-                  m.value === value ? "bg-blue-500/[0.06]" : ""
-                }`}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-left transition-all ${m.value === value ? "bg-indigo-500/10" : "hover:bg-white/5"
+                  }`}
               >
-                <div className="flex items-center gap-2">
-                  {m.value === value && (
-                    <div className="w-1 h-1 rounded-full bg-blue-400" />
-                  )}
+                <div className="flex flex-col gap-0.5">
                   <span
-                    className={`text-xs ${
-                      m.value === value
-                        ? "text-blue-300 font-medium"
-                        : "text-neutral-400"
-                    }`}
+                    className={`text-xs font-bold leading-none ${m.value === value ? "text-indigo-400" : "text-slate-300"}`}
                   >
                     {m.label}
                   </span>
+                  <span className="text-[9px] text-slate-600 uppercase font-black tracking-tighter">{m.provider}</span>
                 </div>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.04] text-neutral-600">
-                  {m.provider}
-                </span>
+                {m.value === value && (
+                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                )}
               </button>
             ))}
           </motion.div>
@@ -582,8 +572,6 @@ function ModelSelector({
   );
 }
 
-const VERBOSITY_LABELS = ["Brief", "Concise", "Balanced", "Detailed", "Exhaustive"];
-
 function VerbositySlider({
   value,
   onChange,
@@ -592,47 +580,31 @@ function VerbositySlider({
   onChange: (v: number) => void;
 }) {
   return (
-    <div className="flex items-center gap-4">
-      <div className="flex items-center gap-2 shrink-0">
-        <svg
-          viewBox="0 0 16 16"
-          className="w-3.5 h-3.5 text-neutral-600"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        >
-          <line x1="2" y1="4" x2="14" y2="4" />
-          <line x1="2" y1="8" x2="10" y2="8" />
-          <line x1="2" y1="12" x2="12" y2="12" />
-        </svg>
-        <span className="text-[11px] text-neutral-600 w-16">
-          {VERBOSITY_LABELS[value - 1]}
+    <div className="flex items-center gap-6 px-4 py-2 bg-slate-900/30 rounded-xl border border-white/5 flex-1">
+      <div className="flex items-center gap-2.5 shrink-0">
+        <Cpu className="w-3.5 h-3.5 text-indigo-500" />
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em] w-20">
+          Synthesist Level: <span className="text-slate-300">{VERBOSITY_LABELS[value - 1]}</span>
         </span>
       </div>
       <div className="relative flex-1 flex items-center h-6 group">
-        {/* Track background */}
-        <div className="absolute inset-x-0 h-[3px] rounded-full bg-white/[0.04]" />
-        {/* Active track */}
+        <div className="absolute inset-x-0 h-1 rounded-full bg-white/5" />
         <div
-          className="absolute left-0 h-[3px] rounded-full bg-gradient-to-r from-blue-500/40 to-blue-500/60 transition-all duration-200"
+          className="absolute left-0 h-1 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-400 transition-all duration-300 shadow-[0_0_10px_rgba(99,102,241,0.3)]"
           style={{ width: `${((value - 1) / 4) * 100}%` }}
         />
-        {/* Step dots */}
-        <div className="absolute inset-x-0 flex justify-between px-[1px]">
+        <div className="absolute inset-x-0 flex justify-between px-0.5">
           {[1, 2, 3, 4, 5].map((step) => (
             <button
               key={step}
               onClick={() => onChange(step)}
-              className={`w-[7px] h-[7px] rounded-full transition-all duration-200 ${
-                step <= value
-                  ? "bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.4)]"
-                  : "bg-white/[0.08] hover:bg-white/[0.15]"
-              }`}
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 border-2 ${step <= value
+                ? "bg-indigo-500 border-indigo-400 shadow-[0_0_12px_rgba(99,102,241,0.6)]"
+                : "bg-slate-800 border-white/10 hover:border-slate-500"
+                }`}
             />
           ))}
         </div>
-        {/* Native range input (invisible, for drag) */}
         <input
           type="range"
           min={1}
@@ -647,86 +619,128 @@ function VerbositySlider({
   );
 }
 
+const VERBOSITY_LABELS = ["Tactical", "Concise", "Strategic", "Comprehensive", "Deep Context"];
+
 function SourcesSection({ sources }: { sources: Source[] }) {
   const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? sources : sources.slice(0, 3);
+  const visible = expanded ? sources : sources.slice(0, 5);
 
   return (
-    <div className="border-t border-white/[0.04]">
-      <div className="px-6 py-3">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-2 text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
-        >
-          <FileText className="w-3.5 h-3.5" />
-          <span>
-            {sources.length} source{sources.length !== 1 ? "s" : ""}
-          </span>
-          <motion.div
-            animate={{ rotate: expanded ? 180 : 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ChevronDown className="w-3 h-3" />
-          </motion.div>
-        </button>
+    <div className="border-t border-white/5 px-8 py-5 space-y-1">
+      <div className="flex items-center gap-2 mb-3">
+        <FileText className="w-3 h-3 text-indigo-400/60" />
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          Sources · {sources.length}
+        </span>
       </div>
 
-      <AnimatePresence>
-        {(expanded || sources.length <= 3) && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="overflow-hidden"
+      <div className="space-y-1.5">
+        {visible.map((source, i) => (
+          <div
+            key={source.doc_id}
+            className="flex items-center gap-3 group"
           >
-            <div className="px-6 pb-4 grid gap-2">
-              {visible.map((source, i) => (
-                <motion.div
-                  key={source.doc_id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                >
-                  <SourceCard source={source} />
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {/* PDF icon – clickable link */}
+            {source.source_url ? (
+              <a
+                href={source.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open document"
+                className="shrink-0 w-6 h-6 flex items-center justify-center rounded bg-indigo-500/10 hover:bg-indigo-500/25 border border-indigo-500/10 hover:border-indigo-500/30 transition-all"
+              >
+                <FileText className="w-3 h-3 text-indigo-400" />
+              </a>
+            ) : (
+              <span className="shrink-0 w-6 h-6 flex items-center justify-center rounded bg-white/5 border border-white/5">
+                <FileText className="w-3 h-3 text-slate-600" />
+              </span>
+            )}
+
+            {/* Label */}
+            <span className="text-[10px] font-black text-indigo-500/70 uppercase tracking-tight shrink-0">
+              [{source.ref || `SRC-${i + 1}`}]
+            </span>
+            <span className="text-[11px] text-slate-400 truncate leading-tight">
+              {source.title}
+            </span>
+            {source.date && (
+              <span className="text-[9px] text-slate-600 shrink-0 font-medium">{source.date}</span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {sources.length > 5 && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="mt-2 text-[10px] font-bold text-indigo-400/60 hover:text-indigo-400 uppercase tracking-widest transition-colors"
+        >
+          {expanded ? "Show less ↑" : `+${sources.length - 5} more ↓`}
+        </button>
+      )}
     </div>
   );
 }
 
-function SourceCard({ source }: { source: Source }) {
+function SettingsMenu({
+  selectedModel,
+  setSelectedModel,
+  verbosity,
+  setVerbosity,
+}: {
+  selectedModel: string;
+  setSelectedModel: (v: string) => void;
+  verbosity: number;
+  setVerbosity: (v: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <div className="group flex items-start gap-3 px-4 py-3 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.08] transition-all duration-200">
-      <div className="w-8 h-8 rounded-lg bg-blue-500/[0.07] border border-blue-500/[0.1] flex items-center justify-center shrink-0 mt-0.5">
-        <FileText className="w-3.5 h-3.5 text-blue-400" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-neutral-300 truncate">
-          {source.ref || "Document"}
-        </p>
-        <p className="text-[11px] text-neutral-500 mt-0.5 truncate">
-          {source.title}
-        </p>
-        {source.date && (
-          <p className="text-[11px] text-neutral-600 mt-0.5">{source.date}</p>
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        title="Intelligence Config"
+        className={`flex items-center justify-center w-8 h-8 rounded-full border transition-all duration-300 ${open
+          ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+          : "bg-slate-900/50 border-white/5 text-slate-400 hover:border-indigo-500/30 hover:text-indigo-400"
+          }`}
+      >
+        <Settings className={`w-3.5 h-3.5 ${open ? "animate-[spin_4s_linear_infinite]" : ""}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="absolute top-full right-0 mt-3 w-80 glass-panel rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 border border-white/10"
+            >
+              <div className="p-5 space-y-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-3 px-1 text-slate-500">
+                    <Cpu className="w-3 h-3" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Model Architecture</span>
+                  </div>
+                  <ModelSelector value={selectedModel} onChange={setSelectedModel} />
+                </div>
+
+                <div className="pt-2">
+                  <div className="flex items-center gap-2 mb-3 px-1 text-slate-500">
+                    <Wand2 className="w-3 h-3" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Synthesis Verbosity</span>
+                  </div>
+                  <VerbositySlider value={verbosity} onChange={setVerbosity} />
+                </div>
+              </div>
+
+            </motion.div>
+          </>
         )}
-      </div>
-      {source.source_url && (
-        <a
-          href={source.source_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="shrink-0 p-1.5 rounded-lg hover:bg-white/[0.04] text-neutral-600 hover:text-blue-400 transition-colors"
-          title="Open PDF"
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-        </a>
-      )}
+      </AnimatePresence>
     </div>
   );
 }
