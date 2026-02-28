@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { supabaseAdmin } from "./supabase-server";
+import { getSupabaseAdmin } from "./supabase-server";
 import { REWRITE_QUERY_TEMPLATE } from "./prompts";
 
 const EMBEDDING_MODEL = "gemini-embedding-001";
@@ -100,6 +100,7 @@ export async function retrieve(
 
   const queryEmbedding = await embedSingle(searchQuery);
 
+  const supabaseAdmin = getSupabaseAdmin();
   const [chunksRes, summariesRes, titlesRes] = await Promise.all([
     supabaseAdmin.rpc("match_chunks", {
       query_embedding: queryEmbedding,
