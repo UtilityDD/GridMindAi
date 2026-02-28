@@ -51,6 +51,85 @@ const EXAMPLE_QUERIES = [
 
 import Sidebar from "@/components/Sidebar";
 
+function ScanningPulse() {
+  const [step, setStep] = useState(0);
+  const steps = [
+    "Initializing Neural Mapping...",
+    "Scanning Tier 1 Grid Regulations...",
+    "Analyzing Operational Frameworks...",
+    "Synthesizing Strategic Response...",
+    "Verifying Institutional Alignment...",
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setStep((prev) => (prev + 1) % steps.length);
+    }, 2500);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="flex flex-col items-center justify-center py-24 gap-10"
+    >
+      <div className="relative w-32 h-32">
+        {/* Pulsing rings */}
+        <motion.div
+          animate={{ scale: [1, 1.6], opacity: [0.4, 0] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut" }}
+          className="absolute inset-0 border-2 border-indigo-500/40 rounded-full"
+        />
+        <motion.div
+          animate={{ scale: [1, 1.3], opacity: [0.6, 0] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut", delay: 0.8 }}
+          className="absolute inset-0 border-2 border-blue-400/30 rounded-full"
+        />
+
+        {/* Core brain icon */}
+        <div className="absolute inset-0 flex items-center justify-center bg-[#0d152b] rounded-full border border-indigo-500/30 shadow-[0_0_30px_rgba(79,70,229,0.2)]">
+          <BrainCircuit className="w-12 h-12 text-indigo-400" />
+        </div>
+
+        {/* Scanning line */}
+        <motion.div
+          animate={{ top: ["5%", "95%", "5%"] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute left-[15%] right-[15%] h-[2px] bg-gradient-to-r from-transparent via-indigo-400 to-transparent z-10 opacity-70 blur-sm"
+        />
+      </div>
+
+      <div className="flex flex-col items-center gap-4 text-center">
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={step}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.5 }}
+            className="text-[11px] font-bold text-indigo-300 tracking-[0.3em] uppercase leading-relaxed max-w-xs"
+          >
+            {steps[step]}
+          </motion.p>
+        </AnimatePresence>
+
+        <div className="flex gap-2">
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              animate={{ opacity: [0.2, 1, 0.2], scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
+              className="w-1.5 h-1.5 rounded-full bg-indigo-500/60"
+            />
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function Home() {
   const { user, session, loading: authLoading, signOut } = useAuth();
 
@@ -118,6 +197,25 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [charIndex, isDeleting, queryIndex]);
 
+  // Load history from localStorage on mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem("gridmind_history");
+    if (savedHistory) {
+      try {
+        setHistory(JSON.parse(savedHistory));
+      } catch (e) {
+        console.error("Failed to parse saved history", e);
+      }
+    }
+  }, []);
+
+  // Save history to localStorage whenever it changes
+  useEffect(() => {
+    if (history.length > 0) {
+      localStorage.setItem("gridmind_history", JSON.stringify(history));
+    }
+  }, [history]);
+
   useEffect(() => {
     inputRef.current?.focus();
   }, [user]);
@@ -165,7 +263,10 @@ export default function Home() {
 
       const data: QueryResult = await res.json();
       setResult(data);
-      setHistory((prev) => [{ question, result: data }, ...prev]);
+      setHistory((prev) => {
+        const filtered = prev.filter((item) => item.question !== question);
+        return [{ question, result: data }, ...filtered].slice(0, 50); // Keep max 50 items
+      });
 
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -191,8 +292,17 @@ export default function Home() {
         onSignOut={signOut}
         history={history}
         onHistoryClick={(q) => {
-          setQuery(q);
-          handleSubmit(q);
+          const item = history.find((h) => h.question === q);
+          if (item) {
+            setQuery(q);
+            setResult(item.result);
+            setTimeout(() => {
+              resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }, 100);
+          } else {
+            setQuery(q);
+            handleSubmit(q);
+          }
         }}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -209,47 +319,55 @@ export default function Home() {
         </div>
 
         {/* Top Header / Bar */}
-        <header className="relative z-20 glass-panel border-b-0 sticky top-0 px-8 py-4 flex items-center justify-between shadow-lg shadow-black/20">
-          <div className="flex items-center gap-3">
-            {/* Hamburger toggle – visible on mobile only */}
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all"
-              aria-label="Open menu"
+        <AnimatePresence>
+          {(!loading && !result) && (
+            <motion.header
+              initial={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -50 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+              className="relative z-20 glass-panel border-b-0 sticky top-0 px-8 py-4 flex items-center justify-between shadow-lg shadow-black/20"
             >
-              <Menu className="w-4 h-4" />
-            </button>
-            <div className="md:hidden w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-              <BrainCircuit className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xs font-bold text-white tracking-widest uppercase">
-                GridMind <span className="text-indigo-400">Tactical</span>
-              </h1>
-              <p className="text-[9px] text-slate-500 font-medium tracking-tight">Power Sector Strategic Intelligence v2.0</p>
-            </div>
-          </div>
+              <div className="flex items-center gap-3">
+                {/* Hamburger toggle – visible on mobile only */}
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+                  aria-label="Open menu"
+                >
+                  <Menu className="w-4 h-4" />
+                </button>
+                <div className="md:hidden w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
+                  <BrainCircuit className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xs font-bold text-white tracking-widest uppercase">
+                    GridMind <span className="text-indigo-400">Tactical</span>
+                  </h1>
+                  <p className="text-[9px] text-slate-500 font-medium tracking-tight">Power Sector Strategic Intelligence v2.0</p>
+                </div>
+              </div>
 
-          <div className="flex items-center gap-4">
-            <SettingsMenu
-              selectedModel={selectedModel}
-              setSelectedModel={setSelectedModel}
-              verbosity={verbosity}
-              setVerbosity={setVerbosity}
-            />
-          </div>
-        </header>
+              <div className="flex items-center gap-4">
+                <SettingsMenu
+                  selectedModel={selectedModel}
+                  setSelectedModel={setSelectedModel}
+                  verbosity={verbosity}
+                  setVerbosity={setVerbosity}
+                />
+              </div>
+            </motion.header>
+          )}
+        </AnimatePresence>
 
         {/* Main Interface */}
         <div className="relative z-10 w-full max-w-4xl mx-auto px-8 py-10">
-          {/* Hero section */}
           <AnimatePresence mode="wait">
-            {!result && history.length === 0 && (
+            {!result && !loading && history.length === 0 && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.6 }}
+                exit={{ opacity: 0, y: -40, filter: "blur(10px)" }}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
                 className="pt-14 pb-8 flex flex-col items-center text-center"
               >
                 <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.1] mb-4 max-w-2xl">
@@ -267,9 +385,15 @@ export default function Home() {
           {/* Search / Command Bar */}
           <motion.div
             layout
-            style={{ opacity: searchFocused ? 1 : searchOpacity, pointerEvents: searchOpacity < 0.1 ? "none" : "auto" }}
-            transition={{ opacity: { duration: 0.15 } }}
-            className={`${!result && history.length === 0 ? "" : "pt-4"} pb-8 sticky top-[80px] z-20`}
+            style={{
+              opacity: searchFocused ? 1 : searchOpacity,
+              pointerEvents: searchOpacity < 0.1 && !loading ? "none" : "auto",
+            }}
+            transition={{
+              layout: { type: "spring", damping: 25, stiffness: 200 },
+              opacity: { duration: 0.2 }
+            }}
+            className={`${(!result && !loading && history.length === 0) ? "pt-10" : "pt-4"} pb-8 sticky ${(!result && !loading) ? "top-[100px]" : "top-6"} z-30`}
           >
             <div className="relative group shadow-2xl shadow-indigo-500/10">
               <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 via-blue-500/10 to-transparent rounded-[2rem] opacity-0 group-focus-within:opacity-100 transition-opacity duration-700 blur-xl" />
@@ -292,20 +416,40 @@ export default function Home() {
                     target.style.height = target.scrollHeight + "px";
                   }}
                 />
-                <button
-                  onClick={() => handleSubmit()}
-                  disabled={loading || !query.trim()}
-                  className="shrink-0 h-10 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:border-white/5 disabled:text-slate-600 text-white text-sm font-bold shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98] disabled:cursor-not-allowed border border-indigo-500/20"
-                >
-                  {loading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    "Execute"
-                  )}
-                </button>
+
+                <AnimatePresence mode="wait">
+                  <motion.button
+                    key={loading ? "loading" : "idle"}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    onClick={() => handleSubmit()}
+                    disabled={loading || !query.trim()}
+                    className={`shrink-0 h-10 px-6 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-[0.98] disabled:cursor-not-allowed border ${loading
+                        ? "bg-indigo-600/20 border-indigo-500/30 text-indigo-400"
+                        : "bg-indigo-600 hover:bg-indigo-500 border-indigo-500/20 text-white shadow-indigo-600/20"
+                      }`}
+                  >
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>Processing...</span>
+                      </div>
+                    ) : (
+                      "Execute"
+                    )}
+                  </motion.button>
+                </AnimatePresence>
               </div>
             </div>
           </motion.div>
+
+          {/* Immersive Loading State */}
+          <AnimatePresence>
+            {loading && (
+              <ScanningPulse />
+            )}
+          </AnimatePresence>
 
           {/* Error Section */}
           <AnimatePresence>

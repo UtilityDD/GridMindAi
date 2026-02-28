@@ -37,6 +37,20 @@ User question: {question}
 
 Optimized search query:`;
 
+export const KEYWORD_EXTRACTION_TEMPLATE = `You are a strategic analyst specializing in the power sector and utility management.
+
+Given a user's question, extract 3-5 high-level keywords or short phrases (2-3 words max each) that represent the core 'Area of Interest' or 'Policy Domain' the user is inquiring about.
+
+Rules:
+1. Focus on the underlying policy, regulation, or operational theme (e.g., "Renewable Energy", "Employee Benefits", "Grid Stability", "Revenue Protection").
+2. Do not include generic stop words.
+3. Output ONLY the keywords as a comma-separated list.
+4. If no clear theme is found, output "General Inquiry".
+
+User question: {question}
+
+Keywords:`;
+
 export const VERBOSITY_MAP: Record<number, string> = {
   1: "Be extremely brief. Reply in 1-2 sentences maximum. No bullet points, no elaboration.",
   2: "Be concise. Reply in 2-4 sentences. Mention only the most important points.",

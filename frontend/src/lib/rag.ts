@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { getSupabaseAdmin } from "./supabase-server";
-import { REWRITE_QUERY_TEMPLATE } from "./prompts";
+import { REWRITE_QUERY_TEMPLATE, KEYWORD_EXTRACTION_TEMPLATE } from "./prompts";
 
 const EMBEDDING_MODEL = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 768;
@@ -38,10 +38,31 @@ export async function rewriteQuery(question: string): Promise<string> {
       model: LLM_MODEL,
       contents: prompt,
     });
-    const rewritten = response.text?.trim();
-    return rewritten || question;
+    const rewritten = response.text();
+    return rewritten?.trim() || question;
   } catch {
     return question;
+  }
+}
+
+export async function extractKeywords(question: string): Promise<string[]> {
+  const genai = getGenAI();
+  const prompt = KEYWORD_EXTRACTION_TEMPLATE.replace("{question}", question);
+
+  try {
+    const response = await genai.models.generateContent({
+      model: LLM_MODEL,
+      contents: prompt,
+    });
+    const text = response.text()?.trim() || "";
+    if (!text || text === "General Inquiry") return [];
+
+    return text.split(",")
+      .map(k => k.trim())
+      .filter(k => k.length > 0);
+  } catch (e) {
+    console.error("Keyword extraction failed:", e);
+    return [];
   }
 }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
-import { retrieve, buildContext } from "@/lib/rag";
+import { retrieve, buildContext, extractKeywords } from "@/lib/rag";
 import { generateAnswer } from "@/lib/llm";
 import type { SourceMeta } from "@/lib/rag";
 
@@ -13,11 +13,13 @@ export async function POST(req: NextRequest) {
   }
 
   const token = authHeader.slice(7);
+  let userId: string | null = null;
   try {
     const { data, error } = await getSupabaseAdmin().auth.getUser(token);
     if (error || !data.user) {
       return NextResponse.json({ detail: "Invalid token" }, { status: 401 });
     }
+    userId = data.user.id;
   } catch {
     return NextResponse.json({ detail: "Auth failed" }, { status: 401 });
   }
@@ -36,7 +38,11 @@ export async function POST(req: NextRequest) {
 
   const t0 = Date.now();
 
-  const retrievalResult = await retrieve(question);
+  // Run retrieval and keyword extraction in parallel
+  const [retrievalResult, keywords] = await Promise.all([
+    retrieve(question),
+    extractKeywords(question)
+  ]);
 
   if (retrievalResult.docIds.length === 0) {
     return NextResponse.json({
@@ -74,6 +80,22 @@ export async function POST(req: NextRequest) {
   const finalSources = citedSources.length > 0
     ? citedSources
     : result.sources.slice(0, 3);
+
+  // Log analytics (asynchronously, but we await to ensure it's recorded in serverless)
+  if (userId) {
+    try {
+      await getSupabaseAdmin()
+        .from("user_analytics")
+        .insert({
+          user_id: userId,
+          original_query: question,
+          rewritten_query: retrievalResult.rewrittenQuery,
+          keywords: keywords,
+        });
+    } catch (e) {
+      console.error("Failed to log analytics:", e);
+    }
+  }
 
   return NextResponse.json({
     answer: result.answer,
