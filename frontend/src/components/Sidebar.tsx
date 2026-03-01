@@ -6,7 +6,9 @@ import { motion, AnimatePresence } from "framer-motion";
 interface SidebarProps {
     userEmail: string;
     onSignOut: () => void;
-    history: { question: string }[];
+    history: { question: string; result: any }[];
+    onHistoryClick: (question: string) => void;
+    open: boolean;
     onClose: () => void;
     userTier?: string;
     onUpgradeClick?: () => void;

@@ -450,8 +450,6 @@ export default function Home() {
                       onKeyDown={handleKeyDown}
                       placeholder={placeholder || "Ask GridMind Tactical..."}
                       rows={1}
-                      onFocus={() => setSearchFocused(true)}
-                      onBlur={() => setSearchFocused(false)}
                       className="flex-1 bg-transparent text-[15px] text-white placeholder:text-slate-600 outline-none resize-none leading-relaxed pb-1.5"
                       style={{ minHeight: "24px", maxHeight: "200px" }}
                       onInput={(e) => {
@@ -585,8 +583,6 @@ export default function Home() {
                         onKeyDown={handleKeyDown}
                         placeholder="Ask a follow-up..."
                         rows={1}
-                        onFocus={() => setSearchFocused(true)}
-                        onBlur={() => setSearchFocused(false)}
                         className="flex-1 bg-transparent text-[15px] text-white placeholder:text-slate-600 outline-none resize-none leading-relaxed pb-1.5"
                         style={{ minHeight: "24px", maxHeight: "200px" }}
                         onInput={(e) => {
