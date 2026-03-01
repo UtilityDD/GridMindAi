@@ -1,25 +1,36 @@
 "use client";
 
-import { BrainCircuit, ChevronRight, History, LogOut, MessageSquare, X } from "lucide-react";
+import { BrainCircuit, ChevronRight, History, LogOut, MessageSquare, X, PanelLeftClose } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface SidebarProps {
     userEmail: string;
     onSignOut: () => void;
     history: { question: string }[];
-    onHistoryClick: (question: string) => void;
-    open: boolean;
     onClose: () => void;
     userTier?: string;
+    onUpgradeClick?: () => void;
+    collapsed?: boolean;
+    onToggleCollapse?: () => void;
 }
 
-export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick, open, onClose, userTier = "free" }: SidebarProps) {
+export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick, open, onClose, userTier = "free", onUpgradeClick, collapsed = false, onToggleCollapse }: SidebarProps) {
     return (
         <>
-            {/* Desktop: always visible */}
-            <aside className="w-64 bg-slate-900/50 border-r border-white/5 flex flex-col h-screen sticky top-0 shrink-0 hidden md:flex">
-                <SidebarContent userEmail={userEmail} onSignOut={onSignOut} history={history} onHistoryClick={onHistoryClick} onClose={onClose} showClose={false} userTier={userTier} />
-            </aside>
+            {/* Desktop: collapsible sidebar */}
+            <AnimatePresence initial={false}>
+                {!collapsed && (
+                    <motion.aside
+                        initial={{ width: 0, opacity: 0 }}
+                        animate={{ width: 256, opacity: 1 }}
+                        exit={{ width: 0, opacity: 0 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 250 }}
+                        className="bg-slate-900/50 border-r border-white/5 flex flex-col h-screen sticky top-0 shrink-0 hidden md:flex overflow-hidden"
+                    >
+                        <SidebarContent userEmail={userEmail} onSignOut={onSignOut} history={history} onHistoryClick={onHistoryClick} onClose={onClose} showClose={false} userTier={userTier} onUpgradeClick={onUpgradeClick} onToggleCollapse={onToggleCollapse} />
+                    </motion.aside>
+                )}
+            </AnimatePresence>
 
             {/* Mobile: sliding overlay */}
             <AnimatePresence>
@@ -42,7 +53,7 @@ export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick,
                             transition={{ type: "spring", damping: 30, stiffness: 300 }}
                             className="fixed top-0 left-0 h-full w-72 z-50 bg-[#060d1f] border-r border-white/5 flex flex-col md:hidden shadow-2xl shadow-black"
                         >
-                            <SidebarContent userEmail={userEmail} onSignOut={onSignOut} history={history} onHistoryClick={onHistoryClick} onClose={onClose} showClose={true} userTier={userTier} />
+                            <SidebarContent userEmail={userEmail} onSignOut={onSignOut} history={history} onHistoryClick={onHistoryClick} onClose={onClose} showClose={true} userTier={userTier} onUpgradeClick={onUpgradeClick} />
                         </motion.aside>
                     </>
                 )}
@@ -51,8 +62,9 @@ export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick,
     );
 }
 
+
 function SidebarContent({
-    userEmail, onSignOut, history, onHistoryClick, onClose, showClose, userTier
+    userEmail, onSignOut, history, onHistoryClick, onClose, showClose, userTier, onUpgradeClick, onToggleCollapse
 }: SidebarProps & { showClose: boolean }) {
     return (
         <>
@@ -71,12 +83,20 @@ function SidebarContent({
                         </p>
                     </div>
                 </div>
-                {showClose && (
-                    <button onClick={onClose} className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/5 transition-all">
-                        <X className="w-4 h-4" />
-                    </button>
-                )}
+                <div className="flex items-center gap-1">
+                    {!showClose && onToggleCollapse && (
+                        <button onClick={onToggleCollapse} className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/5 transition-all" title="Collapse sidebar">
+                            <PanelLeftClose className="w-4 h-4" />
+                        </button>
+                    )}
+                    {showClose && (
+                        <button onClick={onClose} className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/5 transition-all">
+                            <X className="w-4 h-4" />
+                        </button>
+                    )}
+                </div>
             </div>
+
 
             {/* Navigation */}
             <div className="flex-1 overflow-y-auto py-6 px-3 space-y-8">
@@ -121,14 +141,22 @@ function SidebarContent({
                         {userEmail[0]?.toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                             <p className="text-xs font-semibold text-white truncate">{userEmail.split('@')[0]}</p>
                             <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-md border ${userTier === 'pro' ? 'bg-indigo-500/10 border-indigo-400 text-indigo-400' :
-                                    userTier === 'basic' ? 'bg-blue-500/10 border-blue-400 text-blue-400' :
-                                        'bg-slate-500/10 border-slate-500 text-slate-500'
+                                userTier === 'basic' ? 'bg-blue-500/10 border-blue-400 text-blue-400' :
+                                    'bg-slate-500/10 border-slate-500 text-slate-500'
                                 }`}>
                                 {userTier}
                             </span>
+                            {userTier !== 'pro' && (
+                                <button
+                                    onClick={onUpgradeClick}
+                                    className="text-[9px] font-bold text-indigo-400 hover:text-indigo-300 underline underline-offset-2 animate-pulse transition-colors"
+                                >
+                                    Upgrade
+                                </button>
+                            )}
                         </div>
                         <p className="text-[10px] text-slate-500 truncate">{userEmail}</p>
                     </div>

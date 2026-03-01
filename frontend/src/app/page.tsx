@@ -20,10 +20,12 @@ import {
   Cpu,
   Settings,
   Menu,
+  ArrowUp,
 } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import LoginPage from "@/components/LoginPage";
 import { getSupabase } from "@/lib/supabase";
+import PricingModal from "@/components/PricingModal";
 
 interface Source {
   doc_id: string;
@@ -141,6 +143,8 @@ export default function Home() {
   const [verbosity, setVerbosity] = useState(3);
   const [selectedModel, setSelectedModel] = useState("gemini-2.5-flash");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [userTier, setUserTier] = useState<string>("free");
   const [history, setHistory] = useState<
     { question: string; result: QueryResult }[]
@@ -164,6 +168,21 @@ export default function Home() {
     fetchTier();
   }, [user]);
 
+  const handleSelectPlan = async (tierId: string) => {
+    if (!user) return;
+    const { error } = await getSupabase()
+      .from("profiles")
+      .update({ tier_id: tierId })
+      .eq("id", user.id);
+
+    if (error) {
+      setError(`Failed to activate strategy: ${error.message}`);
+    } else {
+      setUserTier(tierId);
+      setIsPricingOpen(false);
+    }
+  };
+
   // Scroll-driven search bar fade
   const [searchOpacity, setSearchOpacity] = useState(1);
   const [searchFocused, setSearchFocused] = useState(false);
@@ -172,11 +191,15 @@ export default function Home() {
     const el = scrollContainerRef.current;
     if (!el) return;
     const handleScroll = () => {
-      // Only fade when results are showing
-      if (!result) { setSearchOpacity(1); return; }
       const scrollY = el.scrollTop;
+
+      // Only fade search bar when results are showing
+      if (!result) {
+        setSearchOpacity(1);
+        return;
+      }
       const fadeStart = 60;
-      const fadeEnd = 200;
+      const fadeEnd = 240;
       const opacity = Math.max(0, Math.min(1, 1 - (scrollY - fadeStart) / (fadeEnd - fadeStart)));
       setSearchOpacity(opacity);
     };
@@ -331,6 +354,19 @@ export default function Home() {
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         userTier={userTier}
+        onUpgradeClick={() => {
+          setSidebarOpen(false);
+          setIsPricingOpen(true);
+        }}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(true)}
+      />
+
+      <PricingModal
+        isOpen={isPricingOpen}
+        onClose={() => setIsPricingOpen(false)}
+        currentTier={userTier}
+        onSelectPlan={handleSelectPlan}
       />
 
       <div
@@ -344,264 +380,308 @@ export default function Home() {
         </div>
 
         {/* Top Header / Bar */}
-        <AnimatePresence>
-          {(!loading && !result) && (
-            <motion.header
-              initial={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -50 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="relative z-20 glass-panel border-b-0 sticky top-0 px-8 py-4 flex items-center justify-between shadow-lg shadow-black/20"
-            >
-              <div className="flex items-center gap-3">
-                {/* Hamburger toggle – visible on mobile only */}
+        <header
+          className="relative z-50 glass-panel border-b-0 sticky top-0 px-6 py-3 flex items-center justify-between shadow-lg shadow-black/20"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              {(sidebarCollapsed || typeof window === 'undefined') && (
                 <button
-                  onClick={() => setSidebarOpen(true)}
-                  className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all"
-                  aria-label="Open menu"
+                  onClick={() => {
+                    if (window.innerWidth >= 768) {
+                      setSidebarCollapsed(false);
+                    } else {
+                      setSidebarOpen(true);
+                    }
+                  }}
+                  className="hidden md:flex p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+                  aria-label="Show sidebar"
                 >
-                  <Menu className="w-4 h-4" />
+                  <Menu className="w-5 h-5" />
                 </button>
-                <div className="md:hidden w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-                  <BrainCircuit className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xs font-bold text-white tracking-widest uppercase">
-                    GridMind <span className="text-indigo-400">Tactical</span>
-                  </h1>
-                  <p className="text-[9px] text-slate-500 font-medium tracking-tight">Power Sector Strategic Intelligence v2.0</p>
-                </div>
-              </div>
+              )}
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+                aria-label="Open menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
 
-              <div className="flex items-center gap-4">
-                <SettingsMenu
-                  selectedModel={selectedModel}
-                  setSelectedModel={setSelectedModel}
-                  verbosity={verbosity}
-                  setVerbosity={setVerbosity}
-                />
+          <div className="flex items-center gap-2 pointer-events-none absolute left-1/2 -translate-x-1/2">
+            <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
+              <BrainCircuit className="w-4 h-4 text-white" />
+            </div>
+            <h1 className="text-xs font-bold text-white tracking-widest uppercase hidden sm:block">
+              GridMind <span className="text-indigo-400">Tactical</span>
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {userTier !== 'pro' && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsPricingOpen(true)}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20"
+              >
+                <Sparkles className="w-3 h-3" />
+                Get Pro
+              </motion.button>
+            )}
+            <SettingsMenu
+              selectedModel={selectedModel}
+              setSelectedModel={setSelectedModel}
+              verbosity={verbosity}
+              setVerbosity={setVerbosity}
+            />
+          </div>
+        </header>
+
+        {/* ── EMPTY STATE: Centered Input ── */}
+        <AnimatePresence>
+          {!result && !loading && (
+            <motion.div
+              key="centered-input"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="flex-1 flex flex-col items-center justify-center px-8"
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="text-center mb-10"
+              >
+                <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.1] mb-3">
+                  What can I help with?
+                </h2>
+                <p className="text-sm text-slate-500 max-w-md mx-auto">
+                  Power sector regulations, operational frameworks, and institutional knowledge — instantly.
+                </p>
+              </motion.div>
+
+              <div className="w-full max-w-2xl">
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 via-blue-500/10 to-transparent rounded-[2rem] opacity-0 group-focus-within:opacity-100 transition-opacity duration-700 blur-xl" />
+                  <div className="relative flex items-end gap-3 glass-panel border-white/10 rounded-[1.8rem] px-5 py-4 group-focus-within:border-indigo-500/40 group-focus-within:bg-slate-900/90 transition-all duration-300">
+                    <textarea
+                      ref={inputRef}
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder={placeholder || "Ask GridMind Tactical..."}
+                      rows={1}
+                      onFocus={() => setSearchFocused(true)}
+                      onBlur={() => setSearchFocused(false)}
+                      className="flex-1 bg-transparent text-[15px] text-white placeholder:text-slate-600 outline-none resize-none leading-relaxed pb-1.5"
+                      style={{ minHeight: "24px", maxHeight: "200px" }}
+                      onInput={(e) => {
+                        const target = e.target as HTMLTextAreaElement;
+                        target.style.height = "24px";
+                        target.style.height = target.scrollHeight + "px";
+                      }}
+                    />
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleSubmit()}
+                      disabled={loading || !query.trim()}
+                      className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <ArrowUp className="w-5 h-5" />
+                    </motion.button>
+                  </div>
+                </div>
+                <p className="mt-3 text-center text-[10px] text-slate-600 font-medium">GridMind AI can make mistakes. Verify strategic information.</p>
               </div>
-            </motion.header>
+            </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Main Interface */}
-        <div className="relative z-10 w-full max-w-4xl mx-auto px-8 py-10">
-          <AnimatePresence mode="wait">
-            {!result && !loading && history.length === 0 && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, y: -40, filter: "blur(10px)" }}
-                transition={{ duration: 0.6, ease: "easeInOut" }}
-                className="pt-14 pb-8 flex flex-col items-center text-center"
-              >
-                <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.1] mb-4 max-w-2xl">
-                  Decode Energy <br />
-                  <span className="bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent">Power Intelligence</span>
-                </h2>
+        {/* ── ACTIVE STATE: Loading + Results + Bottom Input ── */}
+        <AnimatePresence>
+          {(loading || result) && (
+            <motion.div
+              key="active-state"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex-1 flex flex-col"
+            >
+              {/* Scrollable Results Area */}
+              <div className="flex-1 w-full max-w-4xl mx-auto px-8 pt-6">
+                {/* Loading Animation */}
+                <AnimatePresence>
+                  {loading && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex flex-col items-center justify-center py-32"
+                    >
+                      <ScanningPulse />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-                <p className="text-sm text-slate-500 max-w-lg mx-auto leading-relaxed mb-8">
-                  Instant access to power sector regulations, operational frameworks, and institutional knowledge.
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {/* Error Section */}
+                <AnimatePresence>
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="mb-8 p-5 rounded-2xl bg-red-500/[0.03] border border-red-500/10 text-sm text-red-400 flex items-center gap-3 backdrop-blur-md"
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                      {error}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-          {/* Search / Command Bar */}
-          <motion.div
-            layout
-            style={{
-              opacity: searchFocused ? 1 : searchOpacity,
-              pointerEvents: searchOpacity < 0.1 && !loading ? "none" : "auto",
-            }}
-            transition={{
-              layout: { type: "spring", damping: 25, stiffness: 200 },
-              opacity: { duration: 0.2 }
-            }}
-            className={`${(!result && !loading && history.length === 0) ? "pt-10" : "pt-4"} pb-8 sticky ${(!result && !loading) ? "top-[100px]" : "top-6"} z-30`}
-          >
-            <div className="relative group shadow-2xl shadow-indigo-500/10">
-              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 via-blue-500/10 to-transparent rounded-[2rem] opacity-0 group-focus-within:opacity-100 transition-opacity duration-700 blur-xl" />
-              <div className="relative flex items-start gap-4 glass-panel border-white/10 rounded-[1.5rem] px-6 py-5 group-focus-within:border-indigo-500/40 group-focus-within:bg-slate-900/80 transition-all duration-300">
-                <Search className="w-5 h-5 text-slate-500 mt-1.5 shrink-0 group-focus-within:text-indigo-400 transition-colors" />
-                <textarea
-                  ref={inputRef}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={placeholder || "Initialize policy inquiry..."}
-                  rows={1}
-                  onFocus={() => setSearchFocused(true)}
-                  onBlur={() => setSearchFocused(false)}
-                  className="flex-1 bg-transparent text-base text-white placeholder:text-slate-600 outline-none resize-none leading-relaxed pt-0.5"
-                  style={{ minHeight: "28px", maxHeight: "150px" }}
-                  onInput={(e) => {
-                    const target = e.target as HTMLTextAreaElement;
-                    target.style.height = "28px";
-                    target.style.height = target.scrollHeight + "px";
-                  }}
-                />
-
-                <AnimatePresence mode="wait">
-                  <motion.button
-                    key={loading ? "loading" : "idle"}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    onClick={() => handleSubmit()}
-                    disabled={loading || !query.trim()}
-                    className={`shrink-0 h-10 px-6 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-[0.98] disabled:cursor-not-allowed border ${loading
-                      ? "bg-indigo-600/20 border-indigo-500/30 text-indigo-400"
-                      : "bg-indigo-600 hover:bg-indigo-500 border-indigo-500/20 text-white shadow-indigo-600/20"
-                      }`}
-                  >
-                    {loading ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        <span>Processing...</span>
+                {/* Strategic Results View */}
+                <AnimatePresence>
+                  {result && (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-8 pb-48"
+                    >
+                      {/* User Query Bubble */}
+                      <div className="flex justify-end">
+                        <div className="max-w-[80%] px-5 py-3 rounded-2xl rounded-br-md bg-indigo-600/20 border border-indigo-500/20 text-sm text-indigo-200">
+                          {history.length > 0 ? history[history.length - 1].question : query}
+                        </div>
                       </div>
-                    ) : (
-                      "Execute"
-                    )}
-                  </motion.button>
+
+                      {/* AI Response */}
+                      <div ref={resultsRef} className="glass-panel rounded-[2rem] overflow-hidden shadow-2xl shadow-black/40">
+                        {/* Result Header */}
+                        <div className="px-8 py-4 bg-white/[0.02] border-b border-white/5 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                            </div>
+                            <span className="text-xs font-bold text-white uppercase tracking-wider">GridMind</span>
+                          </div>
+                          <span className="text-[10px] text-slate-500 font-medium">
+                            {(result.elapsed_ms / 1000).toFixed(1)}s
+                          </span>
+                        </div>
+
+                        {/* Answer Content Area with Typing Animation */}
+                        <div className="px-8 py-8">
+                          <div className="markdown-content text-[15px] text-slate-200 leading-[1.7] font-normal">
+                            <TypingMarkdown text={result.answer} speed={8} />
+                          </div>
+                        </div>
+
+                        {/* Share bar node */}
+                        <ShareBar result={result} query={query} />
+
+                        {/* Structured Sources Section */}
+                        {result.sources.length > 0 && (
+                          <SourcesSection sources={result.sources} />
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
                 </AnimatePresence>
               </div>
-            </div>
-          </motion.div>
 
-          {/* Immersive Loading State */}
-          <AnimatePresence>
-            {loading && (
-              <ScanningPulse />
-            )}
-          </AnimatePresence>
-
-          {/* Error Section */}
-          <AnimatePresence>
-            {error && (
+              {/* Bottom Input Bar */}
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="mb-8 p-5 rounded-2xl bg-red-500/[0.03] border border-red-500/10 text-sm text-red-400 flex items-center gap-3 backdrop-blur-md"
+                transition={{ delay: 0.2, type: "spring", damping: 20, stiffness: 200 }}
+                className="sticky bottom-0 left-0 right-0 z-40 px-8 pb-8 bg-gradient-to-t from-[#020617] via-[#020617]/95 to-transparent pt-10"
               >
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                {error}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Strategic Results View */}
-          <AnimatePresence>
-            {result && (
-              <motion.div
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-12 space-y-8 pb-32"
-              >
-                {/* Strategic Result Container */}
-                <div ref={resultsRef} className="glass-panel rounded-[2rem] overflow-hidden shadow-2xl shadow-black/40">
-                  {/* Result Header */}
-                  <div className="px-8 py-5 bg-white/[0.02] border-b border-white/5 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                        <Sparkles className="w-4 h-4 text-indigo-400" />
-                      </div>
-                      <div>
-                        <h3 className="text-xs font-bold text-white uppercase tracking-wider">Strategic Insight</h3>
-                        <p className="text-[10px] text-slate-500 font-medium">Validated by Regulatory Intelligence</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                      <div className="flex items-center gap-1.5">
-                        <Cpu className="w-3 h-3 text-indigo-500/60" />
-                        <span>{result.model_used.split('/')[1] || result.model_used}</span>
-                      </div>
-                      <div className="w-px h-3 bg-white/10" />
-                      <span>Lat: {result.elapsed_ms}ms</span>
-                    </div>
-                  </div>
-
-                  {/* Rewritten query node */}
-                  {result.rewritten_query && (
-                    <div className="mx-8 mt-6 px-5 py-4 rounded-2xl bg-indigo-500/[0.03] border border-indigo-500/10">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Wand2 className="w-3.5 h-3.5 text-indigo-400/80" />
-                        <span className="text-[10px] text-indigo-400/80 font-bold uppercase tracking-widest">
-                          Neural Query Refinement
-                        </span>
-                      </div>
-                      <p className="text-sm text-slate-400 leading-relaxed font-medium italic">
-                        &quot;{result.rewritten_query}&quot;
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Answer Content Area */}
-                  <div className="px-8 py-8">
-                    <div className="markdown-content text-[15px] text-slate-200 leading-[1.7] font-normal">
-                      <ReactMarkdown>{result.answer}</ReactMarkdown>
-                    </div>
-                  </div>
-
-                  {/* Share bar node */}
-                  <ShareBar result={result} query={query} />
-
-                  {/* Structured Sources Section */}
-                  {result.sources.length > 0 && (
-                    <SourcesSection sources={result.sources} />
-                  )}
-                </div>
-
-                {/* Collateral History (Only if no results yet, or secondary) */}
-                {history.length > 1 && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="pt-8 border-t border-white/5"
-                  >
-                    <div className="flex items-center gap-3 mb-6 px-2">
-                      <Clock className="w-4 h-4 text-slate-600" />
-                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-[0.2em]">
-                        Previous Operational Inquiries
-                      </p>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {history.slice(1, 4).map((h, i) => (
-                        <button
-                          key={i}
-                          onClick={() => {
-                            setQuery(h.question);
-                            setResult(h.result);
-                          }}
-                          className="group flex flex-col gap-2 px-5 py-4 rounded-2xl glass-panel text-left hover:border-indigo-500/30 hover:bg-white/[0.02] transition-all duration-300"
+                <div className="max-w-4xl mx-auto">
+                  <div className="relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 via-blue-500/10 to-transparent rounded-[2rem] opacity-0 group-focus-within:opacity-100 transition-opacity duration-700 blur-xl" />
+                    <div className="relative flex items-end gap-3 glass-panel border-white/10 rounded-[1.8rem] px-5 py-4 group-focus-within:border-indigo-500/40 group-focus-within:bg-slate-900/90 transition-all duration-300">
+                      <textarea
+                        ref={!result && !loading ? undefined : inputRef}
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Ask a follow-up..."
+                        rows={1}
+                        onFocus={() => setSearchFocused(true)}
+                        onBlur={() => setSearchFocused(false)}
+                        className="flex-1 bg-transparent text-[15px] text-white placeholder:text-slate-600 outline-none resize-none leading-relaxed pb-1.5"
+                        style={{ minHeight: "24px", maxHeight: "200px" }}
+                        onInput={(e) => {
+                          const target = e.target as HTMLTextAreaElement;
+                          target.style.height = "24px";
+                          target.style.height = target.scrollHeight + "px";
+                        }}
+                      />
+                      <AnimatePresence mode="wait">
+                        <motion.button
+                          key={loading ? "loading" : "idle"}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          onClick={() => handleSubmit()}
+                          disabled={loading || !query.trim()}
+                          className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-[0.9] disabled:cursor-not-allowed ${loading
+                            ? "bg-indigo-600/20 text-indigo-400"
+                            : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20"
+                            }`}
                         >
-                          <p className="text-sm text-slate-400 group-hover:text-white transition-colors truncate font-medium">
-                            {h.question}
-                          </p>
-                          <div className="flex items-center gap-3">
-                            <span className="text-[10px] text-slate-600 font-bold uppercase tracking-tighter">
-                              {h.result.sources.length} SOURCES
-                            </span>
-                            <span className="text-[10px] text-slate-600 font-bold uppercase tracking-tighter">
-                              {(h.result.elapsed_ms / 1000).toFixed(2)}s LATENCY
-                            </span>
-                          </div>
-                        </button>
-                      ))}
+                          {loading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <ArrowUp className="w-5 h-5" />
+                          )}
+                        </motion.button>
+                      </AnimatePresence>
                     </div>
-                  </motion.div>
-                )}
+                  </div>
+                </div>
               </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
+    </div>
+  );
+}
+function TypingMarkdown({ text, speed = 8 }: { text: string; speed?: number }) {
+  const [displayedLength, setDisplayedLength] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
 
-      </div >
-    </div >
+  useEffect(() => {
+    setDisplayedLength(0);
+    setIsComplete(false);
+  }, [text]);
+
+  useEffect(() => {
+    if (displayedLength >= text.length) {
+      setIsComplete(true);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setDisplayedLength((prev) => Math.min(prev + speed, text.length));
+    }, 16); // ~60fps
+    return () => clearTimeout(timer);
+  }, [displayedLength, text, speed]);
+
+  if (isComplete) {
+    return <ReactMarkdown>{text}</ReactMarkdown>;
+  }
+
+  return (
+    <div>
+      <ReactMarkdown>{text.slice(0, displayedLength)}</ReactMarkdown>
+      <span className="inline-block w-0.5 h-5 bg-indigo-400 animate-pulse ml-0.5 align-middle" />
+    </div>
   );
 }
 
