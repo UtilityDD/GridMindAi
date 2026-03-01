@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import {
@@ -37,6 +37,14 @@ interface QueryResult {
   model_used: string;
   elapsed_ms: number;
   rewritten_query: string | null;
+}
+
+interface UsageData {
+  dailyCount: number;
+  dailyLimit: number;
+  monthlyCount: number;
+  monthlyLimit: number;
+  tierName: string;
 }
 
 const EXAMPLE_QUERIES = [
@@ -146,24 +154,33 @@ export default function Home() {
   const [history, setHistory] = useState<
     { question: string; result: QueryResult }[]
   >([]);
+  const [usage, setUsage] = useState<UsageData | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!user) return;
-    const fetchTier = async () => {
-      const { data, error } = await getSupabase()
-        .from("profiles")
-        .select("tier_id")
-        .eq("id", user.id)
-        .single();
-      if (!error && data) {
-        setUserTier(data.tier_id);
+  const refreshUsage = useCallback(async () => {
+    if (!session?.access_token) return;
+    try {
+      const res = await fetch("/api/user/usage", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUsage(data);
+        setUserTier(data.tierId || "free");
       }
-    };
-    fetchTier();
-  }, [user]);
+    } catch (err) {
+      console.error("Failed to fetch usage:", err);
+    }
+  }, [session?.access_token]);
+
+  useEffect(() => {
+    if (!user || !session) return;
+    refreshUsage();
+  }, [user, session, refreshUsage]);
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -377,6 +394,7 @@ export default function Home() {
 
       const data: QueryResult = await res.json();
       setResult(data);
+      refreshUsage(); // Update usage counts after success
       setHistory((prev) => {
         const filtered = prev.filter((item) => item.question !== question);
         return [{ question, result: data }, ...filtered].slice(0, 50); // Keep max 50 items
@@ -402,31 +420,17 @@ export default function Home() {
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar
-        userEmail={user.email || ""}
+        userEmail={user?.email || ""}
         onSignOut={signOut}
         history={history}
-        onHistoryClick={(q) => {
-          const item = history.find((h) => h.question === q);
-          if (item) {
-            setQuery(q);
-            setResult(item.result);
-            setTimeout(() => {
-              resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }, 100);
-          } else {
-            setQuery(q);
-            handleSubmit(q);
-          }
-        }}
+        onHistoryClick={handleSubmit}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         userTier={userTier}
-        onUpgradeClick={() => {
-          setSidebarOpen(false);
-          setIsPricingOpen(true);
-        }}
+        onUpgradeClick={() => setIsPricingOpen(true)}
         collapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed(true)}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        usage={usage}
       />
 
       <PricingModal

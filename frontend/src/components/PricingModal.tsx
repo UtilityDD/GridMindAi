@@ -71,7 +71,7 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
             // Once the Razorpay window opens or process finishes, we can let the user click again if needed
             // (though usually modal closes on success)
             setSelectedPlanId(null);
-        } catch (_err) {
+        } catch {
             setSelectedPlanId(null);
         }
     };
@@ -104,7 +104,7 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
             } else {
                 setPromoError(data.detail || "Invalid promo code.");
             }
-        } catch (_err: unknown) {
+        } catch {
             setPromoError("Failed to validate promo code. Technical network failure.");
         } finally {
             setIsValidating(false);
