@@ -165,8 +165,13 @@ export default function Home() {
     fetchTier();
   }, [user]);
 
-  const handleSelectPlan = async (tierId: string) => {
+  const handleSelectPlan = async (tierId: string, promoCode?: string) => {
     if (!user) return;
+
+    if (promoCode) {
+      console.log(`Activating strategy ${tierId} with promo code: ${promoCode}`);
+    }
+
     const { error } = await getSupabase()
       .from("profiles")
       .update({ tier_id: tierId })
@@ -468,7 +473,6 @@ export default function Home() {
                     </motion.button>
                   </div>
                 </div>
-                <p className="mt-3 text-center text-[10px] text-slate-600 font-medium">GridMind AI can make mistakes. Verify strategic information.</p>
               </div>
             </motion.div>
           )}
@@ -618,6 +622,10 @@ export default function Home() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <p className="pb-3 text-center text-[10px] text-slate-600 font-medium select-none">
+          GridMind AI can make mistakes. Verify strategic information.
+        </p>
       </div>
 
     </div>

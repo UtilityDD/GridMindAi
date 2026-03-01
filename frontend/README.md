@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GridMind AI: Strategic Intelligence for the Power Sector
 
-## Getting Started
+GridMind AI is an elite, RAG-powered (Retrieval-Augmented Generation) intelligence platform designed specifically for the professional Indian Electricity Sector. It transforms thousands of complex regulatory documents into actionable strategic insights with precision and high-performance aesthetics.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 👤 User Perspective (The Strategy Center)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+GridMind provides a seamless "Command Center" experience for grid managers, policy analysts, and regulatory consultants.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🔥 Key Features
+- **Semantic Intelligence**: Ask questions in natural language (e.g., *"What is the latest amendment on grid stability for WBERC?"*) and get cited, professional answers instantly.
+- **Dynamic Synthesis**: Adjust the "Synthesist Level" (Verbosity) to get exactly what you need—from a quick tactical summary to a deep context structural analysis.
+- **Persistent Memory**: Your tactical query history is preserved locally, allowing for instant recovery of previous insights without redundant requests.
+- **Tiered Access**: Scale your capabilities using flexible membership tiers:
+  - **Field Agent**: For tactical, daily lookups.
+  - **Strategic Lead**: For consistent regulatory oversight.
+  - **Grid Master**: For enterprise-scale neural mapping and analytics.
+- **Promotion Redemption**: Unlock premium intelligence using universal or user-specific promo codes within the Strategic Overview panel.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 💻 Developer Perspective (The Infrastructure)
 
-To learn more about Next.js, take a look at the following resources:
+GridMind AI is built on a modern, scalable stack focusing on high-performance retrieval and low-latency interaction.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 🏗️ Architecture & Flow
+1. **Query Rewriting**: Every user inquiry is rewritten by specialized LLM templates to maximize semantic retrieval accuracy.
+2. **Hybrid Retrieval**:
+   - **Vector Search**: Uses `pgvector` to find semantically relevant chunks across thousands of regulatory pages.
+   - **Keyword Extraction**: Simultaneously extracts key policy terms for granular analytics.
+3. **Context Injection**: The `rag.ts` layer builds a dense context from top-ranked fragments, including automatic amendment-awareness logic.
+4. **LLM Synthesis**: The final answer is generated using models like **Gemini 2.5 Flash** or **Llama 3.3 70B**, enforcing a formal, 7-section structured output.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 🔐 Multi-Layer Controls
+- **Supabase Integration**: Handles Auth, RLS (Row Level Security), and vectorized storage.
+- **Account status**: The `is_enabled` flag at the API level provides instant administrative account control.
+- **Custom Overrides**: A flexible limit system allows developers to override tier defaults for specific priority users directly in the database.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## �️ Database Architecture (PostgreSQL/Supabase)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 📄 Intelligence Content
+| Table | Description | Key Columns |
+| :--- | :--- | :--- |
+| `chunks` | Granular text fragments | `content` (TEXT), `embedding` (VECTOR-768), `doc_id` (TEXT) |
+| `summaries` | Per-document syntheses | `summary_text` (TEXT), `embedding` (VECTOR-768) |
+| `titles` | Document indexing | `title` (TEXT), `embedding` (VECTOR-768) |
+
+### 🎟️ Administration & Promo
+| Table | Description | Key Columns |
+| :--- | :--- | :--- |
+| `promo_codes` | Discount & Access Codes | `code`, `discount_percent`, `valid_until`, `max_uses`, `restricted_to_email` |
+| `profiles` | User Preferences & Status | `tier_id`, `is_enabled`, `custom_daily_limit`, `custom_monthly_limit` |
+| `user_tiers` | Tier Definition | `id`, `daily_limit`, `monthly_limit` |
+| `user_analytics` | Keyword & Usage Tracking | `original_query`, `rewritten_query`, `keywords` (JSONB) |
+
+---
+
+## 🚀 Technical Setup
+
+1. **Environment Config**:
+   Configure `frontend/.env.local` with your Supabase and LLM API keys.
+2. **Database Migration**:
+   1. Execute `supabase_schema.sql` to initialize vector storage and functions.
+   2. Execute `supabase_promo_schema.sql` to initialize the administrative layer.
+3. **Frontend Boot**:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+---
+*GridMind AI: Powering Strategic Decisions through Neural Intelligence.*
