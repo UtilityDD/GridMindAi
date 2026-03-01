@@ -24,7 +24,7 @@ interface SidebarProps {
     onSignOut: () => void;
     history: { question: string; result: QueryResult }[];
     onHistoryClick: (question: string) => void;
-    open: boolean;
+    open?: boolean;
     onClose: () => void;
     userTier?: string;
     onUpgradeClick?: () => void;
