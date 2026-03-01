@@ -3,10 +3,26 @@
 import { BrainCircuit, ChevronRight, History, LogOut, MessageSquare, X, PanelLeftClose } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+interface Source {
+    doc_id: string;
+    ref: string;
+    date: string;
+    title: string;
+    source_url: string;
+}
+
+interface QueryResult {
+    answer: string;
+    sources: Source[];
+    model_used: string;
+    elapsed_ms: number;
+    rewritten_query: string | null;
+}
+
 interface SidebarProps {
     userEmail: string;
     onSignOut: () => void;
-    history: { question: string; result: any }[];
+    history: { question: string; result: QueryResult }[];
     onHistoryClick: (question: string) => void;
     open: boolean;
     onClose: () => void;
