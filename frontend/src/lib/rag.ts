@@ -38,7 +38,7 @@ export async function rewriteQuery(question: string): Promise<string> {
       model: LLM_MODEL,
       contents: prompt,
     });
-    const rewritten = response.text();
+    const rewritten = response.text;
     return rewritten?.trim() || question;
   } catch {
     return question;
@@ -54,7 +54,7 @@ export async function extractKeywords(question: string): Promise<string[]> {
       model: LLM_MODEL,
       contents: prompt,
     });
-    const text = response.text()?.trim() || "";
+    const text = response.text?.trim() || "";
     if (!text || text === "General Inquiry") return [];
 
     return text.split(",")

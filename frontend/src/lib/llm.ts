@@ -46,7 +46,7 @@ async function callGemini(
     contents: userPrompt,
     config: { systemInstruction: SYSTEM_PROMPT },
   });
-  return response.text() ?? "";
+  return response.text ?? "";
 }
 
 async function callGroq(
