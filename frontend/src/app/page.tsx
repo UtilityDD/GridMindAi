@@ -165,23 +165,111 @@ export default function Home() {
     fetchTier();
   }, [user]);
 
-  const handleSelectPlan = async (tierId: string, promoCode?: string) => {
-    if (!user) return;
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (typeof window === "undefined") return resolve(false);
+      if ((window as Window & { Razorpay?: unknown }).Razorpay) return resolve(true);
 
-    if (promoCode) {
-      console.log(`Activating strategy ${tierId} with promo code: ${promoCode}`);
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  interface RazorpayResponse {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  }
+
+  const handleSelectPlan = async (tierId: string, promoCode?: string) => {
+    if (!user) {
+      setError("Please sign in to upgrade your strategy bandwidth.");
+      return;
     }
 
-    const { error } = await getSupabase()
-      .from("profiles")
-      .update({ tier_id: tierId })
-      .eq("id", user.id);
+    // Free tier stays instant
+    if (tierId === "free") {
+      const { error } = await getSupabase()
+        .from("profiles")
+        .update({ tier_id: tierId })
+        .eq("id", user.id);
 
-    if (error) {
-      setError(`Failed to activate strategy: ${error.message}`);
-    } else {
-      setUserTier(tierId);
+      if (error) setError(`Failed to switch to free: ${error.message}`);
+      else setUserTier(tierId);
       setIsPricingOpen(false);
+      return;
+    }
+
+    // Paid tiers go through Razorpay
+    try {
+      setLoading(true);
+
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        throw new Error("Razorpay SDK failed to load. Check your internet connection.");
+      }
+
+      // Step 1: Create Order
+      const res = await fetch("/api/razorpay/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tierId, promoCode }),
+      });
+
+      const orderData = await res.json();
+      if (orderData.error) throw new Error(orderData.error);
+
+      // Step 2: Open Razorpay Checkout
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "GridMind AI",
+        description: `Upgrade to ${tierId} strategy`,
+        order_id: orderData.id,
+        handler: async (response: RazorpayResponse) => {
+          try {
+            // Step 3: Verify Payment
+            const verifyRes = await fetch("/api/razorpay/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                ...response,
+                tierId,
+                userId: user.id
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              setUserTier(tierId);
+              setIsPricingOpen(false);
+            } else {
+              setError(verifyData.error || "Payment verification failed.");
+            }
+          } catch (err: unknown) {
+            setError(`Verification service unavailable: ${err instanceof Error ? err.message : "Internal Error"}`);
+          }
+        },
+        prefill: {
+          email: user.email,
+        },
+        theme: {
+          color: "#4f46e5",
+        },
+      };
+
+      // @ts-expect-error - Razorpay is loaded dynamically via script tag
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+
+    } catch (e: unknown) {
+      setError(`Payment initialization failed: ${e instanceof Error ? e.message : "Internal Error"}`);
+    } finally {
+      setLoading(false);
     }
   };
 

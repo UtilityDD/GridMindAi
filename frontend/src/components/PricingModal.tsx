@@ -29,7 +29,7 @@ const PLANS: Plan[] = [
     {
         id: "basic",
         name: "Strategic Lead",
-        price: 29,
+        price: 2499,
         limit: "50 queries / day",
         description: "Enhanced bandwidth for consistent policy analysis.",
         features: ["Priority retrieval", "Query optimization", "Extended history", "Email support"],
@@ -39,7 +39,7 @@ const PLANS: Plan[] = [
     {
         id: "pro",
         name: "Grid Master",
-        price: 99,
+        price: 8199,
         limit: "200 queries / day",
         description: "Maximum intelligence for enterprise-scale operations.",
         features: ["Neural mapping", "Unlimited history", "Advanced analytics", "24/7 Priority support"],
@@ -60,7 +60,21 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
     const [isValidating, setIsValidating] = useState(false);
     const [promoData, setPromoData] = useState<{ discount: number; code: string } | null>(null);
     const [promoError, setPromoError] = useState("");
+    const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
 
+    const handleSelect = async (planId: string) => {
+        if (planId === currentTier || selectedPlanId) return;
+
+        setSelectedPlanId(planId);
+        try {
+            await onSelectPlan(planId, promoData?.code);
+            // Once the Razorpay window opens or process finishes, we can let the user click again if needed
+            // (though usually modal closes on success)
+            setSelectedPlanId(null);
+        } catch (_err) {
+            setSelectedPlanId(null);
+        }
+    };
     const handleValidatePromo = async () => {
         if (!promoCode.trim()) return;
         setIsValidating(true);
@@ -90,8 +104,8 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
             } else {
                 setPromoError(data.detail || "Invalid promo code.");
             }
-        } catch (err) {
-            setPromoError("Failed to validate promo code.");
+        } catch (_err: unknown) {
+            setPromoError("Failed to validate promo code. Technical network failure.");
         } finally {
             setIsValidating(false);
         }
@@ -163,11 +177,11 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                         <div className="flex flex-col mb-4">
                                             <div className="flex items-baseline gap-1">
                                                 <span className={`text-2xl font-bold text-white ${promoData ? "line-through opacity-30 text-lg" : ""}`}>
-                                                    ${plan.price}
+                                                    ₹{plan.price}
                                                 </span>
                                                 {promoData && plan.price > 0 && (
                                                     <span className="text-2xl font-bold text-emerald-400">
-                                                        ${finalPrice}
+                                                        ₹{finalPrice}
                                                     </span>
                                                 )}
                                                 <span className="text-xs text-slate-500">/month</span>
@@ -197,14 +211,15 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                         </div>
 
                                         <button
-                                            onClick={() => !isCurrent && onSelectPlan(plan.id, promoData?.code)}
-                                            disabled={isCurrent}
-                                            className={`w-full py-3 rounded-xl text-xs font-bold transition-all ${isCurrent
+                                            onClick={() => handleSelect(plan.id)}
+                                            disabled={isCurrent || (!!selectedPlanId)}
+                                            className={`w-full py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${isCurrent
                                                 ? "bg-slate-800 text-slate-500 cursor-default"
-                                                : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 active:scale-[0.98]"
+                                                : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                                                 }`}
                                         >
-                                            {isCurrent ? "Active Plan" : plan.id === 'free' ? "Downgrade" : "Activate Strategy"}
+                                            {selectedPlanId === plan.id && <Loader2 className="w-3 h-3 animate-spin" />}
+                                            {isCurrent ? "Active Plan" : plan.id === 'free' ? "Downgrade" : (selectedPlanId === plan.id ? "Preparing Checkout..." : "Activate Strategy")}
                                         </button>
                                     </motion.div>
                                 );
