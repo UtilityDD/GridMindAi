@@ -89,7 +89,7 @@ function ScanningPulse() {
         />
 
         {/* Core brain icon */}
-        <div className="absolute inset-0 flex items-center justify-center bg-[#0d152b] rounded-full border border-indigo-500/30 shadow-[0_0_30px_rgba(79,70,229,0.2)]">
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-900 rounded-full border border-slate-700 shadow-sm">
           <BrainCircuit className="w-12 h-12 text-indigo-400" />
         </div>
 
@@ -329,10 +329,10 @@ export default function Home() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#020617]">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-          <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-600">Initializing Core...</p>
+          <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-500">Initializing Core...</p>
         </div>
       </div>
     );
@@ -438,17 +438,16 @@ export default function Home() {
 
       <div
         ref={scrollContainerRef}
-        className="flex-1 flex flex-col min-w-0 relative bg-[#020617] overflow-y-auto scroll-smooth"
+        className="flex-1 flex flex-col min-w-0 relative bg-slate-950 overflow-y-auto scroll-smooth"
       >
-        {/* Ambient background effects */}
+        {/* Ambient background effects (Simplified) */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-          <div className="absolute top-[-5%] right-[-5%] w-[400px] h-[400px] bg-indigo-500/[0.02] rounded-full blur-[100px]" />
-          <div className="absolute bottom-[-5%] left-[10%] w-[500px] h-[500px] bg-blue-500/[0.02] rounded-full blur-[100px]" />
+          <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-indigo-500/[0.03] rounded-full blur-[120px]" />
         </div>
 
         {/* Top Header / Bar */}
         <header
-          className="relative z-50 glass-panel border-b-0 sticky top-0 px-6 py-3 flex items-center justify-between shadow-lg shadow-black/20"
+          className="relative z-50 bg-slate-900 border-b border-slate-800 sticky top-0 px-6 py-3 flex items-center justify-between shadow-sm"
         >
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -534,8 +533,7 @@ export default function Home() {
 
               <div className="w-full max-w-2xl">
                 <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 via-blue-500/10 to-transparent rounded-[2rem] opacity-0 group-focus-within:opacity-100 transition-opacity duration-700 blur-xl" />
-                  <div className="relative flex items-end gap-3 glass-panel border-white/10 rounded-[1.8rem] px-5 py-4 group-focus-within:border-indigo-500/40 group-focus-within:bg-slate-900/90 transition-all duration-300">
+                  <div className="relative flex items-end gap-3 bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4 focus-within:border-indigo-500/50 transition-all duration-200">
                     <textarea
                       ref={inputRef}
                       value={query}
@@ -598,10 +596,10 @@ export default function Home() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
-                      className="mb-8 p-5 rounded-2xl bg-red-500/[0.03] border border-red-500/10 text-sm text-red-400 flex items-center gap-3 backdrop-blur-md"
+                      className="mb-8 p-4 bg-red-950/20 border border-red-900/50 rounded-xl text-red-400 text-sm flex items-start gap-3"
                     >
-                      <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                      {error}
+                      <Sparkles className="w-5 h-5 shrink-0 rotate-180" />
+                      <p>{error}</p>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -708,15 +706,16 @@ export default function Home() {
                 </div>
               </motion.div>
             </motion.div>
-          )}
-        </AnimatePresence>
+          )
+          }
+        </AnimatePresence >
 
         <p className="pb-3 text-center text-[10px] text-slate-600 font-medium select-none">
           GridMind AI can make mistakes. Verify strategic information.
         </p>
-      </div>
+      </div >
 
-    </div>
+    </div >
   );
 }
 function TypingMarkdown({ text, speed = 8 }: { text: string; speed?: number }) {
@@ -833,15 +832,15 @@ function ModelSelector({
     <div className="relative shrink-0">
       <button
         onClick={() => setOpen(!open)}
-        className="group flex items-center gap-2.5 px-4 py-2 rounded-xl border border-white/5 bg-slate-900/50 hover:bg-slate-900 hover:border-white/10 transition-all duration-300 shadow-lg"
+        className="group flex items-center gap-2.5 px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 hover:border-slate-500 transition-all duration-200 shadow-sm"
       >
-        <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{current.label}</span>
+        <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.3)]" />
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{current.label}</span>
         <motion.div
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.2 }}
         >
-          <ChevronDown className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors" />
+          <ChevronDown className="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300 transition-colors" />
         </motion.div>
       </button>
 
@@ -851,7 +850,7 @@ function ModelSelector({
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="absolute top-full left-0 mt-2 w-64 glass-panel rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-y-auto max-h-80 z-50 p-1.5"
+            className="absolute top-full left-0 mt-2 w-64 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-y-auto max-h-80 z-50 p-1.5"
           >
             {MODEL_OPTIONS.map((m) => (
               <button
@@ -860,7 +859,7 @@ function ModelSelector({
                   onChange(m.value);
                   setOpen(false);
                 }}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-left transition-all ${m.value === value ? "bg-indigo-500/10" : "hover:bg-white/5"
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-left transition-all ${m.value === value ? "bg-indigo-600/10" : "hover:bg-slate-800"
                   }`}
               >
                 <div className="flex flex-col gap-0.5">
@@ -895,7 +894,7 @@ function VerbositySlider({
   onChange: (v: number) => void;
 }) {
   return (
-    <div className="flex items-center gap-6 px-4 py-2 bg-slate-900/30 rounded-xl border border-white/5 flex-1">
+    <div className="flex items-center gap-6 px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl flex-1 shadow-sm">
       <div className="flex items-center gap-2.5 shrink-0">
         <Cpu className="w-3.5 h-3.5 text-indigo-500" />
         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em] w-20">
@@ -903,9 +902,9 @@ function VerbositySlider({
         </span>
       </div>
       <div className="relative flex-1 flex items-center h-6 group">
-        <div className="absolute inset-x-0 h-1 rounded-full bg-white/5" />
+        <div className="absolute inset-x-0 h-1 rounded-full bg-slate-800" />
         <div
-          className="absolute left-0 h-1 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-400 transition-all duration-300 shadow-[0_0_10px_rgba(99,102,241,0.3)]"
+          className="absolute left-0 h-1 rounded-full bg-indigo-600 transition-all duration-300"
           style={{ width: `${((value - 1) / 4) * 100}%` }}
         />
         <div className="absolute inset-x-0 flex justify-between px-0.5">
@@ -913,9 +912,9 @@ function VerbositySlider({
             <button
               key={step}
               onClick={() => onChange(step)}
-              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 border-2 ${step <= value
-                ? "bg-indigo-500 border-indigo-400 shadow-[0_0_12px_rgba(99,102,241,0.6)]"
-                : "bg-slate-800 border-white/10 hover:border-slate-500"
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-200 border-2 ${step <= value
+                ? "bg-indigo-500 border-indigo-400 shadow-sm shadow-indigo-500/20"
+                : "bg-slate-800 border-slate-700 hover:border-slate-500"
                 }`}
             />
           ))}
@@ -941,10 +940,10 @@ function SourcesSection({ sources }: { sources: Source[] }) {
   const visible = expanded ? sources : sources.slice(0, 5);
 
   return (
-    <div className="border-t border-white/5 px-8 py-5 space-y-1">
+    <div className="border-t border-slate-800 px-8 py-5 space-y-1 bg-slate-900/50">
       <div className="flex items-center gap-2 mb-3">
-        <FileText className="w-3 h-3 text-indigo-400/60" />
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+        <FileText className="w-3 h-3 text-indigo-400" />
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
           Sources · {sources.length}
         </span>
       </div>
@@ -962,12 +961,12 @@ function SourcesSection({ sources }: { sources: Source[] }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Open document"
-                className="shrink-0 w-6 h-6 flex items-center justify-center rounded bg-indigo-500/10 hover:bg-indigo-500/25 border border-indigo-500/10 hover:border-indigo-500/30 transition-all"
+                className="shrink-0 w-6 h-6 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all"
               >
                 <FileText className="w-3 h-3 text-indigo-400" />
               </a>
             ) : (
-              <span className="shrink-0 w-6 h-6 flex items-center justify-center rounded bg-white/5 border border-white/5">
+              <span className="shrink-0 w-6 h-6 flex items-center justify-center rounded bg-slate-800 border border-slate-700">
                 <FileText className="w-3 h-3 text-slate-600" />
               </span>
             )}
@@ -1032,9 +1031,9 @@ function SettingsMenu({
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="absolute top-full right-0 mt-3 w-80 glass-panel rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 border border-white/10"
+              className="absolute top-full right-0 mt-3 w-80 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl z-50 overflow-visible"
             >
-              <div className="p-5 space-y-6">
+              <div className="p-5 space-y-6 bg-slate-900">
                 <div>
                   <div className="flex items-center gap-2 mb-3 px-1 text-slate-500">
                     <Cpu className="w-3 h-3" />

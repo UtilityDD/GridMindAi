@@ -119,7 +119,7 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-[#060d1f]/80 backdrop-blur-xl"
+                        className="absolute inset-0 bg-slate-950/90"
                         onClick={onClose}
                     />
 
@@ -127,14 +127,14 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                         initial={{ scale: 0.9, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                        className="relative w-full max-w-5xl bg-slate-900/50 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden p-8 md:p-12 max-h-[90vh] overflow-y-auto"
+                        className="relative w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-[2rem] shadow-2xl overflow-hidden p-8 md:p-12 max-h-[90vh] overflow-y-auto"
                     >
                         <div className="text-center mb-10">
                             <motion.div
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 }}
-                                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-bold tracking-widest uppercase mb-4"
+                                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-900/30 border border-indigo-500/30 text-indigo-400 text-[10px] font-bold tracking-widest uppercase mb-4"
                             >
                                 <Sparkles className="w-3 h-3" />
                                 Intelligence Bandwidth
@@ -159,8 +159,8 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.2 + idx * 0.1 }}
                                         className={`relative flex flex-col p-6 rounded-3xl border transition-all duration-300 ${isCurrent
-                                            ? "bg-white/5 border-indigo-500/50 shadow-lg shadow-indigo-500/10"
-                                            : "bg-slate-900/40 border-white/5 hover:border-white/10"
+                                            ? "bg-slate-800 border-indigo-500/50 shadow-lg shadow-indigo-500/5"
+                                            : "bg-slate-800 border-slate-700 hover:border-slate-600"
                                             }`}
                                     >
                                         {isCurrent && (
@@ -251,13 +251,13 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                         onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                                         placeholder="ENTER PROMO CODE"
                                         disabled={!!promoData || isValidating}
-                                        className="flex-1 bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-xs text-white placeholder:text-slate-600 focus:border-indigo-500/50 outline-none transition-all disabled:opacity-50"
+                                        className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white placeholder:text-slate-600 focus:border-indigo-500/50 outline-none transition-all disabled:opacity-50"
                                     />
                                     {!promoData ? (
                                         <button
                                             onClick={handleValidatePromo}
                                             disabled={!promoCode || isValidating}
-                                            className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-white/5"
+                                            className="px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-slate-600"
                                         >
                                             {isValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
                                         </button>
