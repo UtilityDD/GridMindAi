@@ -50,19 +50,20 @@ const EXAMPLE_QUERIES = [
 
 import Sidebar from "@/components/Sidebar";
 
+const LOADING_STEPS = [
+  "Initializing Neural Mapping...",
+  "Scanning Tier 1 Grid Regulations...",
+  "Analyzing Operational Frameworks...",
+  "Synthesizing Strategic Response...",
+  "Verifying Institutional Alignment...",
+];
+
 function ScanningPulse() {
   const [step, setStep] = useState(0);
-  const steps = [
-    "Initializing Neural Mapping...",
-    "Scanning Tier 1 Grid Regulations...",
-    "Analyzing Operational Frameworks...",
-    "Synthesizing Strategic Response...",
-    "Verifying Institutional Alignment...",
-  ];
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setStep((prev) => (prev + 1) % steps.length);
+      setStep((prev) => (prev + 1) % LOADING_STEPS.length);
     }, 2500);
     return () => clearInterval(timer);
   }, []);
@@ -179,25 +180,6 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-    const handleScroll = () => {
-      const scrollY = el.scrollTop;
-
-      // Only fade search bar when results are showing
-      if (!result) {
-        setSearchOpacity(1);
-        return;
-      }
-      const fadeStart = 60;
-      const fadeEnd = 240;
-      const opacity = Math.max(0, Math.min(1, 1 - (scrollY - fadeStart) / (fadeEnd - fadeStart)));
-      setSearchOpacity(opacity);
-    };
-    el.addEventListener("scroll", handleScroll, { passive: true });
-    return () => el.removeEventListener("scroll", handleScroll);
-  }, [result]);
 
   // Dynamic Placeholder Effect
   const [placeholder, setPlaceholder] = useState("");
