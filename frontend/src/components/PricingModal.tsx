@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, x, Sparkles, Rocket, Zap, ShieldCheck } from "lucide-react";
+import { Check, Sparkles, Rocket, Zap, ShieldCheck } from "lucide-react";
 
 interface Plan {
     id: string;
@@ -11,7 +11,7 @@ interface Plan {
     description: string;
     features: string[];
     color: string;
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
 }
 
 const PLANS: Plan[] = [
@@ -101,8 +101,8 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.2 + idx * 0.1 }}
                                         className={`relative flex flex-col p-6 rounded-3xl border transition-all duration-300 ${isCurrent
-                                                ? "bg-white/5 border-indigo-500/50 shadow-lg shadow-indigo-500/10"
-                                                : "bg-slate-900/40 border-white/5 hover:border-white/10"
+                                            ? "bg-white/5 border-indigo-500/50 shadow-lg shadow-indigo-500/10"
+                                            : "bg-slate-900/40 border-white/5 hover:border-white/10"
                                             }`}
                                     >
                                         {isCurrent && (
@@ -142,8 +142,8 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                             onClick={() => !isCurrent && onSelectPlan(plan.id)}
                                             disabled={isCurrent}
                                             className={`w-full py-3 rounded-xl text-xs font-bold transition-all ${isCurrent
-                                                    ? "bg-slate-800 text-slate-500 cursor-default"
-                                                    : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 active:scale-[0.98]"
+                                                ? "bg-slate-800 text-slate-500 cursor-default"
+                                                : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 active:scale-[0.98]"
                                                 }`}
                                         >
                                             {isCurrent ? "Active Plan" : plan.id === 'free' ? "Downgrade" : "Activate Strategy"}

@@ -4,19 +4,15 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import {
-  Search,
   Loader2,
   FileText,
-  ExternalLink,
   Sparkles,
-  Clock,
   BrainCircuit,
   ChevronDown,
   Wand2,
   Copy,
   Check,
   Share2,
-  LogOut,
   Cpu,
   Settings,
   Menu,
@@ -182,10 +178,6 @@ export default function Home() {
       setIsPricingOpen(false);
     }
   };
-
-  // Scroll-driven search bar fade
-  const [searchOpacity, setSearchOpacity] = useState(1);
-  const [searchFocused, setSearchFocused] = useState(false);
 
   useEffect(() => {
     const el = scrollContainerRef.current;
