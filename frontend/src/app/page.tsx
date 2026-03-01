@@ -111,7 +111,7 @@ function ScanningPulse() {
             transition={{ duration: 0.5 }}
             className="text-[11px] font-bold text-indigo-300 tracking-[0.3em] uppercase leading-relaxed max-w-xs"
           >
-            {steps[step]}
+            {LOADING_STEPS[step]}
           </motion.p>
         </AnimatePresence>
 
