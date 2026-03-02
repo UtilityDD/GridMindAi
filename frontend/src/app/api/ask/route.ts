@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { retrieve, buildContext, extractKeywords } from "@/lib/rag";
 import { generateAnswer } from "@/lib/llm";
+import { checkBurstFromAnalytics } from "@/lib/rate-limiter";
 import type { SourceMeta } from "@/lib/rag";
 
 export const maxDuration = 60;
@@ -24,7 +25,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ detail: "Auth failed" }, { status: 401 });
   }
 
-  // Enforce Tiered Limits & Account Status
+  // 1. Fetch Profile & Tier Info
+  let userTier: string = "free";
   if (userId) {
     const { data: profileData, error: profileError } = await getSupabaseAdmin()
       .from("profiles")
@@ -33,6 +35,8 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (!profileError && profileData) {
+      userTier = profileData.tier_id;
+
       // 0. Check if account is enabled
       if (profileData.is_enabled === false) {
         return NextResponse.json(
@@ -41,13 +45,24 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const tierInfo = profileData.user_tiers as unknown as { daily_limit: number; monthly_limit: number };
+      // 2. Burst Protection (Rapid Fire Prevention) - ONLY for Free Users
+      if (userTier === "free") {
+        const isUnderBurstLimit = await checkBurstFromAnalytics(userId, 3, 30);
+        if (!isUnderBurstLimit) {
+          return NextResponse.json(
+            { detail: "Strategic node cooling down. High-frequency queries detected. Please wait 30 seconds." },
+            { status: 429 }
+          );
+        }
+      }
+
+      const tierInfo = (profileData.user_tiers as unknown as { daily_limit: number; monthly_limit: number }) || { daily_limit: 5, monthly_limit: 100 };
 
       // Use custom limits if defined, otherwise fall back to tier defaults
       const daily_limit = profileData.custom_daily_limit ?? tierInfo.daily_limit;
       const monthly_limit = profileData.custom_monthly_limit ?? tierInfo.monthly_limit;
 
-      // 1. Check daily limit
+      // 3. Check daily limit
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const { count: dailyCount } = await getSupabaseAdmin()
@@ -63,7 +78,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // 2. Check monthly limit
+      // 4. Check monthly limit
       const firstOfMonth = new Date();
       firstOfMonth.setDate(1);
       firstOfMonth.setHours(0, 0, 0, 0);

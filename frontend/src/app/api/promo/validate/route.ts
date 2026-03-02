@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
+import { limitRequest } from "@/lib/rate-limiter";
 
 export async function POST(req: NextRequest) {
     const authHeader = req.headers.get("authorization");
@@ -8,15 +9,40 @@ export async function POST(req: NextRequest) {
     }
 
     const token = authHeader.slice(7);
+    let userId: string | null = null;
     let userEmail: string | null = null;
+    let userTier: string = "free";
+
     try {
         const { data, error } = await getSupabaseAdmin().auth.getUser(token);
         if (error || !data.user) {
             return NextResponse.json({ detail: "Invalid token" }, { status: 401 });
         }
+        userId = data.user.id;
         userEmail = data.user.email ?? null;
+
+        // Fetch Tier Info
+        const { data: profile } = await getSupabaseAdmin()
+            .from("profiles")
+            .select("tier_id")
+            .eq("id", userId)
+            .single();
+
+        if (profile) userTier = profile.tier_id;
+
     } catch {
         return NextResponse.json({ detail: "Auth failed" }, { status: 401 });
+    }
+
+    // Brute-force protection: 5 attempts per 10 minutes - ONLY for Free users
+    if (userTier === "free" && userEmail) {
+        const rateLimit = await limitRequest(userEmail, "api/promo/validate", 5, 600);
+        if (!rateLimit.success) {
+            return NextResponse.json(
+                { detail: `Too many attempts. Security lockout active. Try again in ${Math.ceil((rateLimit.reset.getTime() - Date.now()) / 60000)} minutes.` },
+                { status: 429 }
+            );
+        }
     }
 
     const body = await req.json();

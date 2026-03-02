@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, ComponentType } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import {
@@ -17,9 +17,21 @@ import {
   Settings,
   Menu,
   ArrowUp,
+  Zap,
+  X,
 } from "lucide-react";
+
+// Add type for custom element
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'dotlottie-player': any;
+    }
+  }
+}
 import { useAuth } from "@/components/AuthProvider";
 import LoginPage from "@/components/LoginPage";
+import Sidebar from "@/components/Sidebar";
 import { getSupabase } from "@/lib/supabase";
 import PricingModal from "@/components/PricingModal";
 
@@ -56,7 +68,36 @@ const EXAMPLE_QUERIES = [
   "What are the regulatory requirements for high-tension claims?",
 ];
 
-import Sidebar from "@/components/Sidebar";
+const MOBILE_EXAMPLE_QUERIES = [
+  "Renewable grid standards?",
+  "Power theft guidelines?",
+  "Grid stability procedures?",
+  "Public utility procurement?",
+  "High-tension claim regs?",
+];
+
+const FEATURED_QUESTIONS = [
+  {
+    id: "solar",
+    text: "What are the latest Rooftop Solar regulations for prosumers in WB?",
+    mobileText: "Latest WB Rooftop Solar regs?",
+    icon: Sparkles
+  },
+  {
+    id: "industrial",
+    text: "Explain the eligibility criteria for high-tension industrial connections.",
+    mobileText: "Industrial connection criteria?",
+    icon: Zap
+  },
+  {
+    id: "stability",
+    text: "What are the standard protocols for grid stability during peak load?",
+    mobileText: "Peak load grid protocols?",
+    icon: BrainCircuit
+  }
+];
+
+
 
 const LOADING_STEPS = [
   "Initializing Neural Mapping...",
@@ -158,6 +199,14 @@ export default function Home() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const refreshUsage = useCallback(async () => {
     if (!session?.access_token) return;
@@ -298,7 +347,8 @@ export default function Home() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    const currentQuery = EXAMPLE_QUERIES[queryIndex];
+    const queries = isMobile ? MOBILE_EXAMPLE_QUERIES : EXAMPLE_QUERIES;
+    const currentQuery = queries[queryIndex] || queries[0];
     const typingSpeed = isDeleting ? 40 : 80;
     const pauseDuration = 2000;
 
@@ -313,13 +363,13 @@ export default function Home() {
         setTimeout(() => setIsDeleting(true), pauseDuration);
       } else if (isDeleting && charIndex === 0) {
         setIsDeleting(false);
-        setQueryIndex((prev) => (prev + 1) % EXAMPLE_QUERIES.length);
+        setQueryIndex((prev) => (prev + 1) % queries.length);
       }
     };
 
     const timer = setTimeout(handleTyping, typingSpeed);
     return () => clearTimeout(timer);
-  }, [charIndex, isDeleting, queryIndex]);
+  }, [charIndex, isDeleting, queryIndex, isMobile]);
 
   // Load history from localStorage on mount
   useEffect(() => {
@@ -404,7 +454,23 @@ export default function Home() {
         resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Operational failure encountered.");
+      const msg = e instanceof Error ? e.message : "Operational failure encountered.";
+      setError(msg);
+
+      const isLimitError = (m: string) => {
+        const lower = m.toLowerCase();
+        return lower.includes("limit") ||
+          lower.includes("reached") ||
+          lower.includes("lockout") ||
+          lower.includes("cooling") ||
+          lower.includes("bandwidth");
+      };
+
+      // If result was null (initial state), and we got a limit error, 
+      // stay in empty state but show the graceful alert
+      if (!result && isLimitError(msg)) {
+        // We keep result as null, which keeps us in empty state
+      }
     } finally {
       setLoading(false);
     }
@@ -535,8 +601,58 @@ export default function Home() {
                 </p>
               </motion.div>
 
+
+              {/* Graceful Limit Alert */}
+              <AnimatePresence>
+                {(() => {
+                  if (!error) return null;
+                  const lowerErr = error.toLowerCase();
+                  const isLimit = lowerErr.includes("limit") ||
+                    lowerErr.includes("reached") ||
+                    lowerErr.includes("lockout") ||
+                    lowerErr.includes("cooling") ||
+                    lowerErr.includes("bandwidth");
+
+                  if (!isLimit) return null;
+
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="w-full max-w-2xl mb-8 p-6 glass-panel border-indigo-500/30 bg-indigo-500/5 shadow-xl shadow-indigo-500/5 flex flex-col sm:flex-row items-center gap-6 rounded-3xl"
+                    >
+                      <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center shrink-0 border border-indigo-500/20 overflow-hidden">
+                        <LottieCDNWrapper src="/unlock.lottie" className="w-full h-full transform scale-125" />
+                      </div>
+                      <div className="flex-1 text-center sm:text-left">
+                        <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-1.5 flex items-center justify-center sm:justify-start gap-2">
+                          Limit reached!
+                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                        </h3>
+                        <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                          Quota reached. Upgrade for expanded strategic insights and zero cooling periods.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setIsPricingOpen(true)}
+                        className="shrink-0 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-indigo-600/20 active:scale-95 whitespace-nowrap"
+                      >
+                        Upgrade
+                      </button>
+                      <button
+                        onClick={() => setError("")}
+                        className="absolute top-4 right-4 text-slate-600 hover:text-slate-400 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </motion.div>
+                  );
+                })()}
+              </AnimatePresence>
+
               <div className="w-full max-w-2xl">
-                <div className="relative group">
+                <div className="relative group mb-8">
                   <div className="relative flex items-end gap-3 bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4 focus-within:border-indigo-500/50 transition-all duration-200">
                     <textarea
                       ref={inputRef}
@@ -562,6 +678,34 @@ export default function Home() {
                       <ArrowUp className="w-5 h-5" />
                     </motion.button>
                   </div>
+                </div>
+
+                {/* Featured Questions Grid */}
+                <div className="flex flex-wrap justify-center gap-3">
+                  {FEATURED_QUESTIONS.map((q, idx) => {
+                    const Icon = q.icon;
+                    return (
+                      <motion.button
+                        key={q.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 + idx * 0.1 }}
+                        onClick={() => {
+                          const text = isMobile ? (q.mobileText || q.text) : q.text;
+                          setQuery(text);
+                          handleSubmit(text);
+                        }}
+                        className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900 border border-slate-800 hover:border-indigo-500/30 hover:bg-slate-800/50 transition-all text-left max-w-[280px] group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0 group-hover:bg-indigo-500/20 transition-colors">
+                          <Icon className="w-4 h-4 text-indigo-400" />
+                        </div>
+                        <span className="text-[11px] font-medium text-slate-300 leading-tight group-hover:text-white transition-colors">
+                          {isMobile ? (q.mobileText || q.text) : q.text}
+                        </span>
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </div>
             </motion.div>
@@ -722,6 +866,41 @@ export default function Home() {
     </div >
   );
 }
+
+function LottieCDNWrapper({ src, className }: { src: string; className?: string }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    // Add the lottie player script if not present
+    if (!document.getElementById("dotlottie-player-script")) {
+      const script = document.createElement("script");
+      script.id = "dotlottie-player-script";
+      script.src = "https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs";
+      script.type = "module";
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  if (!mounted) return null;
+
+  return (
+    <div className={className}>
+      <dotlottie-player
+        src={src}
+        background="transparent"
+        speed="1"
+        style={{ width: "100%", height: "100%" }}
+        direction="1"
+        playMode="normal"
+        loop
+        autoplay
+      ></dotlottie-player>
+    </div>
+  );
+}
+
+
 function TypingMarkdown({ text, speed = 8 }: { text: string; speed?: number }) {
   const [displayedLength, setDisplayedLength] = useState(0);
   const [isComplete, setIsComplete] = useState(false);

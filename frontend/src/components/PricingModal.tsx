@@ -18,7 +18,7 @@ interface Plan {
 const PLANS: Plan[] = [
     {
         id: "free",
-        name: "Field Agent",
+        name: "Free",
         price: 0,
         limit: "5 queries / day",
         description: "Ideal for occasional lookups and tactical inquiries.",
@@ -28,7 +28,7 @@ const PLANS: Plan[] = [
     },
     {
         id: "basic",
-        name: "Strategic Lead",
+        name: "Basic",
         price: 2499,
         limit: "50 queries / day",
         description: "Enhanced bandwidth for consistent policy analysis.",
@@ -38,7 +38,7 @@ const PLANS: Plan[] = [
     },
     {
         id: "pro",
-        name: "Grid Master",
+        name: "Pro",
         price: 8199,
         limit: "200 queries / day",
         description: "Maximum intelligence for enterprise-scale operations.",
@@ -61,6 +61,7 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
     const [promoData, setPromoData] = useState<{ discount: number; code: string } | null>(null);
     const [promoError, setPromoError] = useState("");
     const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+    const [showPromoInput, setShowPromoInput] = useState(false);
 
     const handleSelect = async (planId: string) => {
         if (planId === currentTier || selectedPlanId) return;
@@ -228,53 +229,68 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
 
                         {/* Promo Code Section */}
                         <div className="max-w-md mx-auto pt-6 border-t border-white/5">
-                            <div className="flex flex-col gap-3">
-                                <div className="flex items-center justify-between px-1">
-                                    <div className="flex items-center gap-2 text-slate-400">
-                                        <Tag className="w-3 h-3" />
-                                        <span className="text-[10px] font-bold uppercase tracking-widest">Promotion Logic</span>
+                            {!showPromoInput && !promoData ? (
+                                <button
+                                    onClick={() => setShowPromoInput(true)}
+                                    className="w-full flex items-center justify-center gap-2 text-indigo-400 hover:text-indigo-300 font-bold text-xs transition-colors py-2"
+                                >
+                                    <Tag className="w-3.5 h-3.5" />
+                                    Have a Promo code?
+                                </button>
+                            ) : (
+                                <div className="flex flex-col gap-3">
+                                    <div className="flex items-center justify-between px-1">
+                                        <div className="flex items-center gap-2 text-slate-400">
+                                            <Tag className="w-3.5 h-3.5 text-indigo-400" />
+                                            <span className="text-[10px] font-bold uppercase tracking-widest">Promotion Logic</span>
+                                        </div>
+                                        {(promoData || showPromoInput) && (
+                                            <button
+                                                onClick={() => {
+                                                    setPromoCode("");
+                                                    setPromoData(null);
+                                                    setShowPromoInput(false);
+                                                }}
+                                                className="text-[9px] font-bold text-slate-500 hover:text-indigo-400 uppercase tracking-tighter"
+                                            >
+                                                {promoData ? "Remove Code" : "Cancel"}
+                                            </button>
+                                        )}
                                     </div>
-                                    {promoData && (
-                                        <button
-                                            onClick={() => { setPromoCode(""); setPromoData(null); }}
-                                            className="text-[9px] font-bold text-slate-500 hover:text-indigo-400 uppercase tracking-tighter"
-                                        >
-                                            Remove Code
-                                        </button>
-                                    )}
-                                </div>
 
-                                <div className="flex items-center gap-2">
-                                    <input
-                                        type="text"
-                                        value={promoCode}
-                                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                                        placeholder="ENTER PROMO CODE"
-                                        disabled={!!promoData || isValidating}
-                                        className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white placeholder:text-slate-600 focus:border-indigo-500/50 outline-none transition-all disabled:opacity-50"
-                                    />
-                                    {!promoData ? (
-                                        <button
-                                            onClick={handleValidatePromo}
-                                            disabled={!promoCode || isValidating}
-                                            className="px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-slate-600"
-                                        >
-                                            {isValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                                        </button>
-                                    ) : (
-                                        <div className="px-6 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-2">
-                                            <Check className="w-3.5 h-3.5" />
-                                            Applied
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={promoCode}
+                                            onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                            placeholder="ENTER PROMO CODE"
+                                            disabled={!!promoData || isValidating}
+                                            className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white placeholder:text-slate-600 focus:border-indigo-500/50 outline-none transition-all disabled:opacity-50"
+                                            autoFocus
+                                        />
+                                        {!promoData ? (
+                                            <button
+                                                onClick={handleValidatePromo}
+                                                disabled={!promoCode || isValidating}
+                                                className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-indigo-500/30"
+                                            >
+                                                {isValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                                            </button>
+                                        ) : (
+                                            <div className="px-6 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-2">
+                                                <Check className="w-3.5 h-3.5" />
+                                                Applied
+                                            </div>
+                                        )}
+                                    </div>
+                                    {promoError && (
+                                        <div className="flex items-center gap-1.5 px-1 text-[10px] font-bold text-red-400 uppercase tracking-tighter">
+                                            <AlertCircle className="w-3 h-3" />
+                                            {promoError}
                                         </div>
                                     )}
                                 </div>
-                                {promoError && (
-                                    <div className="flex items-center gap-1.5 px-1 text-[10px] font-bold text-red-400 uppercase tracking-tighter">
-                                        <AlertCircle className="w-3 h-3" />
-                                        {promoError}
-                                    </div>
-                                )}
-                            </div>
+                            )}
                         </div>
 
                         <button
