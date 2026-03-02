@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, ComponentType } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import {
@@ -21,14 +21,6 @@ import {
   X,
 } from "lucide-react";
 
-// Add type for custom element
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      'dotlottie-player': any;
-    }
-  }
-}
 import { useAuth } from "@/components/AuthProvider";
 import LoginPage from "@/components/LoginPage";
 import Sidebar from "@/components/Sidebar";
@@ -884,9 +876,13 @@ function LottieCDNWrapper({ src, className }: { src: string; className?: string 
 
   if (!mounted) return null;
 
+  // Use a type-neutral tag to bypass JSX type checking for custom elements
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const PlayerTag = 'dotlottie-player' as any;
+
   return (
     <div className={className}>
-      <dotlottie-player
+      <PlayerTag
         src={src}
         background="transparent"
         speed="1"
@@ -895,7 +891,7 @@ function LottieCDNWrapper({ src, className }: { src: string; className?: string 
         playMode="normal"
         loop
         autoplay
-      ></dotlottie-player>
+      />
     </div>
   );
 }
