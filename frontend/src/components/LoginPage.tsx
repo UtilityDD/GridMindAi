@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BrainCircuit, Mail, Lock, Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { getSupabase } from "@/lib/supabase";
+import LiveStats from "@/components/LiveStats";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -59,6 +60,10 @@ export default function LoginPage() {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="relative w-full max-w-md mx-4"
       >
+        {/* Global Grid Stats */}
+        <div className="fixed top-6 right-6 z-50">
+          <LiveStats />
+        </div>
         {/* Logo Section */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 mb-5 shadow-lg shadow-indigo-500/20">

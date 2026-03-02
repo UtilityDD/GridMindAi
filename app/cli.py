@@ -125,7 +125,7 @@ def cmd_add_manifest(args: argparse.Namespace) -> None:
         "date": args.date or "",
         "title": args.title or "",
         "keywords": "",
-        "source_url": "",
+        "source_url": args.url or "",
     }
     manifest.append(entry)
 
@@ -169,6 +169,7 @@ def main() -> None:
     p_add.add_argument("--ref", default="", help="Order/Circular reference number")
     p_add.add_argument("--date", default="", help="Date of the circular")
     p_add.add_argument("--title", default="", help="Title / subject of the circular")
+    p_add.add_argument("--url", default="", help="Source URL of the PDF")
 
     args = parser.parse_args()
     _setup_logging(args.verbose)

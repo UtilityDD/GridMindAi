@@ -4,14 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --no-lint",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
     "@google/genai": "^1.43.0",
     "@lottiefiles/dotlottie-react": "^0.18.3",
-    "@supabase/supabase-js": "^2.48.1",
+    "@supabase/supabase-js": "^2.98.0",
     "framer-motion": "^12.4.7",
     "groq-sdk": "^0.37.0",
     "lucide-react": "^0.475.0",

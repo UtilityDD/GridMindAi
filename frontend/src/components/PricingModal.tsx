@@ -21,8 +21,8 @@ const PLANS: Plan[] = [
         name: "Free",
         price: 0,
         limit: "5 queries / day",
-        description: "Ideal for occasional lookups and tactical inquiries.",
-        features: ["Manual search", "Basic context retrieval", "Limited history"],
+        description: "Perfect for occasional lookups.",
+        features: ["Standard search", "Basic history", "Web access"],
         color: "from-slate-500 to-slate-700",
         icon: Rocket,
     },
@@ -31,8 +31,8 @@ const PLANS: Plan[] = [
         name: "Basic",
         price: 2499,
         limit: "50 queries / day",
-        description: "Enhanced bandwidth for consistent policy analysis.",
-        features: ["Priority retrieval", "Query optimization", "Extended history", "Email support"],
+        description: "More searches for regular policy research.",
+        features: ["Faster search", "Priority support", "Extended history"],
         color: "from-blue-500 to-indigo-600",
         icon: Zap,
     },
@@ -41,8 +41,8 @@ const PLANS: Plan[] = [
         name: "Pro",
         price: 8199,
         limit: "200 queries / day",
-        description: "Maximum intelligence for enterprise-scale operations.",
-        features: ["Neural mapping", "Unlimited history", "Advanced analytics", "24/7 Priority support"],
+        description: "High-volume search for power users.",
+        features: ["Full database access", "Unlimited history", "24/7 Priority support"],
         color: "from-indigo-500 to-purple-600",
         icon: ShieldCheck,
     },
@@ -138,11 +138,11 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                 className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-900/30 border border-indigo-500/30 text-indigo-400 text-[10px] font-bold tracking-widest uppercase mb-4"
                             >
                                 <Sparkles className="w-3 h-3" />
-                                Intelligence Bandwidth
+                                PLAN LIMITS
                             </motion.div>
-                            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Choose Your Strategy</h2>
+                            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Choose Your Plan</h2>
                             <p className="text-slate-400 max-w-xl mx-auto text-sm leading-relaxed">
-                                Scale your analytical capabilities with tiers designed for every level of grid management.
+                                Pick the plan that best fits your search and analysis needs.
                             </p>
                         </div>
 
@@ -220,7 +220,7 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                                 }`}
                                         >
                                             {selectedPlanId === plan.id && <Loader2 className="w-3 h-3 animate-spin" />}
-                                            {isCurrent ? "Active Plan" : plan.id === 'free' ? "Downgrade" : (selectedPlanId === plan.id ? "Preparing Checkout..." : "Activate Strategy")}
+                                            {isCurrent ? "Current Plan" : plan.id === 'free' ? "Select Free" : (selectedPlanId === plan.id ? "Processing..." : "Upgrade Now")}
                                         </button>
                                     </motion.div>
                                 );
@@ -242,7 +242,7 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                     <div className="flex items-center justify-between px-1">
                                         <div className="flex items-center gap-2 text-slate-400">
                                             <Tag className="w-3.5 h-3.5 text-indigo-400" />
-                                            <span className="text-[10px] font-bold uppercase tracking-widest">Promotion Logic</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest">PROMO CODE</span>
                                         </div>
                                         {(promoData || showPromoInput) && (
                                             <button
@@ -297,7 +297,7 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                             onClick={onClose}
                             className="mt-12 w-full text-center text-[10px] text-slate-600 hover:text-slate-400 font-bold tracking-widest uppercase transition-colors"
                         >
-                            Close Strategic Overview
+                            Close
                         </button>
                     </motion.div>
                 </div>

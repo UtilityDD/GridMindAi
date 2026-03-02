@@ -26,6 +26,7 @@ import LoginPage from "@/components/LoginPage";
 import Sidebar from "@/components/Sidebar";
 import { getSupabase } from "@/lib/supabase";
 import PricingModal from "@/components/PricingModal";
+import LiveStats from "@/components/LiveStats";
 
 interface Source {
   doc_id: string;
@@ -559,6 +560,9 @@ export default function Home() {
                 Get Pro
               </motion.button>
             )}
+            <div className="hidden xl:block ml-2 border-l border-white/5 pl-4 py-1">
+              <LiveStats />
+            </div>
             <SettingsMenu
               selectedModel={selectedModel}
               setSelectedModel={setSelectedModel}
@@ -1076,8 +1080,8 @@ function VerbositySlider({
     <div className="flex items-center gap-6 px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl flex-1 shadow-sm">
       <div className="flex items-center gap-2.5 shrink-0">
         <Cpu className="w-3.5 h-3.5 text-indigo-500" />
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em] w-20">
-          Synthesist Level: <span className="text-slate-300">{VERBOSITY_LABELS[value - 1]}</span>
+        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest w-20 text-center">
+          {VERBOSITY_LABELS[value - 1]}
         </span>
       </div>
       <div className="relative flex-1 flex items-center h-6 group">
@@ -1112,7 +1116,7 @@ function VerbositySlider({
   );
 }
 
-const VERBOSITY_LABELS = ["Tactical", "Concise", "Strategic", "Comprehensive", "Deep Context"];
+const VERBOSITY_LABELS = ["Short", "Brief", "Standard", "Detailed", "In-depth"];
 
 function SourcesSection({ sources }: { sources: Source[] }) {
   const [expanded, setExpanded] = useState(false);
@@ -1224,7 +1228,7 @@ function SettingsMenu({
                 <div className="pt-2">
                   <div className="flex items-center gap-2 mb-3 px-1 text-slate-500">
                     <Wand2 className="w-3 h-3" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Synthesis Verbosity</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Response Length</span>
                   </div>
                   <VerbositySlider value={verbosity} onChange={setVerbosity} />
                 </div>

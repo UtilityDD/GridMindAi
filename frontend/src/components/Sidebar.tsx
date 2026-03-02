@@ -206,7 +206,7 @@ function SidebarContent({
                     </div>
                     {!collapsed && (
                         <p className="text-[9px] text-slate-500 font-medium leading-tight">
-                            Daily Strategic Intel Bandwidth reset in ~{24 - new Date().getHours()}h.
+                            Daily limit resets in ~{24 - new Date().getHours()}h.
                         </p>
                     )}
                 </div>
@@ -245,10 +245,10 @@ function SidebarContent({
                 <button
                     onClick={onSignOut}
                     className={`w-full flex items-center justify-center ${collapsed ? 'p-2' : 'gap-2 px-3 py-2'} rounded-xl border border-slate-700 bg-slate-800 hover:bg-red-950/30 hover:text-red-400 hover:border-red-900/50 text-slate-400 text-xs font-semibold transition-all group shadow-sm`}
-                    title={collapsed ? "Terminate Session" : undefined}
+                    title={collapsed ? "Logout" : undefined}
                 >
                     <LogOut className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
-                    {!collapsed && <span>Terminate Session</span>}
+                    {!collapsed && <span>Logout</span>}
                 </button>
             </div>
         </>
