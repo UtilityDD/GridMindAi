@@ -89,12 +89,15 @@ export async function generateAnswer(
       };
     }
     try {
+      console.log(`Calling Groq model ${model} with context length: ${context.length}`);
       const answer = await callGroq(question, context, sources, model, verbosity);
       return { answer, sources, modelUsed: model };
-    } catch (e) {
-      console.error(`Groq model ${model} failed:`, e);
+    } catch (e: any) {
+      console.error(`Groq model ${model} failed. Error:`, e?.message || e);
+      if (e?.response?.data) console.error("Groq error data:", e.response.data);
+
       return {
-        answer: `Model ${model} failed to generate an answer. Please try another model.`,
+        answer: `Model ${model} failed to generate an answer. Error: ${e?.message || "Unknown error"}. Please try another model.`,
         sources,
         modelUsed: "none",
       };
@@ -102,13 +105,14 @@ export async function generateAnswer(
   }
 
   try {
+    console.log(`Calling Gemini with context length: ${context.length}`);
     const answer = await callGemini(question, context, sources, verbosity);
     return { answer, sources, modelUsed: GEMINI_MODEL };
-  } catch (e) {
-    console.error("Gemini failed:", e);
+  } catch (e: any) {
+    console.error("Gemini failed. Error:", e?.message || e);
     return {
       answer:
-        "Sorry, I was unable to generate an answer at this time. Please try again later.",
+        `Sorry, I was unable to generate an answer at this time. Error: ${e?.message || "Unknown error"}. Please try again later.`,
       sources,
       modelUsed: "none",
     };

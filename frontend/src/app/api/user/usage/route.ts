@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
         // Fetch profile and tier limits
         const { data: profile, error: profileError } = await getSupabaseAdmin()
             .from("profiles")
-            .select("tier_id, custom_daily_limit, custom_monthly_limit, user_tiers(name, daily_limit, monthly_limit)")
+            .select("tier_id, custom_daily_limit, custom_monthly_limit, user_tiers(id, daily_limit, monthly_limit)")
             .eq("id", userId)
             .single();
 
@@ -36,22 +36,24 @@ export async function GET(req: NextRequest) {
         }
 
         interface TierInfo {
-            name: string;
+            id: string;
             daily_limit: number;
             monthly_limit: number;
         }
 
         // Fallback to free tier if profile or user_tiers is missing
         const tierInfo = (profile?.user_tiers as unknown as TierInfo) || {
-            name: "free",
+            id: "free",
             daily_limit: 20,
             monthly_limit: 150
         };
 
-        const dailyLimit = profile?.custom_daily_limit ?? tierInfo.daily_limit ?? 20;
-        const monthlyLimit = profile?.custom_monthly_limit ?? tierInfo.monthly_limit ?? 150;
-        const tierName = tierInfo.name || "free";
+        const tierName = tierInfo.id || "free";
         const tierId = profile?.tier_id || "free";
+
+        let dailyLimit = profile?.custom_daily_limit ?? tierInfo.daily_limit ?? 20;
+        if (tierId === "free" || tierName === "free") dailyLimit = Math.max(dailyLimit, 20);
+        const monthlyLimit = profile?.custom_monthly_limit ?? tierInfo.monthly_limit ?? 150;
 
         // Calculate daily usage
         const today = new Date();

@@ -5,10 +5,10 @@ import { REWRITE_QUERY_TEMPLATE, KEYWORD_EXTRACTION_TEMPLATE } from "./prompts";
 const EMBEDDING_MODEL = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 768;
 const LLM_MODEL = "gemini-2.5-flash";
-const TOP_K_CHUNKS = 5;
-const TOP_K_SUMMARIES = 5;
-const TOP_K_TITLES = 5;
-const MAX_CONTEXT_CHUNKS_PER_DOC = 3;
+const TOP_K_CHUNKS = 3;
+const TOP_K_SUMMARIES = 3;
+const TOP_K_TITLES = 3;
+const MAX_CONTEXT_CHUNKS_PER_DOC = 2;
 
 let _genaiClient: GoogleGenAI | null = null;
 

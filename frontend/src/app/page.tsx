@@ -182,6 +182,7 @@ export default function Home() {
   const [verbosity, setVerbosity] = useState(3);
   const [userTier, setUserTier] = useState<string>("free");
   const [selectedModel, setSelectedModel] = useState("llama-3.1-8b-instant");
+  const [activeQuestion, setActiveQuestion] = useState("");
 
   // Effect to handle tier-based model defaults
   useEffect(() => {
@@ -421,6 +422,7 @@ export default function Home() {
     if (cachedResult) {
       setResult(cachedResult);
       setQuery(question);
+      setActiveQuestion(question);
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
@@ -430,6 +432,7 @@ export default function Home() {
     setLoading(true);
     setError("");
     setResult(null);
+    setActiveQuestion(question);
 
     try {
       const res = await fetch("/api/ask", {
@@ -647,7 +650,7 @@ export default function Home() {
 
               <div className="w-full max-w-2xl">
                 <div className="relative group mb-8">
-                  <div className="relative flex items-end gap-3 bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4 focus-within:border-indigo-500/50 transition-all duration-200">
+                  <div className="relative flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-2xl px-5 py-2.5 focus-within:border-slate-700 transition-all duration-200">
                     <textarea
                       ref={inputRef}
                       value={query}
@@ -655,11 +658,11 @@ export default function Home() {
                       onKeyDown={handleKeyDown}
                       placeholder={placeholder || "Ask GridMind Tactical..."}
                       rows={1}
-                      className="flex-1 bg-transparent text-[15px] text-white placeholder:text-slate-600 outline-none resize-none leading-relaxed pb-1.5"
-                      style={{ minHeight: "24px", maxHeight: "200px" }}
+                      className="flex-1 bg-transparent text-[14px] text-white placeholder:text-slate-600 outline-none resize-none leading-relaxed"
+                      style={{ minHeight: "22px", maxHeight: "200px" }}
                       onInput={(e) => {
                         const target = e.target as HTMLTextAreaElement;
-                        target.style.height = "24px";
+                        target.style.height = "22px";
                         target.style.height = target.scrollHeight + "px";
                       }}
                     />
@@ -667,7 +670,7 @@ export default function Home() {
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleSubmit()}
                       disabled={loading || !query.trim()}
-                      className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       <ArrowUp className="w-5 h-5" />
                     </motion.button>
@@ -771,7 +774,7 @@ export default function Home() {
                       {/* User Query Bubble */}
                       <div className="flex justify-end">
                         <div className="max-w-[80%] px-5 py-3 rounded-2xl rounded-br-md bg-indigo-600/20 border border-indigo-500/20 text-sm text-indigo-200">
-                          {history.length > 0 ? history[history.length - 1].question : query}
+                          {activeQuestion}
                         </div>
                       </div>
 
@@ -819,8 +822,7 @@ export default function Home() {
               >
                 <div className="max-w-4xl mx-auto">
                   <div className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 via-blue-500/10 to-transparent rounded-[2rem] opacity-0 group-focus-within:opacity-100 transition-opacity duration-700 blur-xl" />
-                    <div className="relative flex items-end gap-3 glass-panel border-white/10 rounded-[1.8rem] px-5 py-4 group-focus-within:border-indigo-500/40 group-focus-within:bg-slate-900/90 transition-all duration-300">
+                    <div className="relative flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-[1.8rem] px-5 py-2.5 focus-within:border-slate-700 transition-all duration-300">
                       <textarea
                         ref={!result && !loading ? undefined : inputRef}
                         value={query}
@@ -828,11 +830,11 @@ export default function Home() {
                         onKeyDown={handleKeyDown}
                         placeholder="Ask a follow-up..."
                         rows={1}
-                        className="flex-1 bg-transparent text-[15px] text-white placeholder:text-slate-600 outline-none resize-none leading-relaxed pb-1.5"
-                        style={{ minHeight: "24px", maxHeight: "200px" }}
+                        className="flex-1 bg-transparent text-[14px] text-white placeholder:text-slate-600 outline-none resize-none leading-relaxed"
+                        style={{ minHeight: "22px", maxHeight: "200px" }}
                         onInput={(e) => {
                           const target = e.target as HTMLTextAreaElement;
-                          target.style.height = "24px";
+                          target.style.height = "22px";
                           target.style.height = target.scrollHeight + "px";
                         }}
                       />
@@ -846,7 +848,7 @@ export default function Home() {
                           disabled={loading || !query.trim()}
                           className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-[0.9] disabled:cursor-not-allowed ${loading
                             ? "bg-indigo-600/20 text-indigo-400"
-                            : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20"
+                            : "bg-indigo-600 hover:bg-indigo-500 text-white"
                             }`}
                         >
                           {loading ? (

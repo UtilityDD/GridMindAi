@@ -63,7 +63,8 @@ export async function POST(req: NextRequest) {
         monthly_limit: 150
       };
 
-      const dailyLimit = profileData.custom_daily_limit ?? tierInfo.daily_limit ?? 20;
+      let dailyLimit = profileData.custom_daily_limit ?? tierInfo.daily_limit ?? 20;
+      if (userTier === "free") dailyLimit = Math.max(dailyLimit, 20);
       const monthlyLimit = profileData.custom_monthly_limit ?? tierInfo.monthly_limit ?? 150;
 
       // 3. Check daily limit
