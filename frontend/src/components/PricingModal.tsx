@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Sparkles, Rocket, Zap, ShieldCheck, Tag, Loader2, AlertCircle } from "lucide-react";
+import { Check, Sparkles, Rocket, Zap, ShieldCheck, Tag, Loader2, AlertCircle, BrainCircuit } from "lucide-react";
 
 interface Plan {
     id: string;
@@ -18,32 +18,42 @@ interface Plan {
 const PLANS: Plan[] = [
     {
         id: "free",
-        name: "Free",
+        name: "Basic",
         price: 0,
         limit: "20 queries / day",
-        description: "Perfect for occasional lookups.",
+        description: "Standard regulatory lookup for general users.",
         features: ["Standard search", "Basic history", "Web access"],
         color: "from-slate-500 to-slate-700",
         icon: Rocket,
     },
     {
         id: "basic",
-        name: "Basic",
-        price: 2499,
-        limit: "50 queries / day",
-        description: "More searches for regular policy research.",
-        features: ["Faster search", "Priority support", "Extended history"],
+        name: "Basic+",
+        price: 200,
+        limit: "100 queries / day",
+        description: "Enhanced bandwidth for active policy research.",
+        features: ["High-speed search", "Priority support", "Extended history"],
         color: "from-blue-500 to-indigo-600",
         icon: Zap,
     },
     {
+        id: "advance",
+        name: "Advance",
+        price: 300,
+        limit: "300 queries / day",
+        description: "Professional grade strategic intelligence.",
+        features: ["Full database access", "Extended context", "Priority support"],
+        color: "from-purple-500 to-indigo-600",
+        icon: BrainCircuit,
+    },
+    {
         id: "pro",
         name: "Pro",
-        price: 8199,
-        limit: "200 queries / day",
-        description: "High-volume search for power users.",
-        features: ["Full database access", "Unlimited history", "24/7 Priority support"],
-        color: "from-indigo-500 to-purple-600",
+        price: 500,
+        limit: "500 queries / day",
+        description: "Maximum bandwidth for enterprise-level operations.",
+        features: ["Enterprise support", "Unlimited history", "Advanced analytics"],
+        color: "from-indigo-500 to-amber-600",
         icon: ShieldCheck,
     },
 ];
@@ -128,7 +138,7 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                         initial={{ scale: 0.9, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                        className="relative w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-[2rem] shadow-2xl overflow-hidden p-8 md:p-12 max-h-[90vh] overflow-y-auto"
+                        className="relative w-full max-w-7xl bg-slate-900 border border-slate-800 rounded-[2rem] shadow-2xl overflow-hidden p-8 md:p-10 max-h-[95vh] overflow-y-auto"
                     >
                         <div className="text-center mb-10">
                             <motion.div
@@ -146,7 +156,7 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
                             {PLANS.map((plan, idx) => {
                                 const isCurrent = currentTier === plan.id;
                                 const Icon = plan.icon;

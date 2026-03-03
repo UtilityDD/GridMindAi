@@ -4,8 +4,9 @@ import { getRazorpay } from "@/lib/razorpay";
 export const dynamic = "force-dynamic";
 
 const PRICE_MAP_INR: Record<string, { price: number; name: string }> = {
-    basic: { price: 249900, name: "Strategic Lead" }, // ₹2,499.00
-    pro: { price: 819900, name: "Grid Master" },    // ₹8,199.00
+    basic: { price: 20000, name: "Basic+" },     // ₹200.00
+    advance: { price: 30000, name: "Advance" },  // ₹300.00
+    pro: { price: 50000, name: "Grid Pro" },     // ₹500.00
 };
 
 export async function POST(req: NextRequest) {

@@ -26,6 +26,7 @@ import LoginPage from "@/components/LoginPage";
 import Sidebar from "@/components/Sidebar";
 import { getSupabase } from "@/lib/supabase";
 import PricingModal from "@/components/PricingModal";
+import DisclaimerModal from "@/components/DisclaimerModal";
 import LiveStats from "@/components/LiveStats";
 
 interface Source {
@@ -502,6 +503,7 @@ export default function Home() {
 
   return (
     <div className="flex h-screen overflow-hidden">
+      <DisclaimerModal />
       <Sidebar
         userEmail={user?.email || ""}
         onSignOut={signOut}
@@ -1008,10 +1010,10 @@ function ShareBar({ result, query }: { result: QueryResult; query: string }) {
 
 const MODEL_OPTIONS = [
   { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google DeepMind", tier: "Pro" },
-  { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B", provider: "Meta/Groq", tier: "Free" },
-  { value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B", provider: "Meta/Groq", tier: "Basic" },
-  { value: "moonshotai/kimi-k2-instruct", label: "Kimi K2 Instruct", provider: "Moonshot", tier: "Basic" },
-  { value: "qwen/qwen3-32b", label: "Qwen3 32B", provider: "Ali/Groq", tier: "Basic" },
+  { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B", provider: "Meta/Groq", tier: "Basic" },
+  { value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B", provider: "Meta/Groq", tier: "Basic+" },
+  { value: "moonshotai/kimi-k2-instruct", label: "Kimi K2 Instruct", provider: "Moonshot", tier: "Advance" },
+  { value: "qwen/qwen3-32b", label: "Qwen3 32B", provider: "Ali/Groq", tier: "Advance" },
 ];
 
 function ModelSelector({
@@ -1025,8 +1027,9 @@ function ModelSelector({
   const current = MODEL_OPTIONS.find((m) => m.value === value) || MODEL_OPTIONS[0];
 
   const groupedModels = {
-    Free: MODEL_OPTIONS.filter((m) => m.tier === "Free"),
     Basic: MODEL_OPTIONS.filter((m) => m.tier === "Basic"),
+    "Basic+": MODEL_OPTIONS.filter((m) => m.tier === "Basic+"),
+    Advance: MODEL_OPTIONS.filter((m) => m.tier === "Advance"),
     Pro: MODEL_OPTIONS.filter((m) => m.tier === "Pro"),
   };
 
@@ -1057,7 +1060,7 @@ function ModelSelector({
             exit={{ opacity: 0, scale: 0.95 }}
             className="absolute top-full left-0 mt-2 w-64 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-y-auto max-h-[400px] z-50 p-1.5"
           >
-            {(["Free", "Basic", "Pro"] as const).map((tier) => {
+            {(["Basic", "Basic+", "Advance", "Pro"] as const).map((tier) => {
               const models = groupedModels[tier];
               if (models.length === 0) return null;
 
