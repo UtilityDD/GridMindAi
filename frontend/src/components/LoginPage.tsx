@@ -47,87 +47,86 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen noise-bg flex items-center justify-center relative font-sans">
-      {/* Ambient effects */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-indigo-500/[0.05] rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-5%] w-[700px] h-[700px] bg-blue-500/[0.05] rounded-full blur-[120px]" />
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center relative font-sans selection:bg-indigo-500/30">
+      {/* Ambient background glow */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden overflow-hidden">
+        <div className="absolute top-[-15%] left-[-10%] w-[800px] h-[800px] bg-indigo-500/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-15%] right-[-10%] w-[800px] h-[800px] bg-blue-500/10 rounded-full blur-[120px]" />
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative w-full max-w-md mx-4"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="relative w-full max-w-[400px] mx-4"
       >
-        {/* Global Grid Stats */}
-        <div className="fixed top-6 right-6 z-50">
+        {/* Simple Top Stats */}
+        <div className="fixed top-8 right-8 z-50 opacity-80 hover:opacity-100 transition-opacity">
           <LiveStats />
         </div>
-        {/* Logo Section */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 mb-5 shadow-lg shadow-indigo-500/20">
-            <BrainCircuit className="w-7 h-7 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
-            GridMind AI
-          </h1>
-          <p className="text-[10px] text-slate-500 mt-2 tracking-[0.2em] font-medium uppercase">
-            Strategic Decisions &bull; Policy Intelligence
-          </p>
-        </div>
 
-        {/* glass-panel Card */}
-        <div className="glass-panel rounded-3xl p-8 shadow-2xl shadow-black/50 overflow-hidden relative">
-          {/* Decorative gradient overlay */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
-
+        {/* Minimal Card */}
+        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-10 shadow-3xl">
           <AnimatePresence mode="wait">
             <motion.div
               key={mode}
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
             >
-              <h2 className="text-xl font-semibold text-white mb-2 tracking-tight">
-                {mode === "login"
-                  ? "Enterprise Sign In"
-                  : mode === "signup"
-                    ? "Create Account"
-                    : "Reset Password"}
-              </h2>
-              <p className="text-sm text-slate-400 mb-8">
-                {mode === "login"
-                  ? "Access the strategic policy repository."
-                  : mode === "signup"
-                    ? "Register for centralized intelligence."
-                    : "Enter your institutional email."}
-              </p>
+              <div className="flex flex-col items-center mb-10 text-center">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                  className="w-14 h-14 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center shadow-2xl mb-4 relative group"
+                >
+                  <div className="absolute inset-0 bg-indigo-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <BrainCircuit className="w-7 h-7 text-indigo-400 relative z-10" />
+                </motion.div>
+                <h1 className="text-2xl font-bold text-white tracking-tight mb-1">GridMind AI</h1>
+                <p className="text-[11px] text-slate-500 font-bold uppercase tracking-[0.2em]">Grid Regulations Made Simple</p>
+              </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Email */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500 ml-1">Email Identifier</label>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Email Field */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Email</label>
                   <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-400 transition-colors" />
                     <input
                       type="email"
-                      placeholder="name@organization.com"
+                      placeholder="name@company.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-900/50 border border-white/5 text-sm text-white placeholder:text-slate-600 outline-none focus:border-indigo-500/50 focus:bg-slate-900/80 transition-all"
+                      className="w-full pl-11 pr-4 py-4 rounded-2xl bg-slate-950/50 border border-white/5 text-sm text-white placeholder:text-slate-700 outline-none focus:border-indigo-500/30 focus:bg-slate-950 transition-all duration-300"
                     />
                   </div>
                 </div>
 
-                {/* Password */}
+                {/* Password Field */}
                 {mode !== "forgot" && (
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500 ml-1">Access Credential</label>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between px-1">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Password</label>
+                      {mode === "login" && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMode("forgot");
+                            setError("");
+                            setMessage("");
+                          }}
+                          className="text-[11px] font-bold text-indigo-500/70 hover:text-indigo-400 transition-colors uppercase tracking-wider"
+                        >
+                          Forgot?
+                        </button>
+                      )}
+                    </div>
                     <div className="relative group">
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-400 transition-colors" />
                       <input
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
@@ -135,76 +134,49 @@ export default function LoginPage() {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         minLength={6}
-                        className="w-full pl-11 pr-12 py-3.5 rounded-xl bg-slate-900/50 border border-white/5 text-sm text-white placeholder:text-slate-600 outline-none focus:border-indigo-500/50 focus:bg-slate-900/80 transition-all"
+                        className="w-full pl-11 pr-12 py-4 rounded-2xl bg-slate-950/50 border border-white/5 text-sm text-white placeholder:text-slate-700 outline-none focus:border-indigo-500/30 focus:bg-slate-950 transition-all duration-300"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition-colors"
                       >
-                        {showPassword ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* Forgot link */}
-                {mode === "login" && (
-                  <div className="text-right">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMode("forgot");
-                        setError("");
-                        setMessage("");
-                      }}
-                      className="text-xs text-slate-500 hover:text-indigo-400 transition-colors font-medium"
+                {/* Notifications */}
+                <AnimatePresence>
+                  {(error || message) && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
                     >
-                      Credential recovery?
-                    </button>
-                  </div>
-                )}
+                      <div className={`p-4 rounded-2xl text-[13px] font-medium ${error ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                        }`}>
+                        {error || message}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-                {/* Error / Message */}
-                {error && (
-                  <motion.p
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3"
-                  >
-                    {error}
-                  </motion.p>
-                )}
-                {message && (
-                  <motion.p
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3"
-                  >
-                    {message}
-                  </motion.p>
-                )}
-
-                {/* Submit */}
+                {/* Action Button */}
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 text-white text-sm font-semibold shadow-lg shadow-indigo-600/20 active:scale-[0.98] transition-all duration-200 disabled:cursor-not-allowed group"
+                  className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-indigo-600/10 active:scale-[0.97] transition-all duration-300 flex items-center justify-center gap-3 group overflow-hidden relative"
                 >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
                   {loading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
                     <>
-                      {mode === "login"
-                        ? "Execute Authorization"
-                        : mode === "signup"
-                          ? "Establish Account"
-                          : "Request Recovery"}
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                      {mode === "login" ? "Sign In" : mode === "signup" ? "Create Account" : "Reset Password"}
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
                 </button>
@@ -212,47 +184,27 @@ export default function LoginPage() {
             </motion.div>
           </AnimatePresence>
 
-          {/* Mode switch */}
-          <div className="mt-8 pt-6 border-t border-white/5 text-center">
+          {/* Secondary Action */}
+          <div className="mt-10 pt-8 border-t border-white/5 text-center">
             <p className="text-sm text-slate-500">
               {mode === "login" ? (
-                <>
-                  New investigator?{" "}
-                  <button
-                    onClick={() => {
-                      setMode("signup");
-                      setError("");
-                      setMessage("");
-                    }}
-                    className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors"
-                  >
-                    Request Access
-                  </button>
-                </>
+                <>No account? <button onClick={() => setMode("signup")} className="text-indigo-400 font-bold hover:text-indigo-300 transition-colors">Sign up</button></>
               ) : (
-                <>
-                  Existing investigator?{" "}
-                  <button
-                    onClick={() => {
-                      setMode("login");
-                      setError("");
-                      setMessage("");
-                    }}
-                    className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors"
-                  >
-                    Sign In
-                  </button>
-                </>
+                <>Already a member? <button onClick={() => setMode("login")} className="text-indigo-400 font-bold hover:text-indigo-300 transition-colors">Sign in</button></>
               )}
             </p>
           </div>
         </div>
 
-        {/* Subtle footer info */}
-        <p className="text-center mt-10 text-[10px] text-slate-600 font-medium tracking-widest uppercase">
-          Classified Information System &bull; Secured with SHA-256
-        </p>
+        {/* Minimal Spacer for padding */}
+        <div className="mt-12 h-1" />
       </motion.div>
+
+      <style jsx global>{`
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
     </div>
   );
 }

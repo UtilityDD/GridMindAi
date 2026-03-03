@@ -56,11 +56,15 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      const tierInfo = (profileData.user_tiers as unknown as { daily_limit: number; monthly_limit: number }) || { daily_limit: 5, monthly_limit: 100 };
+      // Fallback to free tier if profile or user_tiers is missing
+      const tierInfo = (profileData.user_tiers as unknown as TierInfo) || {
+        name: "free",
+        daily_limit: 20,
+        monthly_limit: 150
+      };
 
-      // Use custom limits if defined, otherwise fall back to tier defaults
-      const daily_limit = profileData.custom_daily_limit ?? tierInfo.daily_limit;
-      const monthly_limit = profileData.custom_monthly_limit ?? tierInfo.monthly_limit;
+      const dailyLimit = profileData.custom_daily_limit ?? tierInfo.daily_limit ?? 20;
+      const monthlyLimit = profileData.custom_monthly_limit ?? tierInfo.monthly_limit ?? 150;
 
       // 3. Check daily limit
       const today = new Date();

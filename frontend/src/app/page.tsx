@@ -180,11 +180,22 @@ export default function Home() {
   const [result, setResult] = useState<QueryResult | null>(null);
   const [error, setError] = useState("");
   const [verbosity, setVerbosity] = useState(3);
-  const [selectedModel, setSelectedModel] = useState("gemini-2.5-flash");
+  const [userTier, setUserTier] = useState<string>("free");
+  const [selectedModel, setSelectedModel] = useState("moonshotai/kimi-k2-instruct");
+
+  // Effect to handle tier-based model defaults
+  useEffect(() => {
+    if (userTier === "free") {
+      setSelectedModel("moonshotai/kimi-k2-instruct");
+    } else if (userTier === "pro" && selectedModel === "moonshotai/kimi-k2-instruct") {
+      // Auto-upgrade selected model if they move to Pro
+      setSelectedModel("gemini-2.5-flash");
+    }
+  }, [userTier, selectedModel]);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isPricingOpen, setIsPricingOpen] = useState(false);
-  const [userTier, setUserTier] = useState<string>("free");
   const [history, setHistory] = useState<
     { question: string; result: QueryResult }[]
   >([]);
@@ -402,9 +413,19 @@ export default function Home() {
     return <LoginPage />;
   }
 
-  const handleSubmit = async (q?: string) => {
+  const handleSubmit = async (q?: string, cachedResult?: QueryResult) => {
     const question = (q || query).trim();
     if (!question || loading) return;
+
+    // If we have a cached result, restore it instantly and skip the fetch
+    if (cachedResult) {
+      setResult(cachedResult);
+      setQuery(question);
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+      return;
+    }
 
     setLoading(true);
     setError("");
@@ -482,7 +503,7 @@ export default function Home() {
         userEmail={user?.email || ""}
         onSignOut={signOut}
         history={history}
-        onHistoryClick={handleSubmit}
+        onHistoryClick={(q, res) => handleSubmit(q, res)}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         userTier={userTier}
@@ -514,21 +535,6 @@ export default function Home() {
         >
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              {(sidebarCollapsed || typeof window === 'undefined') && (
-                <button
-                  onClick={() => {
-                    if (window.innerWidth >= 768) {
-                      setSidebarCollapsed(false);
-                    } else {
-                      setSidebarOpen(true);
-                    }
-                  }}
-                  className="hidden md:flex p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all"
-                  aria-label="Show sidebar"
-                >
-                  <Menu className="w-5 h-5" />
-                </button>
-              )}
               <button
                 onClick={() => setSidebarOpen(true)}
                 className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all"
@@ -539,14 +545,6 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 pointer-events-none absolute left-1/2 -translate-x-1/2">
-            <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
-              <BrainCircuit className="w-4 h-4 text-white" />
-            </div>
-            <h1 className="text-xs font-bold text-white tracking-widest uppercase hidden sm:block">
-              GridMind <span className="text-indigo-400">Tactical</span>
-            </h1>
-          </div>
 
           <div className="flex items-center gap-3">
             {userTier !== 'pro' && (
@@ -733,18 +731,31 @@ export default function Home() {
                   )}
                 </AnimatePresence>
 
-                {/* Error Section */}
+                {/* Common Error Display (Simple) */}
                 <AnimatePresence>
                   {error && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      className="mb-8 p-4 bg-red-950/20 border border-red-900/50 rounded-xl text-red-400 text-sm flex items-start gap-3"
-                    >
-                      <Sparkles className="w-5 h-5 shrink-0 rotate-180" />
-                      <p>{error}</p>
-                    </motion.div>
+                    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] w-full max-w-md px-4">
+                      <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="p-4 rounded-2xl bg-slate-900 border border-red-500/20 shadow-2xl flex items-center gap-3"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
+                          <X className="w-4 h-4 text-red-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] font-bold text-red-400 uppercase tracking-widest leading-tight">Query Failed</p>
+                          <p className="text-xs text-slate-400 truncate">{error}</p>
+                        </div>
+                        <button
+                          onClick={() => setError("")}
+                          className="p-1.5 rounded-lg hover:bg-white/5 text-slate-500 transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </motion.div>
+                    </div>
                   )}
                 </AnimatePresence>
 
@@ -994,11 +1005,11 @@ function ShareBar({ result, query }: { result: QueryResult; query: string }) {
 }
 
 const MODEL_OPTIONS = [
-  { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google DeepMind" },
-  { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B", provider: "Meta/Groq" },
-  { value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B", provider: "Meta/Groq" },
-  { value: "moonshotai/kimi-k2-instruct", label: "Kimi K2 Instruct", provider: "Moonshot" },
-  { value: "qwen/qwen3-32b", label: "Qwen3 32B", provider: "Ali/Groq" },
+  { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google DeepMind", tier: "Pro" },
+  { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B", provider: "Meta/Groq", tier: "Free" },
+  { value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B", provider: "Meta/Groq", tier: "Basic" },
+  { value: "moonshotai/kimi-k2-instruct", label: "Kimi K2 Instruct", provider: "Moonshot", tier: "Basic" },
+  { value: "qwen/qwen3-32b", label: "Qwen3 32B", provider: "Ali/Groq", tier: "Basic" },
 ];
 
 function ModelSelector({
@@ -1011,14 +1022,23 @@ function ModelSelector({
   const [open, setOpen] = useState(false);
   const current = MODEL_OPTIONS.find((m) => m.value === value) || MODEL_OPTIONS[0];
 
+  const groupedModels = {
+    Free: MODEL_OPTIONS.filter((m) => m.tier === "Free"),
+    Basic: MODEL_OPTIONS.filter((m) => m.tier === "Basic"),
+    Pro: MODEL_OPTIONS.filter((m) => m.tier === "Pro"),
+  };
+
   return (
     <div className="relative shrink-0">
       <button
         onClick={() => setOpen(!open)}
         className="group flex items-center gap-2.5 px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 hover:border-slate-500 transition-all duration-200 shadow-sm"
       >
-        <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.3)]" />
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{current.label}</span>
+        <div className={`w-2 h-2 rounded-full shadow-[0_0_8px_rgba(79,70,229,0.3)] ${current.tier === 'Pro' ? 'bg-amber-400' : 'bg-indigo-500'}`} />
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+          {current.label}
+          {current.tier === "Pro" && <span className="ml-2 text-amber-500/80">PRO</span>}
+        </span>
         <motion.div
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.2 }}
@@ -1033,31 +1053,48 @@ function ModelSelector({
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="absolute top-full left-0 mt-2 w-64 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-y-auto max-h-80 z-50 p-1.5"
+            className="absolute top-full left-0 mt-2 w-64 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-y-auto max-h-[400px] z-50 p-1.5"
           >
-            {MODEL_OPTIONS.map((m) => (
-              <button
-                key={m.value}
-                onClick={() => {
-                  onChange(m.value);
-                  setOpen(false);
-                }}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-left transition-all ${m.value === value ? "bg-indigo-600/10" : "hover:bg-slate-800"
-                  }`}
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span
-                    className={`text-xs font-bold leading-none ${m.value === value ? "text-indigo-400" : "text-slate-300"}`}
-                  >
-                    {m.label}
-                  </span>
-                  <span className="text-[9px] text-slate-600 uppercase font-black tracking-tighter">{m.provider}</span>
+            {(["Free", "Basic", "Pro"] as const).map((tier) => {
+              const models = groupedModels[tier];
+              if (models.length === 0) return null;
+
+              return (
+                <div key={tier} className="mb-2">
+                  <div className="px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2">
+                    {tier}
+                    <div className="flex-1 h-px bg-slate-800" />
+                  </div>
+                  {models.map((m) => (
+                    <button
+                      key={m.value}
+                      onClick={() => {
+                        onChange(m.value);
+                        setOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all ${m.value === value
+                        ? "bg-indigo-600/10"
+                        : "hover:bg-slate-800"
+                        }`}
+                    >
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-xs font-bold leading-none ${m.value === value ? "text-indigo-400" : "text-slate-300"}`}
+                          >
+                            {m.label}
+                          </span>
+                        </div>
+                        <span className="text-[9px] text-slate-600 uppercase font-black tracking-tighter">{m.provider}</span>
+                      </div>
+                      {m.value === value && (
+                        <div className={`w-1.5 h-1.5 rounded-full ${m.tier === 'Pro' ? 'bg-amber-400' : 'bg-indigo-500'} shadow-[0_0_8px_rgba(99,102,241,0.5)]`} />
+                      )}
+                    </button>
+                  ))}
                 </div>
-                {m.value === value && (
-                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-                )}
-              </button>
-            ))}
+              );
+            })}
           </motion.div>
         )}
       </AnimatePresence>

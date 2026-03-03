@@ -20,7 +20,7 @@ const PLANS: Plan[] = [
         id: "free",
         name: "Free",
         price: 0,
-        limit: "5 queries / day",
+        limit: "20 queries / day",
         description: "Perfect for occasional lookups.",
         features: ["Standard search", "Basic history", "Web access"],
         color: "from-slate-500 to-slate-700",

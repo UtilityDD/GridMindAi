@@ -1,6 +1,7 @@
 "use client";
 
-import { BrainCircuit, ChevronRight, History, LogOut, MessageSquare, X, PanelLeftClose, Cpu, Menu } from "lucide-react";
+import { useState } from "react";
+import { BrainCircuit, ChevronRight, History, LogOut, MessageSquare, X, PanelLeftClose, PanelLeftOpen, Cpu, Menu } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Source {
@@ -23,7 +24,7 @@ interface SidebarProps {
     userEmail: string;
     onSignOut: () => void;
     history: { question: string; result: QueryResult }[];
-    onHistoryClick: (question: string) => void;
+    onHistoryClick: (question: string, result: QueryResult) => void;
     open?: boolean;
     onClose: () => void;
     userTier?: string;
@@ -98,18 +99,28 @@ export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick,
 function SidebarContent({
     userEmail, onSignOut, history, onHistoryClick, onClose, showClose, userTier, onUpgradeClick, onToggleCollapse, usage, collapsed
 }: SidebarProps & { showClose: boolean }) {
+    const [logoHovered, setLogoHovered] = useState(false);
     const progress = usage ? Math.min(100, (usage.dailyCount / usage.dailyLimit) * 100) : 0;
 
     return (
         <>
             {/* Brand */}
             <div className={`p-6 flex items-center ${collapsed ? 'justify-center' : 'justify-between'} gap-3 border-b border-slate-800 bg-slate-900`}>
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
-                        <BrainCircuit className="w-4 h-4 text-white" />
+                <div
+                    className="flex items-center gap-3 cursor-pointer group"
+                    onMouseEnter={() => setLogoHovered(true)}
+                    onMouseLeave={() => setLogoHovered(false)}
+                    onClick={collapsed ? onToggleCollapse : undefined}
+                >
+                    <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                        {collapsed && logoHovered ? (
+                            <PanelLeftOpen className="w-6 h-6 text-indigo-400 animate-in fade-in zoom-in duration-200" />
+                        ) : (
+                            <BrainCircuit className="w-6 h-6 text-indigo-400 group-hover:scale-110 transition-transform duration-200" />
+                        )}
                     </div>
                     {!collapsed && (
-                        <div>
+                        <div className="animate-in fade-in slide-in-from-left-2 duration-300">
                             <h1 className="text-sm font-bold tracking-tight text-white leading-tight">
                                 GridMind <span className="text-indigo-400">AI</span>
                             </h1>
@@ -134,13 +145,8 @@ function SidebarContent({
                     </div>
                 )}
             </div>
-            {collapsed && (
-                <div className="flex justify-center p-4 border-b border-slate-800">
-                    <button onClick={onToggleCollapse} className="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-all">
-                        <Menu className="w-5 h-5" />
-                    </button>
-                </div>
-            )}
+            {/* Collapsed view spacer replaced redundant menu button */}
+            {collapsed && <div className="h-6" />}
 
 
             {/* Navigation */}
@@ -171,7 +177,7 @@ function SidebarContent({
                             history.slice(0, 10).map((item, idx) => (
                                 <button
                                     key={idx}
-                                    onClick={() => { onHistoryClick(item.question); onClose(); }}
+                                    onClick={() => { onHistoryClick(item.question, item.result); onClose(); }}
                                     className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2 px-3'} py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 text-xs text-left group transition-all`}
                                     title={collapsed ? item.question : undefined}
                                 >

@@ -44,11 +44,11 @@ export async function GET(req: NextRequest) {
         // Fallback to free tier if profile or user_tiers is missing
         const tierInfo = (profile?.user_tiers as unknown as TierInfo) || {
             name: "free",
-            daily_limit: 5,
+            daily_limit: 20,
             monthly_limit: 150
         };
 
-        const dailyLimit = profile?.custom_daily_limit ?? tierInfo.daily_limit ?? 5;
+        const dailyLimit = profile?.custom_daily_limit ?? tierInfo.daily_limit ?? 20;
         const monthlyLimit = profile?.custom_monthly_limit ?? tierInfo.monthly_limit ?? 150;
         const tierName = tierInfo.name || "free";
         const tierId = profile?.tier_id || "free";
