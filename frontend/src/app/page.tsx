@@ -181,13 +181,13 @@ export default function Home() {
   const [error, setError] = useState("");
   const [verbosity, setVerbosity] = useState(3);
   const [userTier, setUserTier] = useState<string>("free");
-  const [selectedModel, setSelectedModel] = useState("moonshotai/kimi-k2-instruct");
+  const [selectedModel, setSelectedModel] = useState("llama-3.1-8b-instant");
 
   // Effect to handle tier-based model defaults
   useEffect(() => {
     if (userTier === "free") {
-      setSelectedModel("moonshotai/kimi-k2-instruct");
-    } else if (userTier === "pro" && selectedModel === "moonshotai/kimi-k2-instruct") {
+      setSelectedModel("llama-3.1-8b-instant");
+    } else if (userTier === "pro" && selectedModel === "llama-3.1-8b-instant") {
       // Auto-upgrade selected model if they move to Pro
       setSelectedModel("gemini-2.5-flash");
     }

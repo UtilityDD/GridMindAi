@@ -7,12 +7,10 @@ const GEMINI_MODEL = "gemini-2.5-flash";
 
 const GROQ_MODELS = new Set([
   "llama-3.1-8b-instant",
+  "llama-3.1-70b-versatile",
   "llama-3.3-70b-versatile",
-  "moonshotai/kimi-k2-instruct",
-  "moonshotai/kimi-k2-instruct-0905",
-  "openai/gpt-oss-120b",
-  "openai/gpt-oss-20b",
-  "qwen/qwen3-32b",
+  "mixtral-8x7b-32768",
+  "gemma-7b-it",
 ]);
 
 let _genaiClient: GoogleGenAI | null = null;

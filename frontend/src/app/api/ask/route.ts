@@ -75,9 +75,9 @@ export async function POST(req: NextRequest) {
         .eq("user_id", userId)
         .gte("created_at", today.toISOString());
 
-      if (dailyCount !== null && dailyCount >= daily_limit) {
+      if (dailyCount !== null && dailyCount >= dailyLimit) {
         return NextResponse.json(
-          { detail: `Daily limit of ${daily_limit} queries reached. Upgrade your Strategic Intelligence bandwidth for more access.` },
+          { detail: `Daily limit of ${dailyLimit} queries reached. Upgrade your Strategic Intelligence bandwidth for more access.` },
           { status: 429 }
         );
       }
@@ -92,9 +92,9 @@ export async function POST(req: NextRequest) {
         .eq("user_id", userId)
         .gte("created_at", firstOfMonth.toISOString());
 
-      if (monthlyCount !== null && monthlyCount >= monthly_limit) {
+      if (monthlyCount !== null && monthlyCount >= monthlyLimit) {
         return NextResponse.json(
-          { detail: `Monthly limit of ${monthly_limit} queries reached. Upgrade your Strategic Intelligence bandwidth for more access.` },
+          { detail: `Monthly limit of ${monthlyLimit} queries reached. Upgrade your Strategic Intelligence bandwidth for more access.` },
           { status: 429 }
         );
       }
