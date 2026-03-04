@@ -138,7 +138,8 @@ export async function POST(req: NextRequest) {
     context,
     sources,
     verbosity,
-    model
+    model,
+    userTier
   );
 
   // Filter sources to only those actually cited in the answer

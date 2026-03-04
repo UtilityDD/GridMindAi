@@ -14,16 +14,19 @@ import config
 
 logger = logging.getLogger(__name__)
 
-_client_local = threading.local()
+_pool_index = 0
 
-
-def _get_client() -> genai.Client:
-    if not hasattr(_client_local, "client"):
-        _client_local.client = genai.Client(
-            api_key=config.GEMINI_API_KEY,
-            http_options=types.HttpOptions(timeout=120_000),
-        )
-    return _client_local.client
+def _get_client(key=None) -> genai.Client:
+    """Gets a client for a specific key or the next one in the pool."""
+    global _pool_index
+    if key is None:
+        key = config.GEMINI_KEY_POOL[_pool_index % len(config.GEMINI_KEY_POOL)]
+        _pool_index += 1
+        
+    return genai.Client(
+        api_key=key,
+        http_options=types.HttpOptions(timeout=120_000),
+    )
 
 
 def _load_ocr_prompt() -> str:
@@ -34,11 +37,12 @@ OCR_PROMPT = _load_ocr_prompt()
 
 
 def ocr_page_gemini(page_image: Image.Image) -> str:
-    """Send a page image to Gemini vision with retry logic."""
+    """Send a page image to Gemini vision with pool-based key rotation on 429 errors."""
     import time
-    client = _get_client()
-    max_retries = 10
+    max_retries = len(config.GEMINI_KEY_POOL) * 2
+    
     for attempt in range(max_retries):
+        client = _get_client() # Naturally rotates on each call/retry
         try:
             response = client.models.generate_content(
                 model=config.GEMINI_VISION_MODEL,
@@ -47,16 +51,22 @@ def ocr_page_gemini(page_image: Image.Image) -> str:
             text = response.text or ""
             if text.strip():
                 return text
-            # If empty text but no exception, maybe retry once
+            
+            # If empty text but no exception, wait a bit and retry
             if attempt < 2:
-                time.sleep(5)
+                time.sleep(2)
                 continue
         except Exception as exc:
-            wait = (attempt + 1) * 10.0  # Linear backoff: 10, 20, 30...
-            if "429" in str(exc) or "RESOURCE_EXHAUSTED" in str(exc):
-                # Specific handling for rate limits
-                wait = 15.0 + (attempt * 10.0) 
+            msg = str(exc)
+            is_rate_limit = "429" in msg or "RESOURCE_EXHAUSTED" in msg
             
+            if is_rate_limit:
+                logger.warning("Gemini OCR hit rate limit. Rotating key... (Attempt %d/%d)", attempt + 1, max_retries)
+                time.sleep(1) # Short wait before trying next key
+                continue
+            
+            # For other errors, use exponential backoff
+            wait = (attempt + 1) * 5.0
             if attempt < max_retries - 1:
                 logger.warning("Gemini OCR attempt %d failed (%s), retrying in %ds", attempt + 1, exc, wait)
                 time.sleep(wait)

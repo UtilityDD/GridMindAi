@@ -37,6 +37,7 @@ interface SidebarProps {
         monthlyCount: number;
         monthlyLimit: number;
         tierName: string;
+        hasCustomLimit?: boolean;
     } | null;
 }
 
@@ -196,7 +197,16 @@ function SidebarContent({
                     <div className={`flex items-center ${collapsed ? 'flex-col gap-1' : 'justify-between'}`}>
                         <div className="flex items-center gap-2">
                             <Cpu className="w-3 h-3 text-indigo-400" />
-                            {!collapsed && <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Consumption</span>}
+                            {!collapsed && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Consumption</span>
+                                    {usage.hasCustomLimit && (
+                                        <span className="text-[8px] font-black text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded border border-emerald-400/20 uppercase tracking-tighter">
+                                            Promo Active
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                         </div>
                         <span className="text-[10px] font-bold text-white tracking-widest leading-none">
                             {collapsed ? `${usage.dailyCount}/${usage.dailyLimit}` : `${usage.dailyCount} / ${usage.dailyLimit}`}
@@ -232,9 +242,14 @@ function SidebarContent({
                                     userTier === 'basic' ? 'bg-blue-500/10 border-blue-400 text-blue-400' :
                                         'bg-slate-500/10 border-slate-500 text-slate-500'
                                     }`}>
-                                    {userTier}
+                                    {usage?.hasCustomLimit ? 'Promo' : userTier}
                                 </span>
-                                {userTier !== 'pro' && (
+                                {usage?.hasCustomLimit && (
+                                    <span className="text-[8px] font-bold text-slate-500 uppercase">
+                                        Applied
+                                    </span>
+                                )}
+                                {userTier !== 'pro' && !usage?.hasCustomLimit && (
                                     <button
                                         onClick={onUpgradeClick}
                                         className="text-[9px] font-bold text-indigo-400 hover:text-indigo-300 underline underline-offset-2 transition-colors"

@@ -74,13 +74,16 @@ export async function GET(req: NextRequest) {
             .eq("user_id", userId)
             .gte("created_at", firstOfMonth.toISOString());
 
+        const hasCustomLimit = profile?.custom_daily_limit !== null || profile?.custom_monthly_limit !== null;
+
         return NextResponse.json({
             dailyCount: dailyCount || 0,
             dailyLimit,
             monthlyCount: monthlyCount || 0,
             monthlyLimit,
             tierName,
-            tierId
+            tierId,
+            hasCustomLimit
         });
     } catch {
         return NextResponse.json({ detail: "Internal server error during usage check" }, { status: 500 });

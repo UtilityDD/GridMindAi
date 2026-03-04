@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Sparkles, Rocket, Zap, ShieldCheck, Tag, Loader2, AlertCircle, BrainCircuit } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
 
 interface Plan {
     id: string;
@@ -66,6 +67,7 @@ interface PricingModalProps {
 }
 
 export default function PricingModal({ isOpen, onClose, currentTier, onSelectPlan }: PricingModalProps) {
+    const { session } = useAuth();
     const [promoCode, setPromoCode] = useState("");
     const [isValidating, setIsValidating] = useState(false);
     const [promoData, setPromoData] = useState<{ discount: number; code: string } | null>(null);
@@ -93,12 +95,7 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
         setPromoData(null);
 
         try {
-            const token = localStorage.getItem("sb-vvyhphfzvzgymhzytwws-auth-token"); // Get token from local storage (match AuthProvider logic)
-            let accessToken = "";
-            if (token) {
-                const parsed = JSON.parse(token);
-                accessToken = parsed.access_token;
-            }
+            const accessToken = session?.access_token || "";
 
             const res = await fetch("/api/promo/validate", {
                 method: "POST",
@@ -150,9 +147,18 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                 <Sparkles className="w-3 h-3" />
                                 PLAN LIMITS
                             </motion.div>
-                            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Choose Your Plan</h2>
+                            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                                {promoData ? (
+                                    <span className="flex items-center justify-center gap-3">
+                                        Promo Applied!
+                                        <span className="text-emerald-400 animate-pulse text-2xl md:text-3xl">-{promoData.discount}%</span>
+                                    </span>
+                                ) : "Choose Your Plan"}
+                            </h2>
                             <p className="text-slate-400 max-w-xl mx-auto text-sm leading-relaxed">
-                                Pick the plan that best fits your search and analysis needs.
+                                {promoData
+                                    ? `Strategic discount activated! Your exclusive pricing for ${promoData.code} is now live.`
+                                    : "Pick the plan that best fits your search and analysis needs."}
                             </p>
                         </div>
 
@@ -187,19 +193,25 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                         <h3 className="text-lg font-bold text-white mb-1">{plan.name}</h3>
                                         <div className="flex flex-col mb-4">
                                             <div className="flex items-baseline gap-1">
-                                                <span className={`text-2xl font-bold text-white ${promoData ? "line-through opacity-30 text-lg" : ""}`}>
+                                                <span className={`text-2xl font-bold text-white ${promoData && plan.price > 0 ? "line-through opacity-30 text-lg" : ""}`}>
                                                     ₹{plan.price}
                                                 </span>
                                                 {promoData && plan.price > 0 && (
-                                                    <span className="text-2xl font-bold text-emerald-400">
+                                                    <span className="text-2xl font-bold text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.3)]">
                                                         ₹{finalPrice}
                                                     </span>
                                                 )}
                                                 <span className="text-xs text-slate-500">/month</span>
                                             </div>
                                             {promoData && plan.price > 0 && (
-                                                <div className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-tight">
-                                                    Code Applied · {promoData.discount}% Off
+                                                <div className="mt-1 flex flex-col gap-0.5">
+                                                    <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-tight flex items-center gap-1">
+                                                        <Tag className="w-2.5 h-2.5" />
+                                                        {promoData.discount}% Discount Added
+                                                    </div>
+                                                    <div className="text-[9px] font-medium text-slate-500 italic">
+                                                        You save ₹{plan.price - finalPrice}
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
@@ -230,7 +242,10 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                                 }`}
                                         >
                                             {selectedPlanId === plan.id && <Loader2 className="w-3 h-3 animate-spin" />}
-                                            {isCurrent ? "Current Plan" : plan.id === 'free' ? "Select Free" : (selectedPlanId === plan.id ? "Processing..." : "Upgrade Now")}
+                                            {isCurrent ? "Current Plan" :
+                                                plan.id === 'free' ? "Select Free" :
+                                                    (selectedPlanId === plan.id ? "Processing..." :
+                                                        (promoData?.discount === 100 ? "Claim Free Access" : "Upgrade Now"))}
                                         </button>
                                     </motion.div>
                                 );

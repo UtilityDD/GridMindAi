@@ -8,17 +8,16 @@ import {
   FileText,
   Sparkles,
   BrainCircuit,
-  ChevronDown,
   Wand2,
   Copy,
   Check,
   Share2,
   Cpu,
-  Settings,
   Menu,
+  Lock,
   ArrowUp,
   Zap,
-  X,
+  Clock,
 } from "lucide-react";
 
 import { useAuth } from "@/components/AuthProvider";
@@ -51,15 +50,30 @@ interface UsageData {
   monthlyCount: number;
   monthlyLimit: number;
   tierName: string;
+  hasCustomLimit?: boolean;
 }
 
-const EXAMPLE_QUERIES = [
+const ALL_INTERESTING_QUERIES = [
   "What are the grid connectivity standards for renewable integration?",
-  "Tell me about power theft prevention and monitoring guidelines",
+  "Tell me about power theft prevention and monitoring guidelines.",
   "What is the standard procedure for grid stability management?",
   "What are the procurement policies for public utility projects?",
-  "Explain the career progression protocols in the energy sector",
+  "Explain the career progression protocols in the energy sector.",
   "What are the regulatory requirements for high-tension claims?",
+  "What are the latest Rooftop Solar regulations for prosumers in WB?",
+  "Explain the eligibility criteria for high-tension industrial connections.",
+  "What are the standard protocols for grid stability during peak load?",
+  "What is the procedure for dynamic node assignment in power grids?",
+  "How are transmission losses calculated under WBERC norms?",
+  "What are the safety protocols for high-voltage substation maintenance?",
+  "Explain the 'Open Access' eligibility for captive power plants.",
+  "What are the penalties for exceeding sanctioned load in WB?",
+  "How to apply for a net-metering connection for a commercial building?",
+  "What are the cross-subsidy surcharge rules for industrial consumers?",
+  "Define the 'Safe Harbor' provisions in recent energy amendments.",
+  "What are the billing dispute resolution mechanisms for domestic users?",
+  "Explain the voltage regulation limits for distribution transformers.",
+  "What are the mandatory data logging requirements for IPPs?",
 ];
 
 const MOBILE_EXAMPLE_QUERIES = [
@@ -68,27 +82,9 @@ const MOBILE_EXAMPLE_QUERIES = [
   "Grid stability procedures?",
   "Public utility procurement?",
   "High-tension claim regs?",
-];
-
-const FEATURED_QUESTIONS = [
-  {
-    id: "solar",
-    text: "What are the latest Rooftop Solar regulations for prosumers in WB?",
-    mobileText: "Latest WB Rooftop Solar regs?",
-    icon: Sparkles
-  },
-  {
-    id: "industrial",
-    text: "Explain the eligibility criteria for high-tension industrial connections.",
-    mobileText: "Industrial connection criteria?",
-    icon: Zap
-  },
-  {
-    id: "stability",
-    text: "What are the standard protocols for grid stability during peak load?",
-    mobileText: "Peak load grid protocols?",
-    icon: BrainCircuit
-  }
+  "WB Rooftop Solar regs?",
+  "Industrial connection criteria?",
+  "Peak load protocols?",
 ];
 
 
@@ -182,18 +178,20 @@ export default function Home() {
   const [error, setError] = useState("");
   const [verbosity, setVerbosity] = useState(3);
   const [userTier, setUserTier] = useState<string>("free");
-  const [selectedModel, setSelectedModel] = useState("llama-3.1-8b-instant");
   const [activeQuestion, setActiveQuestion] = useState("");
+  const [featuredQuestions, setFeaturedQuestions] = useState<{ text: string, icon: any }[]>([]);
 
-  // Effect to handle tier-based model defaults
+  // Randomize featured questions on mount
   useEffect(() => {
-    if (userTier === "free") {
-      setSelectedModel("llama-3.1-8b-instant");
-    } else if (userTier === "pro" && selectedModel === "llama-3.1-8b-instant") {
-      // Auto-upgrade selected model if they move to Pro
-      setSelectedModel("gemini-2.5-flash");
-    }
-  }, [userTier, selectedModel]);
+    const shuffled = [...ALL_INTERESTING_QUERIES].sort(() => 0.5 - Math.random());
+    const icons = [Sparkles, Zap, BrainCircuit, Wand2, Cpu];
+    const selected = shuffled.slice(0, 3).map((q, i) => ({
+      text: q,
+      icon: icons[i % icons.length]
+    }));
+    setFeaturedQuestions(selected);
+  }, []);
+
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -353,7 +351,7 @@ export default function Home() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    const queries = isMobile ? MOBILE_EXAMPLE_QUERIES : EXAMPLE_QUERIES;
+    const queries = isMobile ? MOBILE_EXAMPLE_QUERIES : ALL_INTERESTING_QUERIES;
     const currentQuery = queries[queryIndex] || queries[0];
     const typingSpeed = isDeleting ? 40 : 80;
     const pauseDuration = 2000;
@@ -442,7 +440,7 @@ export default function Home() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ question, verbosity, model: selectedModel }),
+        body: JSON.stringify({ question, verbosity }),
       });
 
       if (res.status === 401) {
@@ -566,12 +564,6 @@ export default function Home() {
             <div className="hidden xl:block ml-2 border-l border-white/5 pl-4 py-1">
               <LiveStats />
             </div>
-            <SettingsMenu
-              selectedModel={selectedModel}
-              setSelectedModel={setSelectedModel}
-              verbosity={verbosity}
-              setVerbosity={setVerbosity}
-            />
           </div>
         </header>
 
@@ -652,7 +644,7 @@ export default function Home() {
 
               <div className="w-full max-w-2xl">
                 <div className="relative group mb-8">
-                  <div className="relative flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-2xl px-5 py-2.5 focus-within:border-slate-700 transition-all duration-200">
+                  <div className="relative flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-2xl px-5 py-2.5 focus-within:border-slate-700 transition-all duration-200 shadow-xl">
                     <textarea
                       ref={inputRef}
                       value={query}
@@ -672,35 +664,44 @@ export default function Home() {
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleSubmit()}
                       disabled={loading || !query.trim()}
-                      className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-indigo-600/20"
                     >
                       <ArrowUp className="w-5 h-5" />
                     </motion.button>
+                  </div>
+
+                  {/* Response Length Slider moved here */}
+                  <div className="mt-3 px-4">
+                    <VerbositySlider
+                      value={verbosity}
+                      onChange={setVerbosity}
+                      userTier={userTier}
+                      onUpgradeClick={() => setIsPricingOpen(true)}
+                    />
                   </div>
                 </div>
 
                 {/* Featured Questions Grid */}
                 <div className="flex flex-wrap justify-center gap-3">
-                  {FEATURED_QUESTIONS.map((q, idx) => {
+                  {featuredQuestions.map((q, idx) => {
                     const Icon = q.icon;
                     return (
                       <motion.button
-                        key={q.id}
+                        key={idx}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 + idx * 0.1 }}
                         onClick={() => {
-                          const text = isMobile ? (q.mobileText || q.text) : q.text;
-                          setQuery(text);
-                          handleSubmit(text);
+                          setQuery(q.text);
+                          handleSubmit(q.text);
                         }}
                         className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900 border border-slate-800 hover:border-indigo-500/30 hover:bg-slate-800/50 transition-all text-left max-w-[280px] group"
                       >
                         <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0 group-hover:bg-indigo-500/20 transition-colors">
                           <Icon className="w-4 h-4 text-indigo-400" />
                         </div>
-                        <span className="text-[11px] font-medium text-slate-300 leading-tight group-hover:text-white transition-colors">
-                          {isMobile ? (q.mobileText || q.text) : q.text}
+                        <span className="text-[11px] font-medium text-slate-300 leading-tight group-hover:text-white transition-colors line-clamp-2">
+                          {q.text}
                         </span>
                       </motion.button>
                     );
@@ -785,14 +786,27 @@ export default function Home() {
                         {/* Result Header */}
                         <div className="px-8 py-4 bg-white/[0.02] border-b border-white/5 flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                            <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                              <BrainCircuit className="w-6 h-6 text-indigo-400" />
                             </div>
-                            <span className="text-xs font-bold text-white uppercase tracking-wider">GridMind</span>
+                            <h1 className="text-sm font-bold tracking-tight text-white leading-tight animate-in fade-in slide-in-from-left-2 duration-300">
+                              GridMind <span className="text-indigo-400">AI</span>
+                            </h1>
                           </div>
-                          <span className="text-[10px] text-slate-500 font-medium">
-                            {(result.elapsed_ms / 1000).toFixed(1)}s
-                          </span>
+
+                          <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/5">
+                            <div className="flex items-center gap-1.5 text-slate-500 hover:text-indigo-400/80 transition-colors group cursor-default">
+                              <Cpu className="w-3.5 h-3.5" />
+                              <span className="text-[9px] font-bold uppercase tracking-[0.1em] max-w-0 group-hover:max-w-[200px] opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap overflow-hidden">
+                                {result.model_used}
+                              </span>
+                            </div>
+                            <div className="w-[1px] h-2.5 bg-white/10" />
+                            <div className="flex items-center gap-1.5 text-slate-500">
+                              <Clock className="w-3.5 h-3.5" />
+                              <span className="text-[9px] font-bold uppercase tracking-[0.1em]">{(result.elapsed_ms / 1000).toFixed(1)}s</span>
+                            </div>
+                          </div>
                         </div>
 
                         {/* Answer Content Area with Typing Animation */}
@@ -860,6 +874,16 @@ export default function Home() {
                           )}
                         </motion.button>
                       </AnimatePresence>
+                    </div>
+
+                    {/* Response Length Slider moved here */}
+                    <div className="mt-3 px-4">
+                      <VerbositySlider
+                        value={verbosity}
+                        onChange={setVerbosity}
+                        userTier={userTier}
+                        onUpgradeClick={() => setIsPricingOpen(true)}
+                      />
                     </div>
                   </div>
                 </div>
@@ -983,143 +1007,52 @@ function ShareBar({ result, query }: { result: QueryResult; query: string }) {
     <div className="px-8 py-4 border-t border-white/5 flex items-center gap-3 bg-white/[0.01]">
       <button
         onClick={handleCopy}
-        className="flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500/20 border border-transparent transition-all duration-200"
+        title="Copy Intelligence"
+        className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500/20 border border-transparent transition-all duration-200"
       >
         {copied ? (
-          <>
-            <Check className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-emerald-400 uppercase tracking-widest">Synthesis Copied</span>
-          </>
+          <Check className="w-4 h-4 text-emerald-400" />
         ) : (
-          <>
-            <Copy className="w-3.5 h-3.5" />
-            <span className="uppercase tracking-widest">Copy Intelligence</span>
-          </>
+          <Copy className="w-4 h-4" />
         )}
       </button>
       <button
         onClick={handleShare}
-        className="flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 border border-transparent transition-all duration-200"
+        title="Distribute Strategy"
+        className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 border border-transparent transition-all duration-200"
       >
-        <Share2 className="w-3.5 h-3.5" />
-        <span className="uppercase tracking-widest">Distribute</span>
+        <Share2 className="w-4 h-4" />
       </button>
+
+      <div className="flex-1" />
+
+      <a
+        href={`mailto:gridmind.info@gmail.com?subject=Report: Inaccurate GridMind Response&body=TACTICAL QUERY:%0D%0A${encodeURIComponent(query)}%0D%0A%0D%0AMODEL USED:%0D%0A${encodeURIComponent(result.model_used)}%0D%0A%0D%0AIssue Details:%0D%0A[Please describe why this response was unsatisfactory]`}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-rose-500/5 transition-all group/feedback"
+      >
+        <div className="w-1.5 h-1.5 rounded-full bg-rose-500/50 shadow-[0_0_8px_rgba(244,63,94,0.4)] animate-pulse" />
+        <span className="text-[9px] font-bold text-slate-500 group-hover/feedback:text-rose-400 uppercase tracking-[0.1em]">Bad Response?</span>
+      </a>
     </div>
   );
 }
 
-const MODEL_OPTIONS = [
-  { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google DeepMind", tier: "Pro" },
-  { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B", provider: "Meta/Groq", tier: "Basic" },
-  { value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B", provider: "Meta/Groq", tier: "Basic+" },
-  { value: "moonshotai/kimi-k2-instruct", label: "Kimi K2 Instruct", provider: "Moonshot", tier: "Advance" },
-  { value: "qwen/qwen3-32b", label: "Qwen3 32B", provider: "Ali/Groq", tier: "Advance" },
-];
-
-function ModelSelector({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const current = MODEL_OPTIONS.find((m) => m.value === value) || MODEL_OPTIONS[0];
-
-  const groupedModels = {
-    Basic: MODEL_OPTIONS.filter((m) => m.tier === "Basic"),
-    "Basic+": MODEL_OPTIONS.filter((m) => m.tier === "Basic+"),
-    Advance: MODEL_OPTIONS.filter((m) => m.tier === "Advance"),
-    Pro: MODEL_OPTIONS.filter((m) => m.tier === "Pro"),
-  };
-
-  return (
-    <div className="relative shrink-0">
-      <button
-        onClick={() => setOpen(!open)}
-        className="group flex items-center gap-2.5 px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 hover:border-slate-500 transition-all duration-200 shadow-sm"
-      >
-        <div className={`w-2 h-2 rounded-full shadow-[0_0_8px_rgba(79,70,229,0.3)] ${current.tier === 'Pro' ? 'bg-amber-400' : 'bg-indigo-500'}`} />
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
-          {current.label}
-          {current.tier === "Pro" && <span className="ml-2 text-amber-500/80">PRO</span>}
-        </span>
-        <motion.div
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <ChevronDown className="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300 transition-colors" />
-        </motion.div>
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="absolute top-full left-0 mt-2 w-64 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-y-auto max-h-[400px] z-50 p-1.5"
-          >
-            {(["Basic", "Basic+", "Advance", "Pro"] as const).map((tier) => {
-              const models = groupedModels[tier];
-              if (models.length === 0) return null;
-
-              return (
-                <div key={tier} className="mb-2">
-                  <div className="px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2">
-                    {tier}
-                    <div className="flex-1 h-px bg-slate-800" />
-                  </div>
-                  {models.map((m) => (
-                    <button
-                      key={m.value}
-                      onClick={() => {
-                        onChange(m.value);
-                        setOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all ${m.value === value
-                        ? "bg-indigo-600/10"
-                        : "hover:bg-slate-800"
-                        }`}
-                    >
-                      <div className="flex flex-col gap-0.5">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`text-xs font-bold leading-none ${m.value === value ? "text-indigo-400" : "text-slate-300"}`}
-                          >
-                            {m.label}
-                          </span>
-                        </div>
-                        <span className="text-[9px] text-slate-600 uppercase font-black tracking-tighter">{m.provider}</span>
-                      </div>
-                      {m.value === value && (
-                        <div className={`w-1.5 h-1.5 rounded-full ${m.tier === 'Pro' ? 'bg-amber-400' : 'bg-indigo-500'} shadow-[0_0_8px_rgba(99,102,241,0.5)]`} />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {open && (
-        <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-      )}
-    </div>
-  );
-}
 
 function VerbositySlider({
   value,
   onChange,
+  userTier,
+  onUpgradeClick,
 }: {
   value: number;
   onChange: (v: number) => void;
+  userTier: string;
+  onUpgradeClick: () => void;
 }) {
+  const isPaid = userTier.toLowerCase() !== 'free';
+
   return (
-    <div className="flex items-center gap-6 px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl flex-1 shadow-sm">
+    <div className="flex items-center gap-4 px-1 py-1 flex-1">
       <div className="flex items-center gap-2.5 shrink-0">
         <Cpu className="w-3.5 h-3.5 text-indigo-500" />
         <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest w-20 text-center">
@@ -1132,17 +1065,34 @@ function VerbositySlider({
           className="absolute left-0 h-1 rounded-full bg-indigo-600 transition-all duration-300"
           style={{ width: `${((value - 1) / 4) * 100}%` }}
         />
-        <div className="absolute inset-x-0 flex justify-between px-0.5">
-          {[1, 2, 3, 4, 5].map((step) => (
-            <button
-              key={step}
-              onClick={() => onChange(step)}
-              className={`w-2.5 h-2.5 rounded-full transition-all duration-200 border-2 ${step <= value
-                ? "bg-indigo-500 border-indigo-400 shadow-sm shadow-indigo-500/20"
-                : "bg-slate-800 border-slate-700 hover:border-slate-500"
-                }`}
-            />
-          ))}
+        <div className="absolute inset-x-0 flex justify-between px-0.5 pointer-events-none">
+          {[1, 2, 3, 4, 5].map((step) => {
+            const isLocked = !isPaid && step > 3;
+            return (
+              <div
+                key={step}
+                className={`relative w-2.5 h-2.5 rounded-full transition-all duration-200 border-2 ${step <= value
+                  ? "bg-indigo-500 border-indigo-400 shadow-sm shadow-indigo-500/20"
+                  : "bg-slate-800 border-slate-700"
+                  }`}
+              >
+                {isLocked && (
+                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 pointer-events-none z-50 whitespace-nowrap shadow-2xl flex flex-col items-center gap-1">
+                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">{VERBOSITY_LABELS[step - 1]}</span>
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                      <Lock className="w-2.5 h-2.5 text-amber-500" />
+                      <span className="text-[8px] font-bold text-amber-500 uppercase tracking-widest">Upgrade</span>
+                    </div>
+                  </div>
+                )}
+                {!isPaid && step > 3 && (
+                  <div className="absolute inset-0 flex items-center justify-center opacity-40">
+                    <div className="w-1 h-1 bg-amber-500 rounded-full" />
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
         <input
           type="range"
@@ -1150,8 +1100,17 @@ function VerbositySlider({
           max={5}
           step={1}
           value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="absolute inset-0 w-full opacity-0 cursor-pointer"
+          onChange={(e) => {
+            const newVal = Number(e.target.value);
+            if (!isPaid && newVal > 3) {
+              onUpgradeClick();
+              // Prevent actual change to locked values for free users
+              onChange(Math.min(value, 3));
+            } else {
+              onChange(newVal);
+            }
+          }}
+          className="absolute inset-0 w-full opacity-0 cursor-pointer z-10"
         />
       </div>
     </div>
@@ -1222,64 +1181,3 @@ function SourcesSection({ sources }: { sources: Source[] }) {
   );
 }
 
-function SettingsMenu({
-  selectedModel,
-  setSelectedModel,
-  verbosity,
-  setVerbosity,
-}: {
-  selectedModel: string;
-  setSelectedModel: (v: string) => void;
-  verbosity: number;
-  setVerbosity: (v: number) => void;
-}) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        title="Intelligence Config"
-        className={`flex items-center justify-center w-8 h-8 rounded-full border transition-all duration-300 ${open
-          ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
-          : "bg-slate-900/50 border-white/5 text-slate-400 hover:border-indigo-500/30 hover:text-indigo-400"
-          }`}
-      >
-        <Settings className={`w-3.5 h-3.5 ${open ? "animate-[spin_4s_linear_infinite]" : ""}`} />
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <>
-            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="absolute top-full right-0 mt-3 w-80 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl z-50 overflow-visible"
-            >
-              <div className="p-5 space-y-6 bg-slate-900">
-                <div>
-                  <div className="flex items-center gap-2 mb-3 px-1 text-slate-500">
-                    <Cpu className="w-3 h-3" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Model Architecture</span>
-                  </div>
-                  <ModelSelector value={selectedModel} onChange={setSelectedModel} />
-                </div>
-
-                <div className="pt-2">
-                  <div className="flex items-center gap-2 mb-3 px-1 text-slate-500">
-                    <Wand2 className="w-3 h-3" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Response Length</span>
-                  </div>
-                  <VerbositySlider value={verbosity} onChange={setVerbosity} />
-                </div>
-              </div>
-
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
