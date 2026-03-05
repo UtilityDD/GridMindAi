@@ -3,9 +3,13 @@ import Groq from "groq-sdk";
 import { SYSTEM_PROMPT, buildUserPrompt } from "./prompts";
 import type { SourceMeta } from "./rag";
 
+// --- Models ---
 const GEMINI_MODEL = "gemini-1.5-flash";
 const SAMBANOVA_MODEL = "Llama-3.1-70B-Instruct";
+const GITHUB_MODEL = "gpt-4o-mini"; // Default for GitHub models free tier
 const SAMBANOVA_BASE_URL = "https://api.sambanova.ai/v1";
+const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
+const GITHUB_BASE_URL = "https://models.inference.ai.azure.com"; // GitHub Models endpoint
 
 const GROQ_MODELS = new Set([
   "llama-3.1-8b-instant",
@@ -19,34 +23,37 @@ const OPENROUTER_MODELS = [
   "openai/gpt-4o-mini",
 ];
 
-const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
+// --- Pool Manager ---
+class KeyPool {
+  private keys: string[];
+  private currentIndex: number = 0;
 
-let _genaiClients: GoogleGenerativeAI[] = [];
-let _groqClient: Groq | null = null;
-let _currentKeyIndex = 0;
-
-function getGenAIClients(): GoogleGenerativeAI[] {
-  if (_genaiClients.length === 0) {
-    const keys = (process.env.GEMINI_KEY_POOL || process.env.GEMINI_API_KEY || "").split(",").map(k => k.trim()).filter(Boolean);
-    _genaiClients = keys.map(key => new GoogleGenerativeAI(key));
+  constructor(envKey: string, fallbackEnvKey?: string) {
+    const raw = process.env[envKey] || (fallbackEnvKey ? process.env[fallbackEnvKey] : "");
+    this.keys = (raw || "").split(",").map(k => k.trim()).filter(Boolean);
   }
-  return _genaiClients;
-}
 
-function getNextGenAI(): GoogleGenerativeAI | null {
-  const clients = getGenAIClients();
-  if (clients.length === 0) return null;
-  const client = clients[_currentKeyIndex];
-  _currentKeyIndex = (_currentKeyIndex + 1) % clients.length;
-  return client;
-}
-
-function getGroq(): Groq {
-  if (!_groqClient) {
-    _groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY! });
+  getNext(): string | null {
+    if (this.keys.length === 0) return null;
+    const key = this.keys[this.currentIndex];
+    this.currentIndex = (this.currentIndex + 1) % this.keys.length;
+    return key;
   }
-  return _groqClient;
+
+  get size(): number {
+    return this.keys.length;
+  }
 }
+
+const Pools = {
+  Gemini: new KeyPool("GEMINI_KEY_POOL", "GEMINI_API_KEY"),
+  Groq: new KeyPool("GROQ_KEY_POOL", "GROQ_API_KEY"),
+  SambaNova: new KeyPool("SAMBANOVA_KEY_POOL", "SAMBANOVA_API_KEY"),
+  GitHub: new KeyPool("GITHUB_KEY_POOL", "GITHUB_MODELS_KEY"),
+  OpenRouter: new KeyPool("OPENROUTER_KEY_POOL", "OPENROUTER_API_KEY"),
+};
+
+// --- API Implementation Functions ---
 
 async function callGemini(
   question: string,
@@ -55,9 +62,10 @@ async function callGemini(
   verbosity: number,
   retryCount = 0
 ): Promise<string> {
-  const genai = getNextGenAI();
-  if (!genai) throw new Error("No Gemini API keys configured");
+  const apiKey = Pools.Gemini.getNext();
+  if (!apiKey) throw new Error("No Gemini API keys configured");
 
+  const genai = new GoogleGenerativeAI(apiKey);
   const userPrompt = buildUserPrompt(question, context, sources, verbosity);
 
   try {
@@ -69,12 +77,11 @@ async function callGemini(
     const response = await model.generateContent(userPrompt);
     return response.response.text();
   } catch (e: any) {
-    const poolSize = getGenAIClients().length;
-    const maxRetries = Math.max(poolSize, 3);
+    const msg = e?.message?.toLowerCase() || "";
+    const isRetryable = msg.includes("429") || msg.includes("quota") || msg.includes("404") || msg.includes("expired") || msg.includes("400");
 
-    // If rate limited OR 404 (some regions/keys might not see flash), try next key
-    if ((e?.message?.includes("429") || e?.message?.includes("OUT_OF_QUOTA") || e?.message?.includes("404")) && retryCount < maxRetries) {
-      console.warn(`Gemini Key ${_currentKeyIndex} (Pool) failed or rate limited. Rotating...`);
+    if (isRetryable && retryCount < Pools.Gemini.size) {
+      console.warn(`Gemini Key failed/limited. Rotating... (${retryCount + 1}/${Pools.Gemini.size})`);
       return callGemini(question, context, sources, verbosity, retryCount + 1);
     }
     throw e;
@@ -86,131 +93,105 @@ async function callGroq(
   context: string,
   sources: SourceMeta[],
   model: string,
-  verbosity: number
+  verbosity: number,
+  retryCount = 0
 ): Promise<string> {
-  const groq = getGroq();
+  const apiKey = Pools.Groq.getNext();
+  if (!apiKey) throw new Error("No Groq API keys configured");
+
+  const groq = new Groq({ apiKey });
   const userPrompt = buildUserPrompt(question, context, sources, verbosity);
 
-  const response = await groq.chat.completions.create({
-    model,
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: userPrompt },
-    ],
-  });
-  return response.choices[0]?.message?.content ?? "";
-}
-
-async function callSambaNova(
-  question: string,
-  context: string,
-  sources: SourceMeta[],
-  verbosity: number
-): Promise<string> {
-  const apiKey = process.env.SAMBANOVA_API_KEY;
-  if (!apiKey) throw new Error("SAMBANOVA_API_KEY not configured");
-
-  const userPrompt = buildUserPrompt(question, context, sources, verbosity);
-
-  const response = await fetch(`${SAMBANOVA_BASE_URL}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: SAMBANOVA_MODEL,
+  try {
+    const response = await groq.chat.completions.create({
+      model,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userPrompt },
       ],
-      stream: false,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`SambaNova error: ${errorData?.error?.message || response.statusText}`);
+    });
+    return response.choices[0]?.message?.content ?? "";
+  } catch (e: any) {
+    const msg = e?.message?.toLowerCase() || "";
+    if ((msg.includes("429") || msg.includes("rate_limit")) && retryCount < Pools.Groq.size) {
+      console.warn(`Groq Key rate limited. Rotating...`);
+      return callGroq(question, context, sources, model, verbosity, retryCount + 1);
+    }
+    throw e;
   }
-
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content ?? "";
 }
 
-async function callOpenRouter(
+async function callGenericCompletions(
+  pool: KeyPool,
+  baseUrl: string,
+  model: string,
   question: string,
   context: string,
   sources: SourceMeta[],
   verbosity: number,
-  model: string
+  providerName: string,
+  retryCount = 0
 ): Promise<string> {
-  const apiKey = (process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY || "").trim();
-  if (!apiKey) throw new Error("OpenRouter/OpenAI API key not configured");
+  const apiKey = pool.getNext();
+  if (!apiKey) throw new Error(`No ${providerName} API keys configured`);
 
   const userPrompt = buildUserPrompt(question, context, sources, verbosity);
 
-  // If using an OpenAI key with OpenRouter, it might fail unless specified. 
-  // However, OpenRouter usually expects its own keys.
-  const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": "https://gridmind.ai",
-      "X-Title": "GridMind AI",
-    },
-    body: JSON.stringify({
-      model: model,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userPrompt },
-      ],
-    }),
-  });
+  try {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userPrompt },
+        ],
+        stream: false,
+      }),
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`OpenRouter error: ${errorData?.error?.message || response.statusText}`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const msg = errorData?.error?.message || response.statusText;
+
+      if ((response.status === 429 || response.status === 401) && retryCount < pool.size) {
+        console.warn(`${providerName} Key limited (${response.status}). Rotating...`);
+        return callGenericCompletions(pool, baseUrl, model, question, context, sources, verbosity, providerName, retryCount + 1);
+      }
+      throw new Error(`${providerName} error: ${msg}`);
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content ?? "";
+  } catch (e: any) {
+    if (retryCount < pool.size && (e.message.includes("429") || e.message.includes("fetch"))) {
+      return callGenericCompletions(pool, baseUrl, model, question, context, sources, verbosity, providerName, retryCount + 1);
+    }
+    throw e;
   }
-
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content ?? "";
 }
 
-async function callOpenAI(
-  question: string,
-  context: string,
-  sources: SourceMeta[],
-  verbosity: number
-): Promise<string> {
-  const apiKey = (process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY || "").trim();
-  if (!apiKey) throw new Error("OpenAI API key not configured");
+// Wrapper specialized functions
+const callSambaNova = (q: string, c: string, s: SourceMeta[], v: number) =>
+  callGenericCompletions(Pools.SambaNova, SAMBANOVA_BASE_URL, SAMBANOVA_MODEL, q, c, s, v, "SambaNova");
 
-  const userPrompt = buildUserPrompt(question, context, sources, verbosity);
+const callGitHubModels = (q: string, c: string, s: SourceMeta[], v: number) =>
+  callGenericCompletions(Pools.GitHub, GITHUB_BASE_URL, GITHUB_MODEL, q, c, s, v, "GitHub");
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userPrompt },
-      ],
-    }),
-  });
+const callOpenRouter = (q: string, c: string, s: SourceMeta[], v: number, model: string) =>
+  callGenericCompletions(Pools.OpenRouter, OPENROUTER_BASE_URL, model, q, c, s, v, "OpenRouter");
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`OpenAI error: ${errorData?.error?.message || response.statusText}`);
-  }
+const callOpenAI = (q: string, c: string, s: SourceMeta[], v: number) => {
+  // OpenAI often shares key with GitHub for users, but if they have a real sk-... key, use it.
+  const pool = Pools.GitHub.size > 0 ? Pools.GitHub : Pools.OpenRouter;
+  return callGenericCompletions(pool, "https://api.openai.com/v1", "gpt-4o-mini", q, c, s, v, "OpenAI");
+};
 
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content ?? "";
-}
+// --- Main Interface ---
 
 export interface GenerateResult {
   answer: string;
@@ -237,86 +218,80 @@ export async function generateAnswer(
       return { answer, sources, modelUsed: model };
     } catch (e: any) {
       console.error(`Explicit model ${model} failed:`, e?.message);
-      // Fall through to default behavior on failure
     }
   }
 
-  // 2. Tier-Based Routing & Multi-Provider Fallback
   const isPremium = tier !== "free" && tier !== "basic";
 
-  // Strategy: 
-  // Premium -> Gemini Pool (Best reasoning)
-  // Basic -> Randomized strategy (SambaNova, OpenRouter-Kimi, Groq, Gemini)
-
+  // 2. Optimized Provider Hierarchy (Mega-Pool)
   let sequence: string[] = [];
   if (isPremium) {
-    // Paid tiers: Gemini first, others as fallback
-    sequence = ["gemini", "sambanova", "groq", "openai", "openrouter"];
-    console.log(`[Tier: ${tier}] Paid Strategy: Priority Gemini + Fallbacks`);
+    // Paid tiers: Gemini (Pool) -> OpenAI -> GitHub -> Groq
+    sequence = ["gemini", "openai", "github", "groq", "sambanova", "openrouter"];
+    console.log(`[Tier: ${tier}] Mega-Pool Paid Strategy Enabled`);
   } else {
-    // Basic/Free: Randomized strategy EXCLUDING Gemini to save quota for paid users
-    const providers = ["sambanova", "groq", "openai", "openrouter"];
-    // Fisher-Yates shuffle
-    for (let i = providers.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [providers[i], providers[j]] = [providers[j], providers[i]];
-    }
-    sequence = providers;
-    console.log(`[Tier: ${tier}] Basic Strategy (No Gemini): [${sequence.join(", ")}]`);
+    // Basic/Free: Weights between Groq and SambaNova -> GitHub -> OpenRouter
+    // We shuffle Groq/SambaNova to distribute load
+    const primaries = ["groq", "sambanova"].sort(() => Math.random() - 0.5);
+    sequence = [...primaries, "github", "openrouter"];
+    console.log(`[Tier: ${tier}] Mega-Pool Free Strategy Enabled (Primaries: ${primaries.join(", ")})`);
   }
 
   for (const provider of sequence) {
     try {
       if (provider === "gemini") {
-        console.log(`[Tier: ${tier}] Routing to Gemini Pool...`);
-        const answer = await callGemini(question, context, sources, verbosity);
-        return { answer, sources, modelUsed: `${GEMINI_MODEL} (Pool)` };
-      }
-
-      if (provider === "sambanova") {
-        if (process.env.SAMBANOVA_API_KEY) {
-          console.log(`[Tier: ${tier}] Routing to SambaNova (Llama 70B)...`);
-          const answer = await callSambaNova(question, context, sources, verbosity);
-          return { answer, sources, modelUsed: `SambaNova/${SAMBANOVA_MODEL}` };
+        if (Pools.Gemini.size > 0) {
+          const answer = await callGemini(question, context, sources, verbosity);
+          return { answer, sources, modelUsed: `Gemini/Flash (Pool)` };
         }
       }
 
       if (provider === "groq") {
-        if (process.env.GROQ_API_KEY) {
-          console.log(`[Tier: ${tier}] Routing to Groq (Llama 70B)...`);
+        if (Pools.Groq.size > 0) {
           const groqModel = "llama-3.3-70b-versatile";
           const answer = await callGroq(question, context, sources, groqModel, verbosity);
-          return { answer, sources, modelUsed: `Groq/${groqModel}` };
+          return { answer, sources, modelUsed: `Groq/Llama-70B (Pool)` };
         }
       }
 
-      if (provider === "openrouter") {
-        const apiKey = (process.env.OPENROUTER_API_KEY || "").trim();
-        if (apiKey && apiKey.startsWith("sk-or-")) {
-          const orModel = OPENROUTER_MODELS[Math.floor(Math.random() * OPENROUTER_MODELS.length)];
-          console.log(`[Tier: ${tier}] Routing to OpenRouter (${orModel})...`);
-          const answer = await callOpenRouter(question, context, sources, verbosity, orModel);
-          return { answer, sources, modelUsed: `OR/${orModel.split("/").pop()}` };
+      if (provider === "sambanova") {
+        if (Pools.SambaNova.size > 0) {
+          const answer = await callSambaNova(question, context, sources, verbosity);
+          return { answer, sources, modelUsed: `SambaNova/Llama-70B (Pool)` };
+        }
+      }
+
+      if (provider === "github") {
+        if (Pools.GitHub.size > 0) {
+          const answer = await callGitHubModels(question, context, sources, verbosity);
+          return { answer, sources, modelUsed: `GitHub/GPT-4o (Pool)` };
         }
       }
 
       if (provider === "openai") {
-        const apiKey = (process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY || "").trim();
-        if (apiKey && (apiKey.startsWith("sk-") && !apiKey.startsWith("sk-or-"))) {
-          console.log(`[Tier: ${tier}] Routing to OpenAI (GPT-4o-mini)...`);
-          const answer = await callOpenAI(question, context, sources, verbosity);
-          return { answer, sources, modelUsed: "OpenAI/GPT-4o-mini" };
+        // Fallback for real OpenAI keys if they exist in GITHUB or OPENROUTER pools
+        // or just use GitHub pools as OpenAI proxy for free-feeling experiences
+        const answer = await callOpenAI(question, context, sources, verbosity);
+        return { answer, sources, modelUsed: `OpenAI/Mini (Pool)` };
+      }
+
+      if (provider === "openrouter") {
+        if (Pools.OpenRouter.size > 0) {
+          const orModel = OPENROUTER_MODELS[Math.floor(Math.random() * OPENROUTER_MODELS.length)];
+          const answer = await callOpenRouter(question, context, sources, verbosity, orModel);
+          const shortName = orModel.split("/").pop() || orModel;
+          return { answer, sources, modelUsed: `OR/${shortName} (Pool)` };
         }
       }
     } catch (e: any) {
-      console.error(`[Tier: ${tier}] Provider ${provider} failed:`, e?.message || e);
+      console.error(`[Tier: ${tier}] Provider ${provider} failed: ${e?.message || e}`);
     }
   }
 
-  console.error(`[Tier: ${tier}] Critical Failure: All providers exhausted for query: "${question.substring(0, 50)}..."`);
+  console.error(`[Tier: ${tier}] MEGA-POOL EXHAUSTED for: "${question.substring(0, 50)}..."`);
 
   return {
-    answer: "I'm sorry, I'm currently experiencing high demand and all regulatory nodes are cooling down. Please try again in 60 seconds.",
+    answer: "I'm sorry, I'm currently experiencing extreme demand across all neural nodes. Please try again in a few moments.",
     sources,
     modelUsed: "none",
   };

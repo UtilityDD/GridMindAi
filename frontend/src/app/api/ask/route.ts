@@ -118,8 +118,8 @@ export async function POST(req: NextRequest) {
 
   // Run retrieval and keyword extraction in parallel
   const [retrievalResult, keywords] = await Promise.all([
-    retrieve(question),
-    extractKeywords(question)
+    retrieve(question, true, userTier),
+    extractKeywords(question, userTier)
   ]);
 
   if (retrievalResult.docIds.length === 0) {
