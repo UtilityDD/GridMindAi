@@ -5,7 +5,7 @@ import type { SourceMeta } from "./rag";
 
 // --- Models ---
 const GEMINI_MODEL = "gemini-1.5-flash";
-const SAMBANOVA_MODEL = "Llama-3.1-70B-Instruct";
+const SAMBANOVA_MODEL = "Meta-Llama-3.3-70B-Instruct";
 const GITHUB_MODEL = "gpt-4o-mini"; // Default for GitHub models free tier
 const SAMBANOVA_BASE_URL = "https://api.sambanova.ai/v1";
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";

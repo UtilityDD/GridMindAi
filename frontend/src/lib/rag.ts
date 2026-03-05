@@ -80,7 +80,7 @@ async function callPoolForRAG(prompt: string, retryCount = 0): Promise<string> {
   const providers = [];
   if (Pools.Groq.size > 0) providers.push({ name: "Groq", pool: Pools.Groq, url: "https://api.groq.com/openai/v1", model: "llama-3.1-8b-instant" });
   if (Pools.GitHub.size > 0) providers.push({ name: "GitHub", pool: Pools.GitHub, url: "https://models.inference.ai.azure.com", model: "gpt-4o-mini" });
-  if (Pools.SambaNova.size > 0) providers.push({ name: "SambaNova", pool: Pools.SambaNova, url: "https://api.sambanova.ai/v1", model: "Llama-3.1-8B-Instruct" });
+  if (Pools.SambaNova.size > 0) providers.push({ name: "SambaNova", pool: Pools.SambaNova, url: "https://api.sambanova.ai/v1", model: "Meta-Llama-3.1-8B-Instruct" });
 
   if (providers.length === 0) {
     // Last ditch: check legacy OPENAI_API_KEY
