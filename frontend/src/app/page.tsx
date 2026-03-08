@@ -18,6 +18,9 @@ import {
   ArrowUp,
   Zap,
   Clock,
+  X,
+  AlertCircle,
+  MessageSquare,
 } from "lucide-react";
 
 import { useAuth } from "@/components/AuthProvider";
@@ -1037,13 +1040,37 @@ function ShareBar({ result, query }: { result: QueryResult; query: string }) {
 
       <div className="flex-1" />
 
-      <a
-        href={`mailto:gridmind.info@gmail.com?subject=Report: Inaccurate GridMind Response&body=TACTICAL QUERY:%0D%0A${encodeURIComponent(query)}%0D%0A%0D%0AMODEL USED:%0D%0A${encodeURIComponent(result.model_used)}%0D%0A%0D%0AIssue Details:%0D%0A[Please describe why this response was unsatisfactory]`}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-rose-500/5 transition-all group/feedback"
-      >
-        <div className="w-1.5 h-1.5 rounded-full bg-rose-500/50 shadow-[0_0_8px_rgba(244,63,94,0.4)] animate-pulse" />
-        <span className="text-[9px] font-bold text-slate-500 group-hover/feedback:text-rose-400 uppercase tracking-[0.1em]">Bad Response?</span>
-      </a>
+      <div className="relative group/feedback flex items-center">
+        <a
+          href={`https://mail.google.com/mail/?view=cm&fs=1&to=gridmind.info@gmail.com&su=${encodeURIComponent("Report: Inaccurate GridMind Response")}&body=${encodeURIComponent(
+            `TACTICAL QUERY:\n${query}\n\nMODEL USED:\n${result.model_used}\n\nIssue Details:\n[Please describe why this response was unsatisfactory or what latest info is missing]`
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center p-2 rounded-lg hover:bg-rose-500/5 transition-all text-slate-500 hover:text-rose-400 group-hover/feedback:text-rose-400"
+          title="Report missing latest info or an error"
+        >
+          <div className="relative">
+            <MessageSquare className="w-4 h-4" />
+            <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-rose-500/80 shadow-[0_0_8px_rgba(244,63,94,0.4)] animate-pulse" />
+          </div>
+        </a>
+
+        {/* Minimal Tooltip Prompt */}
+        <div className="absolute right-0 bottom-full mb-3 pointer-events-none opacity-0 group-hover/feedback:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-200">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 shadow-2xl flex flex-col gap-1 w-56">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-3 h-3 text-rose-400" />
+              <span className="text-[10px] font-bold text-white uppercase tracking-widest">Feedback</span>
+            </div>
+            <p className="text-[10px] text-slate-400 leading-relaxed">
+              Report missing latest info on this topic or report an analytical error.
+            </p>
+          </div>
+          {/* Tooltip arrow */}
+          <div className="absolute top-full right-4 -translate-y-1 w-2 h-2 bg-slate-900 border-r border-b border-slate-800 rotate-45" />
+        </div>
+      </div>
     </div>
   );
 }

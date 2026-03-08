@@ -34,7 +34,7 @@ def _get_client(key=None) -> genai.Client:
 
 def _embed_batch(batch: list[str], batch_idx: int) -> tuple[int, list[list[float]]]:
     """Embed a single batch with key rotation on 429 errors."""
-    max_retries = len(config.GEMINI_KEY_POOL) * 2
+    max_retries = 30
     
     for attempt in range(max_retries):
         client = _get_client() # Rotates on each retry
@@ -44,12 +44,28 @@ def _embed_batch(batch: list[str], batch_idx: int) -> tuple[int, list[list[float
                 contents=batch,
                 config={"output_dimensionality": config.EMBEDDING_DIMENSIONS},
             )
+            # Ultra-conservative delay between batches to respect TPM (30,000) on free tier
+            logger.info("Batch embedding successful. Waiting 60s to stay within TPM/RPM limits...")
+            time.sleep(60)
             return batch_idx, [e.values for e in result.embeddings]
         except Exception as exc:
             msg = str(exc)
-            if ("429" in msg or "RESOURCE_EXHAUSTED" in msg) and attempt < max_retries - 1:
-                logger.warning("Embedding batch %d hit rate limit. Rotating key...", batch_idx)
-                time.sleep(1)
+            
+            # Rotate key on rate limit OR invalid/expired key errors
+            is_key_error = (
+                "429" in msg or 
+                "RESOURCE_EXHAUSTED" in msg or 
+                "400" in msg or 
+                "INVALID_ARGUMENT" in msg or
+                "API key expired" in msg or
+                "authorized" in msg.lower()
+            )
+            
+            if is_key_error and attempt < max_retries - 1:
+                # Exponential backoff for 429
+                wait = min(60, (2 ** attempt) + 5) 
+                logger.warning("Embedding batch %d hit error. Rotating key and waiting %.1fs... (Error: %s)", batch_idx, wait, msg[:100])
+                time.sleep(wait)
                 continue
                 
             if attempt == max_retries - 1:
@@ -78,7 +94,8 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
         return embeddings
 
     results: dict[int, list[list[float]]] = {}
-    max_concurrent = max(1, config.EMBEDDING_RATE_LIMIT_RPM // 10)
+    # Strictly limit concurrency for FREE tier to avoid TPM (Tokens Per Minute) exhaustion
+    max_concurrent = 1 
 
     with ThreadPoolExecutor(max_workers=min(max_concurrent, len(batches))) as pool:
         futures = {

@@ -35,8 +35,8 @@ SENTENCE_BOUNDARY = True  # prefer splitting on sentence boundaries
 # --- Embedding ---
 EMBEDDING_MODEL = "models/gemini-embedding-001"
 EMBEDDING_DIMENSIONS = 768
-EMBEDDING_BATCH_SIZE = 10
-EMBEDDING_RATE_LIMIT_RPM = 10  # free tier is very low (e.g. 15 RPM)
+EMBEDDING_BATCH_SIZE = 20
+EMBEDDING_RATE_LIMIT_RPM = 10
 
 # --- LLM ---
 GEMINI_LLM_MODEL = "gemini-2.5-flash"

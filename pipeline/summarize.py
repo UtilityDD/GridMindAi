@@ -57,8 +57,19 @@ def summarize_document(text: str, ref: str = "", date: str = "") -> str:
             return response.text or ""
         except Exception as exc:
             msg = str(exc)
-            if ("429" in msg or "RESOURCE_EXHAUSTED" in msg) and attempt < max_retries - 1:
-                logger.warning("Summarization hit rate limit. Rotating key... (Attempt %d/%d)", attempt + 1, max_retries)
+            
+            # Rotate key on rate limit OR invalid/expired key errors
+            is_key_error = (
+                "429" in msg or 
+                "RESOURCE_EXHAUSTED" in msg or 
+                "400" in msg or 
+                "INVALID_ARGUMENT" in msg or
+                "API key expired" in msg or
+                "authorized" in msg.lower()
+            )
+
+            if is_key_error and attempt < max_retries - 1:
+                logger.warning("Summarization hit error. Rotating key... (Error: %s, Attempt %d/%d)", msg[:100], attempt + 1, max_retries)
                 time.sleep(1)
                 continue
             
