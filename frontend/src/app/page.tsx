@@ -30,6 +30,7 @@ import { getSupabase } from "@/lib/supabase";
 import PricingModal from "@/components/PricingModal";
 import DisclaimerModal from "@/components/DisclaimerModal";
 import LiveStats from "@/components/LiveStats";
+import LandingPage from "@/components/LandingPage";
 
 interface Source {
   doc_id: string;
@@ -194,6 +195,8 @@ export default function Home() {
   const [userTier, setUserTier] = useState<string>("free");
   const [activeQuestion, setActiveQuestion] = useState("");
   const [featuredQuestions, setFeaturedQuestions] = useState<{ text: string, icon: any }[]>([]);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
 
   // Randomize featured questions on mount
   useEffect(() => {
@@ -423,8 +426,24 @@ export default function Home() {
     );
   }
 
-  if (!user || !session) {
-    return <LoginPage />;
+  if (!user || !session || !showDashboard) {
+    if (showLogin && (!user || !session)) {
+      return (
+        <div className="relative">
+          <LoginPage onBack={() => setShowLogin(false)} />
+        </div>
+      );
+    }
+    return (
+      <LandingPage
+        isLoggedIn={!!user && !!session}
+        buttonLabel={user && session ? "Enter Mission Control" : "Get Started Now"}
+        onGetStarted={() => {
+          if (user && session) setShowDashboard(true);
+          else setShowLogin(true);
+        }}
+      />
+    );
   }
 
   const handleSubmit = async (q?: string, cachedResult?: QueryResult) => {
@@ -575,11 +594,16 @@ export default function Home() {
                 Get Pro
               </motion.button>
             )}
-            <div className="hidden xl:block ml-2 border-l border-white/5 pl-4 py-1">
+            <div className="hidden md:block ml-2 border-l border-white/5 pl-4 py-1">
               <LiveStats />
             </div>
           </div>
         </header>
+
+        {/* ── MOBILE LIVE STATS BAR ── */}
+        <div className="md:hidden bg-slate-900/80 backdrop-blur-md border-b border-slate-800 px-4 py-2 flex justify-center sticky top-[61px] z-40 shadow-sm">
+          <LiveStats />
+        </div>
 
         {/* ── EMPTY STATE: Centered Input ── */}
         <AnimatePresence>

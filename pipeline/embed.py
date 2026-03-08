@@ -44,9 +44,9 @@ def _embed_batch(batch: list[str], batch_idx: int) -> tuple[int, list[list[float
                 contents=batch,
                 config={"output_dimensionality": config.EMBEDDING_DIMENSIONS},
             )
-            # Ultra-conservative delay between batches to respect TPM (30,000) on free tier
-            logger.info("Batch embedding successful. Waiting 60s to stay within TPM/RPM limits...")
-            time.sleep(60)
+            # Efficient delay between batches to respect TPM/RPM limits across multiple keys
+            logger.info("Batch embedding successful. Waiting 10s...")
+            time.sleep(10)
             return batch_idx, [e.values for e in result.embeddings]
         except Exception as exc:
             msg = str(exc)
@@ -94,8 +94,8 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
         return embeddings
 
     results: dict[int, list[list[float]]] = {}
-    # Strictly limit concurrency for FREE tier to avoid TPM (Tokens Per Minute) exhaustion
-    max_concurrent = 1 
+    # Moderate concurrency across our multiple available keys (8 keys = 21 RPM max)
+    max_concurrent = 2 
 
     with ThreadPoolExecutor(max_workers=min(max_concurrent, len(batches))) as pool:
         futures = {
