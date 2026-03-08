@@ -44,9 +44,10 @@ def _embed_batch(batch: list[str], batch_idx: int) -> tuple[int, list[list[float
                 contents=batch,
                 config={"output_dimensionality": config.EMBEDDING_DIMENSIONS},
             )
-            # Efficient delay between batches to respect TPM/RPM limits across multiple keys
-            logger.info("Batch embedding successful. Waiting 10s...")
-            time.sleep(10)
+            # Respect 1 chunk per 2 seconds per API key as requested
+            wait_time = len(batch) * 2
+            logger.info("Batch embedding (%d chunks) successful. Waiting %ds to respect rate limit...", len(batch), wait_time)
+            time.sleep(wait_time)
             return batch_idx, [e.values for e in result.embeddings]
         except Exception as exc:
             msg = str(exc)
@@ -94,8 +95,8 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
         return embeddings
 
     results: dict[int, list[list[float]]] = {}
-    # Moderate concurrency across our multiple available keys (8 keys = 21 RPM max)
-    max_concurrent = 2 
+    # Concurrent threads matching number of keys in pool
+    max_concurrent = len(config.GEMINI_KEY_POOL)
 
     with ThreadPoolExecutor(max_workers=min(max_concurrent, len(batches))) as pool:
         futures = {

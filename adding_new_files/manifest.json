@@ -1,18 +1,10 @@
 [
   {
-    "filename": "The Kolkata Gazette 30.07.13_0.PDF",
-    "ref": "65/WBERC",
-    "date": "21/01/2020",
-    "title": "Terms and Conditions of Tariff (3rd Amd) Regs, 2020 [2nd]",
-    "keywords": "",
-    "source_url": "https://wberc.gov.in/sites/default/files/The%20Kolkata%20Gazette%2030.07.13_0.PDF"
-  },
-  {
-    "filename": "SOR-65.pdf",
-    "ref": "65/WBERC",
-    "date": "21/01/2020",
-    "title": "Terms and Conditions of Tariff (3rd Amd) Regs, 2020 [SOR]",
-    "keywords": "",
-    "source_url": "https://wberc.gov.in/sites/default/files/SOR-65.pdf"
+    "filename": "Indian Standard OH Line above 11KV Sec-1.md",
+    "ref": "IS-OH-Line-11KV-Sec1",
+    "date": "2024-03-08",
+    "title": "Indian Standard - Overhead Line above 11KV Section 1",
+    "source_url": "https://raw.githubusercontent.com/smartlinemanapp/GridMind/main/Indian%20Standard%20OH%20Line%20above%2011KV%20Sec-1.pdf",
+    "keywords": "overhead lines, 11KV, electrical safety, Indian Standard, power distribution"
   }
 ]

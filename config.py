@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent
 
 # --- API Keys ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_KEY_POOL = os.getenv("GEMINI_KEY_POOL", GEMINI_API_KEY).split(",")
+GEMINI_KEY_POOL = os.getenv("GEMINI_API_KEYS", os.getenv("GEMINI_API_KEY", "")).split(",")
 GEMINI_KEY_POOL = [k.strip() for k in GEMINI_KEY_POOL if k.strip()]
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
@@ -35,8 +35,8 @@ SENTENCE_BOUNDARY = True  # prefer splitting on sentence boundaries
 # --- Embedding ---
 EMBEDDING_MODEL = "models/gemini-embedding-001"
 EMBEDDING_DIMENSIONS = 768
-EMBEDDING_BATCH_SIZE = 20
-EMBEDDING_RATE_LIMIT_RPM = 10
+EMBEDDING_BATCH_SIZE = 10
+EMBEDDING_RATE_LIMIT_RPM = 120  # 30 RPM per key (1 chunk / 2s) * 4 keys
 
 # --- LLM ---
 GEMINI_LLM_MODEL = "gemini-2.5-flash"

@@ -15,12 +15,12 @@ logger = logging.getLogger(__name__)
 
 
 def extract_text(pdf_path: Path, use_gemini_ocr: bool | None = None) -> str:
-    """
-    Extract text from *pdf_path*.
-    For each page: try native text extraction; if the result is too short,
-    render the page as an image and OCR it.
-    Returns concatenated text for the entire PDF.
-    """
+    """Extract text from a PDF file: native text first, then OCR for image pages."""
+    ext = pdf_path.suffix.lower()
+    if ext in [".md", ".txt"]:
+        logger.info("Reading text directly from %s", pdf_path.name)
+        return pdf_path.read_text(encoding="utf-8")
+
     doc = fitz.open(str(pdf_path))
     pages_text: list[str] = []
 

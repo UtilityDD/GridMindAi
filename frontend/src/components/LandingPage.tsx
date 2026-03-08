@@ -663,9 +663,11 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
 
             <footer id="about" className="py-12 px-6 border-t border-white/5">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-                    <div className="flex items-center gap-3 opacity-50">
-                        <BrainCircuit className="w-5 h-5 text-indigo-400" />
-                        <span className="text-sm font-bold tracking-tight">GridMind Strategic Dashboard</span>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center">
+                            <BrainCircuit className="w-6 h-6 text-indigo-500" />
+                        </div>
+                        <span className="text-sm font-bold tracking-tight">GridMind <span className="text-indigo-400">AI</span></span>
                     </div>
                     <p className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em] italic">Decide Fast. Act Fast.</p>
                     <div className="text-[10px] text-slate-500 uppercase tracking-widest">

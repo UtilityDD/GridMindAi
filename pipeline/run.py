@@ -73,8 +73,9 @@ def process_entry(entry: dict, use_gemini_ocr: bool | None = None) -> bool:
         logger.warning("No chunks produced for %s", filename)
         return False
 
-    # 3. Summarize (API call)
-    summary = summarize_document(text, ref=entry.get("ref", ""), date=entry.get("date", ""))
+    # 3. Summarize (API call) - DISABLED as per user request
+    summary = None
+    # summary = summarize_document(text, ref=entry.get("ref", ""), date=entry.get("date", ""))
 
     # 4. Build title string
     title_text = entry.get("title", "")
