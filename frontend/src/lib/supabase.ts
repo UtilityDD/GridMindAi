@@ -13,7 +13,13 @@ export function getSupabase() {
       throw new Error(msg);
     }
 
-    _supabase = createClient(supabaseUrl, supabaseAnonKey);
+    _supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
   }
   return _supabase;
 }

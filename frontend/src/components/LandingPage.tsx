@@ -3,6 +3,7 @@
 import { motion, useScroll, useSpring } from "framer-motion";
 import { BrainCircuit, Zap, Shield, BarChart3, ArrowRight, Menu, Globe, Cpu, Activity, FileText, Rocket, ShieldCheck, Check, Sparkles } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 interface LandingPageProps {
@@ -670,8 +671,10 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                         <span className="text-sm font-bold tracking-tight">GridMind <span className="text-indigo-400">AI</span></span>
                     </div>
                     <p className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em] italic">Decide Fast. Act Fast.</p>
-                    <div className="text-[10px] text-slate-500 uppercase tracking-widest">
-                        © 2026 GridMind AI. All Rights Reserved.
+                    <div className="flex items-center gap-6 text-[10px] text-slate-500 uppercase tracking-widest">
+                        <Link href="/legal#privacy" className="hover:text-indigo-400 transition-colors">Privacy</Link>
+                        <Link href="/legal#terms" className="hover:text-indigo-400 transition-colors">Terms</Link>
+                        <span>© 2026 GridMind AI</span>
                     </div>
                 </div>
             </footer>

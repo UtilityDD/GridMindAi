@@ -50,6 +50,28 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const { error } = await getSupabase().auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          // Let supabase-js detect OAuth params in URL and persist session on return.
+          redirectTo: `${window.location.origin}`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'select_account',
+          },
+        }
+      });
+      if (error) throw error;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Google authentication failed");
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center relative font-sans selection:bg-indigo-500/30">
       {/* Ambient background glow */}
@@ -183,6 +205,29 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
                     </>
                   )}
                 </button>
+
+                {mode !== "forgot" && (
+                  <>
+                    <div className="relative my-6">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-white/5"></div>
+                      </div>
+                      <div className="relative flex justify-center text-[10px] items-center">
+                        <span className="px-4 py-1 rounded-full bg-slate-900 border border-white/5 text-slate-500 font-bold uppercase tracking-[0.2em]">OR</span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleGoogleLogin}
+                      disabled={loading}
+                      className="w-full h-14 bg-white hover:bg-slate-100 disabled:bg-slate-800 text-slate-950 rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all active:scale-[0.97] flex items-center justify-center gap-3 shadow-xl"
+                    >
+                      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+                      Continue with Google
+                    </button>
+                  </>
+                )}
 
                 {onBack && (
                   <button

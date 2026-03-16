@@ -30,15 +30,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const supabase = getSupabase();
-    supabase.auth.getSession().then(({ data: { session } }) => {
+
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.warn("Auth check error (expected if not logged in):", error.message);
+        // If it's a refresh token error, sign out to clear state
+        if (error.message.includes("Refresh Token Not Found") || error.message.includes("refresh_token_not_found")) {
+          supabase.auth.signOut();
+        }
+      }
       setSession(session);
       setLoading(false);
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth State Changed:", event, session ? "Session Active" : "No Session");
       setSession(session);
+
+      // If the event is SIGNED_OUT, double check we are really cleared
+      if (event === 'SIGNED_OUT') {
+        setSession(null);
+      }
     });
 
     return () => subscription.unsubscribe();
