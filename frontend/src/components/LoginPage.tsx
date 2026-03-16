@@ -4,7 +4,6 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BrainCircuit, Mail, Lock, Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { getSupabase } from "@/lib/supabase";
-import LiveStats from "@/components/LiveStats";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -13,6 +12,7 @@ interface LoginPageProps {
 }
 
 export default function LoginPage({ onBack }: LoginPageProps = {}) {
+  const [showEmail, setShowEmail] = useState(false);
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,13 +26,9 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
     setLoading(true);
     setError("");
     setMessage("");
-
     try {
       if (mode === "login") {
-        const { error } = await getSupabase().auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { error } = await getSupabase().auth.signInWithPassword({ email, password });
         if (error) throw error;
       } else if (mode === "signup") {
         const { error } = await getSupabase().auth.signUp({ email, password });
@@ -41,7 +37,7 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
       } else {
         const { error } = await getSupabase().auth.resetPasswordForEmail(email);
         if (error) throw error;
-        setMessage("Password reset email sent.");
+        setMessage("Reset link sent — check your inbox.");
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -55,215 +51,197 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
     setError("");
     try {
       const { error } = await getSupabase().auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
-          // Let supabase-js detect OAuth params in URL and persist session on return.
           redirectTo: `${window.location.origin}`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'select_account',
-          },
-        }
+          queryParams: { access_type: "offline", prompt: "select_account" },
+        },
       });
       if (error) throw error;
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Google authentication failed");
+      setError(err instanceof Error ? err.message : "Google sign-in failed");
       setLoading(false);
     }
   };
 
+  const submitLabel = mode === "login" ? "Sign In" : mode === "signup" ? "Create Account" : "Send Reset Link";
+
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center relative font-sans selection:bg-indigo-500/30">
-      {/* Ambient background glow */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden overflow-hidden">
-        <div className="absolute top-[-15%] left-[-10%] w-[800px] h-[800px] bg-indigo-500/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-15%] right-[-10%] w-[800px] h-[800px] bg-blue-500/10 rounded-full blur-[120px]" />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[linear-gradient(180deg,_#020617_0%,_#0d1424_50%,_#020617_100%)] px-4 text-white">
+      {/* Subtle ambient glow */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/2 top-0 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-indigo-500/10 blur-[120px]" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="relative w-full max-w-[400px] mx-4"
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        className="relative w-full max-w-sm"
       >
+        {/* ── Brand ── */}
+        <div className="mb-10 flex flex-col items-center gap-4 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-[1.6rem] border border-white/12 bg-white/5 shadow-[0_0_40px_rgba(99,102,241,0.25)]">
+            <BrainCircuit className="h-8 w-8 text-indigo-300" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-white">GridMind AI</h1>
+            <p className="mt-1 text-xs uppercase tracking-[0.3em] text-slate-500">Grid Regulations Intelligence</p>
+          </div>
+        </div>
 
-        {/* Minimal Card */}
-        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-10 shadow-3xl">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={mode}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
-            >
-              <div className="flex flex-col items-center mb-10 text-center">
-                <motion.button
-                  onClick={onBack}
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  whileHover={onBack ? { scale: 1.05 } : {}}
-                  whileTap={onBack ? { scale: 0.95 } : {}}
-                  transition={{ delay: 0.2, duration: 0.5 }}
-                  className={`w-14 h-14 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center shadow-2xl mb-4 relative group ${onBack ? 'cursor-pointer hover:border-indigo-500/50' : ''}`}
-                >
-                  <div className="absolute inset-0 bg-indigo-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <BrainCircuit className="w-7 h-7 text-indigo-400 relative z-10" />
-                </motion.button>
-                <h1 className="text-2xl font-bold text-white tracking-tight mb-1">GridMind AI</h1>
-                <p className="text-[11px] text-slate-500 font-bold uppercase tracking-[0.2em]">Grid Regulations Made Simple</p>
-              </div>
+        {/* ── Card ── */}
+        <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/70 p-7 shadow-[0_24px_80px_rgba(0,0,0,0.5)] backdrop-blur-xl">
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Email Field */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Email</label>
-                  <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-400 transition-colors" />
+          {/* Google — primary action */}
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="group flex w-full items-center gap-4 rounded-2xl border border-white/10 bg-white px-5 py-4 text-slate-900 transition hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(255,255,255,0.12)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? (
+              <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+            ) : (
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" className="h-5 w-5" />
+            )}
+            <span className="flex-1 text-left text-sm font-semibold">Login with Google</span>
+            <ArrowRight className="h-4 w-4 text-slate-400 transition group-hover:translate-x-0.5" />
+          </button>
+
+          {/* Error / message */}
+          <AnimatePresence>
+            {(error || message) && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                className="overflow-hidden"
+              >
+                <div className={`rounded-xl border px-4 py-3 text-sm ${error ? "border-red-500/20 bg-red-500/10 text-red-300" : "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"}`}>
+                  {error || message}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Email option toggle */}
+          {!showEmail ? (
+            <div className="mt-6 flex items-center justify-center gap-4 text-xs text-slate-500">
+              <button
+                type="button"
+                onClick={() => { setShowEmail(true); setMode("login"); setError(""); setMessage(""); }}
+                className="transition hover:text-white"
+              >
+                Sign in with email
+              </button>
+              <span className="text-white/20">·</span>
+              <button
+                type="button"
+                onClick={() => { setShowEmail(true); setMode("signup"); setError(""); setMessage(""); }}
+                className="transition hover:text-white"
+              >
+                Create account
+              </button>
+            </div>
+          ) : (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={mode}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+              >
+                {/* Mode tabs */}
+                <div className="mt-6 flex items-center justify-center gap-5 border-t border-white/8 pt-6 text-xs">
+                  {(["login", "signup", "forgot"] as Mode[]).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => { setMode(m); setError(""); setMessage(""); }}
+                      className={`font-semibold uppercase tracking-[0.2em] transition ${mode === m ? "text-white" : "text-slate-500 hover:text-slate-300"}`}
+                    >
+                      {m === "login" ? "Sign In" : m === "signup" ? "Sign Up" : "Reset"}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Email form */}
+                <form onSubmit={handleSubmit} className="mt-5 space-y-3">
+                  <div className="group relative">
+                    <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 transition group-focus-within:text-indigo-400" />
                     <input
                       type="email"
-                      placeholder="name@company.com"
+                      placeholder="Email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="w-full pl-11 pr-4 py-4 rounded-2xl bg-slate-950/50 border border-white/5 text-sm text-white placeholder:text-slate-700 outline-none focus:border-indigo-500/30 focus:bg-slate-950 transition-all duration-300"
+                      className="h-12 w-full rounded-xl border border-white/10 bg-white/5 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-500/50 focus:bg-white/8"
                     />
                   </div>
-                </div>
 
-                {/* Password Field */}
-                {mode !== "forgot" && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between px-1">
-                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Password</label>
-                      {mode === "login" && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setMode("forgot");
-                            setError("");
-                            setMessage("");
-                          }}
-                          className="text-[11px] font-bold text-indigo-500/70 hover:text-indigo-400 transition-colors uppercase tracking-wider"
-                        >
-                          Forgot?
-                        </button>
-                      )}
-                    </div>
-                    <div className="relative group">
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-400 transition-colors" />
+                  {mode !== "forgot" && (
+                    <div className="group relative">
+                      <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 transition group-focus-within:text-indigo-400" />
                       <input
                         type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
+                        placeholder="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         minLength={6}
-                        className="w-full pl-11 pr-12 py-4 rounded-2xl bg-slate-950/50 border border-white/5 text-sm text-white placeholder:text-slate-700 outline-none focus:border-indigo-500/30 focus:bg-slate-950 transition-all duration-300"
+                        className="h-12 w-full rounded-xl border border-white/10 bg-white/5 pl-11 pr-11 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-500/50 focus:bg-white/8"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition-colors"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-white"
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
-                  </div>
-                )}
-
-                {/* Notifications */}
-                <AnimatePresence>
-                  {(error || message) && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <div className={`p-4 rounded-2xl text-[13px] font-medium ${error ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                        }`}>
-                        {error || message}
-                      </div>
-                    </motion.div>
                   )}
-                </AnimatePresence>
 
-                {/* Action Button */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-indigo-600/10 active:scale-[0.97] transition-all duration-300 flex items-center justify-center gap-3 group overflow-hidden relative"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      {mode === "login" ? "Sign In" : mode === "signup" ? "Create Account" : "Reset Password"}
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
-                </button>
-
-                {mode !== "forgot" && (
-                  <>
-                    <div className="relative my-6">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-white/5"></div>
-                      </div>
-                      <div className="relative flex justify-center text-[10px] items-center">
-                        <span className="px-4 py-1 rounded-full bg-slate-900 border border-white/5 text-slate-500 font-bold uppercase tracking-[0.2em]">OR</span>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleGoogleLogin}
-                      disabled={loading}
-                      className="w-full h-14 bg-white hover:bg-slate-100 disabled:bg-slate-800 text-slate-950 rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all active:scale-[0.97] flex items-center justify-center gap-3 shadow-xl"
-                    >
-                      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-                      Continue with Google
-                    </button>
-                  </>
-                )}
-
-                {onBack && (
                   <button
-                    type="button"
-                    onClick={onBack}
-                    className="w-full h-12 flex items-center justify-center gap-2 rounded-2xl border border-white/5 bg-transparent text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all group"
+                    type="submit"
+                    disabled={loading}
+                    className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-400"
                   >
-                    <ArrowRight className="w-3 h-3 rotate-180 group-hover:-translate-x-1 transition-transform" />
-                    Return to Home
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : submitLabel}
                   </button>
-                )}
-              </form>
-            </motion.div>
-          </AnimatePresence>
 
-          {/* Secondary Action */}
-          <div className="mt-10 pt-8 border-t border-white/5 text-center">
-            <p className="text-sm text-slate-500">
-              {mode === "login" ? (
-                <>No account? <button onClick={() => setMode("signup")} className="text-indigo-400 font-bold hover:text-indigo-300 transition-colors">Sign up</button></>
-              ) : (
-                <>Already a member? <button onClick={() => setMode("login")} className="text-indigo-400 font-bold hover:text-indigo-300 transition-colors">Sign in</button></>
-              )}
-            </p>
-          </div>
+                  {mode === "login" && (
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => { setMode("forgot"); setError(""); setMessage(""); }}
+                        className="text-xs text-slate-500 transition hover:text-slate-300"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                  )}
+                </form>
+              </motion.div>
+            </AnimatePresence>
+          )}
         </div>
 
-        {/* Minimal Spacer for padding */}
-        <div className="mt-12 h-1" />
+        {/* Back link */}
+        {onBack && (
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={onBack}
+              className="text-xs text-slate-500 transition hover:text-slate-300"
+            >
+              ← Back to home
+            </button>
+          </div>
+        )}
       </motion.div>
-
-      <style jsx global>{`
-        @keyframes shimmer {
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
     </div>
   );
 }
