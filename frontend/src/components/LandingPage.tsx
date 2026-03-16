@@ -239,7 +239,7 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                     >
                         <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 w-fit">
                             <Zap className="w-4 h-4 text-indigo-400" />
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300">Built for Indian Power Sector Professionals</span>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300">Decide Fast. Act Fast.</span>
                         </motion.div>
 
                         <motion.h1 variants={itemVariants} className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05]">
@@ -547,21 +547,21 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                 viewport={{ once: true, margin: "-100px" }}
                 className="py-24 px-6 max-w-7xl mx-auto relative z-10"
             >
-                <div className="text-center mb-16">
+                <div className="mb-14 flex flex-col items-center text-center">
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-900/30 border border-indigo-500/30 text-indigo-400 text-[10px] font-bold tracking-widest uppercase mb-4"
+                        className="mb-4 inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-indigo-300"
                     >
                         <Sparkles className="w-3 h-3" />
-                        Platform Access
+                        Pricing
                     </motion.div>
-                    <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-                        Strategic Pricing Plans
+                    <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white">
+                        Simple plans.
                     </h2>
-                    <p className="text-slate-400 max-w-2xl mx-auto text-sm md:text-base font-serif">
-                        Choose the operational bandwidth that matches your intelligence requirements.
+                    <p className="mt-3 max-w-xl text-sm text-slate-400 md:text-base">
+                        Pick a plan and start querying.
                     </p>
                 </div>
 
@@ -576,36 +576,36 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ delay: index * 0.1 }}
-                                className={`relative p-6 rounded-3xl border flex flex-col bg-slate-900 shadow-xl ${isPro ? "border-indigo-500 shadow-indigo-500/10" : "border-slate-800"
+                                className={`relative flex flex-col rounded-[1.75rem] border bg-slate-950/75 p-6 shadow-xl backdrop-blur-sm ${isPro ? "border-indigo-500/70 shadow-indigo-500/10" : "border-white/8"
                                     }`}
                             >
                                 {isPro && (
                                     <div className="absolute -top-3 inset-x-0 flex justify-center">
-                                        <span className="bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-widest py-1 px-4 rounded-full shadow-lg">
-                                            Recommended
+                                        <span className="rounded-full bg-indigo-500 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg">
+                                            Popular
                                         </span>
                                     </div>
                                 )}
-                                <div className="mb-6 flex justify-between items-start">
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br ${plan.color}`}>
+                                <div className="mb-6 flex items-start justify-between gap-4">
+                                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${plan.color}`}>
                                         <Icon className="w-6 h-6 text-white" />
                                     </div>
-                                    <h3 className="text-lg font-bold text-slate-200">{plan.name}</h3>
+                                    <div className="text-right">
+                                        <h3 className="text-lg font-bold text-white">{plan.name}</h3>
+                                        <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{plan.limit}</p>
+                                    </div>
                                 </div>
-                                <div className="mb-4">
-                                    <span className="text-4xl font-extrabold tracking-tight">₹{plan.price}</span>
-                                    <span className="text-slate-500 text-sm ml-2">/ month</span>
+                                <div className="mb-5 border-b border-white/8 pb-5">
+                                    <span className="text-4xl font-extrabold tracking-tight text-white">₹{plan.price}</span>
+                                    <span className="ml-2 text-sm text-slate-500">/ month</span>
                                 </div>
-                                <div className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-4">
-                                    {plan.limit}
-                                </div>
-                                <p className="text-sm text-slate-400 mb-6 font-serif leading-relaxed h-12">
+                                <p className="mb-6 min-h-10 text-sm leading-6 text-slate-400">
                                     {plan.description}
                                 </p>
-                                <ul className="space-y-3 mb-8 flex-1">
+                                <ul className="mb-8 flex-1 space-y-3">
                                     {plan.features.map((feature, i) => (
                                         <li key={i} className="flex items-center gap-3 text-sm text-slate-300">
-                                            <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
+                                            <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/5">
                                                 <Check className="w-3 h-3 text-indigo-400" />
                                             </div>
                                             {feature}
@@ -614,12 +614,12 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                                 </ul>
                                 <button
                                     onClick={onGetStarted}
-                                    className={`w-full py-3 rounded-xl font-bold uppercase tracking-widest text-xs transition-all ${isPro
-                                        ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-xl shadow-indigo-600/20"
-                                        : "bg-slate-800 hover:bg-slate-700 text-white"
+                                    className={`w-full rounded-2xl py-3 text-xs font-bold uppercase tracking-widest transition-all ${isPro
+                                        ? "bg-indigo-600 text-white shadow-xl shadow-indigo-600/20 hover:bg-indigo-500"
+                                        : "bg-white/5 text-white hover:bg-white/10"
                                         }`}
                                 >
-                                    Select Plan
+                                    Choose Plan
                                 </button>
                             </motion.div>
                         );
@@ -657,27 +657,66 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                         onClick={onGetStarted}
                         className="px-12 py-5 rounded-2xl bg-white text-slate-950 font-bold uppercase tracking-widest text-sm hover:bg-slate-200 transition-all active:scale-95 shadow-2xl shadow-white/10"
                     >
-                        Enter GridMind Mission Control
+                        Decide Fast. Act Fast.
                     </button>
                 </motion.div>
             </motion.section>
 
-            <footer id="about" className="py-12 px-6 border-t border-white/5">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center">
-                            <BrainCircuit className="w-6 h-6 text-indigo-500" />
+            {/* About Section */}
+            <section id="about" className="border-t border-white/5">
+                {/* About body */}
+                <div className="max-w-6xl mx-auto px-6 py-28 grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
+                    {/* Left — identity */}
+                    <div className="flex flex-col gap-8">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-indigo-500/15 flex items-center justify-center">
+                                <BrainCircuit className="w-5 h-5 text-indigo-400" />
+                            </div>
+                            <span className="text-base font-bold tracking-tight">GridMind <span className="text-indigo-400">AI</span></span>
                         </div>
-                        <span className="text-sm font-bold tracking-tight">GridMind <span className="text-indigo-400">AI</span></span>
+                        <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-[1.1]">
+                            Built for the<br />
+                            <span className="text-indigo-400">people who decide.</span>
+                        </h2>
+                        <p className="text-slate-400 text-base leading-relaxed max-w-md">
+                            GridMind AI turns dense regulations, circulars, and standards into precise, actionable answers — in seconds. No searching. No second-guessing.
+                        </p>
+                        <button
+                            onClick={onGetStarted}
+                            className="self-start px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold uppercase tracking-widest text-xs transition-all active:scale-95 shadow-xl shadow-indigo-600/20"
+                        >
+                            Get Started Free
+                        </button>
                     </div>
-                    <p className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em] italic">Decide Fast. Act Fast.</p>
-                    <div className="flex items-center gap-6 text-[10px] text-slate-500 uppercase tracking-widest">
-                        <Link href="/legal#privacy" className="hover:text-indigo-400 transition-colors">Privacy</Link>
-                        <Link href="/legal#terms" className="hover:text-indigo-400 transition-colors">Terms</Link>
-                        <span>© 2026 GridMind AI</span>
+
+                    {/* Right — facts */}
+                    <div className="grid grid-cols-2 gap-4">
+                        {[
+                            { stat: "30+", label: "Regulations Indexed" },
+                            { stat: "< 5s", label: "Average Response Time" },
+                            { stat: "100%", label: "Indian Electrical Standards" },
+                            { stat: "24 / 7", label: "Always Available" },
+                        ].map(({ stat, label }) => (
+                            <div key={label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-6 flex flex-col gap-2">
+                                <span className="text-3xl font-bold text-white tracking-tight">{stat}</span>
+                                <span className="text-xs text-slate-500 uppercase tracking-[0.2em] font-semibold">{label}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
-            </footer>
+
+                {/* Footer bar */}
+                <div className="border-t border-white/5 py-6 px-6">
+                    <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <p className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.22em]">Decide Fast. Act Fast.</p>
+                        <div className="flex items-center gap-6 text-[10px] text-slate-500 uppercase tracking-widest">
+                            <Link href="/legal#privacy" className="hover:text-indigo-400 transition-colors">Privacy</Link>
+                            <Link href="/legal#terms" className="hover:text-indigo-400 transition-colors">Terms</Link>
+                            <span>© 2026 GridMind AI</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <style jsx global>{`
         @keyframes shimmer {
