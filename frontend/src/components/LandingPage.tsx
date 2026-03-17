@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useScroll, useSpring } from "framer-motion";
-import { BrainCircuit, Zap, Shield, BarChart3, ArrowRight, Menu, Globe, Cpu, Activity, FileText, Rocket, ShieldCheck, Check, Sparkles } from "lucide-react";
+import { BrainCircuit, Zap, Shield, BarChart3, ArrowRight, Menu, Globe, Cpu, Activity, FileText, Check, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -44,43 +44,74 @@ const PLANS = [
         id: "free",
         name: "Basic",
         price: 0,
-        limit: "20 queries / day",
-        description: "Standard regulatory lookup for general users.",
-        features: ["Standard search", "Basic history", "Web access"],
+        limit: "10 queries / day",
+        duration: "30 days only",
+        capabilities: {
+            standard: true,
+            better: false,
+            detailed: false,
+            highSpeed: false,
+        },
         color: "from-slate-500 to-slate-700",
-        icon: Rocket,
     },
     {
         id: "basic",
         name: "Basic+",
-        price: 200,
-        limit: "100 queries / day",
-        description: "Enhanced bandwidth for active policy research.",
-        features: ["High-speed search", "Priority support", "Extended history"],
+        price: 100,
+        limit: "10 queries / day",
+        duration: "No expiry",
+        capabilities: {
+            standard: true,
+            better: true,
+            detailed: false,
+            highSpeed: false,
+        },
         color: "from-blue-500 to-indigo-600",
-        icon: Zap,
     },
     {
         id: "advance",
         name: "Advance",
-        price: 300,
-        limit: "300 queries / day",
-        description: "Professional grade strategic intelligence.",
-        features: ["Full database access", "Extended context", "Priority support"],
+        price: 200,
+        limit: "50 queries / day",
+        duration: "No expiry",
+        capabilities: {
+            standard: true,
+            better: true,
+            detailed: true,
+            highSpeed: false,
+        },
         color: "from-purple-500 to-indigo-600",
-        icon: BrainCircuit,
     },
     {
         id: "pro",
         name: "Pro",
-        price: 500,
-        limit: "500 queries / day",
-        description: "Maximum bandwidth for enterprise-level operations.",
-        features: ["Enterprise support", "Unlimited history", "Advanced analytics"],
+        price: 300,
+        limit: "150 queries / day",
+        duration: "No expiry",
+        capabilities: {
+            standard: true,
+            better: true,
+            detailed: true,
+            highSpeed: true,
+        },
         color: "from-indigo-500 to-amber-600",
-        icon: ShieldCheck,
     },
 ];
+
+const CAPABILITY_ROWS = [
+    { key: "standard", label: "Standard response" },
+    { key: "better", label: "Better response" },
+    { key: "detailed", label: "Detailed/In-depth response" },
+    { key: "highSpeed", label: "High-speed search" },
+] as const;
+
+const NAV_LINKS = [
+    { name: "The Solution", id: "hero" },
+    { name: "Regulatory Scope", id: "regulatory-scope" },
+    { name: "Institutional", id: "institutional" },
+    { name: "Pricing", id: "pricing" },
+    { name: "About", id: "about" },
+] as const;
 
 export default function LandingPage({ onGetStarted, buttonLabel = "Get Started Now", isLoggedIn = false }: LandingPageProps) {
     const [activeSection, setActiveSection] = useState("hero");
@@ -134,25 +165,43 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
     }, [displayedQ, displayedAPre, displayedAHighlight, qaPhase, qaIndex]);
 
     useEffect(() => {
-        const sections = ["hero", "regulatory-scope", "institutional", "pricing", "about"];
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        setActiveSection(entry.target.id);
-                    }
-                });
-            },
-            { threshold: 0.3 }
-        );
+        const sectionIds = NAV_LINKS.map((link) => link.id);
 
-        sections.forEach((id) => {
-            const el = document.getElementById(id);
-            if (el) observer.observe(el);
-        });
+        const updateActiveSection = () => {
+            const scrollPosition = window.scrollY + 140;
+            let current = sectionIds[0];
 
-        return () => observer.disconnect();
+            for (const id of sectionIds) {
+                const el = document.getElementById(id);
+                if (!el) continue;
+                if (scrollPosition >= el.offsetTop) {
+                    current = id;
+                }
+            }
+
+            setActiveSection(current);
+        };
+
+        updateActiveSection();
+        window.addEventListener("scroll", updateActiveSection, { passive: true });
+        window.addEventListener("resize", updateActiveSection);
+
+        return () => {
+            window.removeEventListener("scroll", updateActiveSection);
+            window.removeEventListener("resize", updateActiveSection);
+        };
     }, []);
+
+    const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+        e.preventDefault();
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        const top = el.getBoundingClientRect().top + window.scrollY - 96;
+        window.history.replaceState(null, "", `#${id}`);
+        window.scrollTo({ top, behavior: "smooth" });
+        setActiveSection(id);
+    };
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -183,16 +232,11 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                     </div>
 
                     <div className="hidden md:flex items-center gap-10">
-                        {[
-                            { name: "The Solution", id: "hero" },
-                            { name: "Regulatory Scope", id: "regulatory-scope" },
-                            { name: "Institutional", id: "institutional" },
-                            { name: "Pricing", id: "pricing" },
-                            { name: "About", id: "about" }
-                        ].map((link) => (
+                        {NAV_LINKS.map((link) => (
                             <a
                                 key={link.id}
                                 href={`#${link.id}`}
+                                onClick={(e) => handleNavClick(e, link.id)}
                                 className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-all relative ${activeSection === link.id ? "text-indigo-400" : "text-slate-500 hover:text-white"
                                     }`}
                             >
@@ -366,175 +410,202 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                className="py-32 px-6 bg-slate-900/40 relative"
+                className="relative bg-slate-900/40 px-6 py-28"
             >
-                <div className="absolute top-0 left-0 w-px h-full bg-gradient-to-b from-indigo-500/0 via-indigo-500/30 to-indigo-500/0 ml-8 hidden lg:block" />
-                <div className="max-w-5xl mx-auto">
-                    <div className="sticky top-20 z-20 py-10 mb-10">
-                        <div className="text-center">
-                            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">The <span className="text-indigo-400">Regulatory Cascade.</span></h2>
-                            <p className="text-slate-400 mt-4 max-w-2xl mx-auto text-sm leading-relaxed">
-                                From parliamentary acts to daily utility operations, rules flow downwards. We index every layer so you can pinpoint the exact mandate governing your work.
-                            </p>
-                        </div>
+                <div className="mx-auto max-w-6xl">
+                    <div className="mb-14 text-center">
+                        <h2 className="text-3xl font-bold tracking-tight md:text-5xl">Regulatory Scope</h2>
+                        <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-400 md:text-base">
+                            One clean path from law to field execution.
+                        </p>
                     </div>
 
-                    <div className="relative max-w-3xl mx-auto">
-                        {/* Timeline Track */}
-                        <div className="absolute left-8 md:left-1/2 top-4 bottom-4 w-px bg-slate-800 -translate-x-1/2" />
-                        <motion.div
-                            className="absolute left-8 md:left-1/2 top-4 bottom-4 w-px bg-indigo-500 -translate-x-1/2 origin-top"
-                            initial={{ scaleY: 0 }}
-                            whileInView={{ scaleY: 1 }}
-                            transition={{ duration: 2, ease: "easeOut" }}
-                            viewport={{ once: true }}
-                        />
-
-                        {[
-                            { title: "Electricity Act 2003", desc: "The primary legislation governing the power sector in India." },
-                            { title: "National Electricity Policy", desc: "Broad framework for development of the power system based on the Act." },
-                            { title: "Tariff Policy", desc: "Guidelines for pricing of electricity by generating companies and licensees." },
-                            { title: "CERC / SERC Regulations", desc: "Detailed rules for tariff determination, open access, and market mechanisms." },
-                            { title: "Grid Code & Technical Standards", desc: "CEA standards and Grid Controller mandates for safe operation." },
-                            { title: "Utility Procedures & Circulars", desc: "Day-to-day SOPs, commercial circulars, and operational guidelines." }
-                        ].map((item, i) => (
+                    <div className="relative mx-auto max-w-5xl">
+                        {/* Desktop path */}
+                        <div className="relative hidden md:block">
+                            <div className="absolute left-0 right-0 top-8 h-px bg-slate-800" />
                             <motion.div
-                                key={i}
-                                initial={{ opacity: 0, x: i % 2 === 0 ? -50 : 50 }}
-                                whileInView={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.6, delay: i * 0.2 }}
-                                viewport={{ once: true, margin: "-50px" }}
-                                className={`relative flex items-center mb-12 last:mb-0 ${i % 2 === 0 ? 'md:flex-row-reverse' : 'md:flex-row'} flex-row`}
-                            >
-                                {/* Center Node */}
-                                <div className="absolute left-8 md:left-1/2 w-4 h-4 rounded-full bg-slate-900 border-2 border-indigo-500 -translate-x-1/2 z-10 shadow-[0_0_10px_rgba(79,70,229,0.5)]" />
+                                className="absolute left-0 top-8 h-px bg-indigo-500"
+                                initial={{ width: 0 }}
+                                whileInView={{ width: "100%" }}
+                                transition={{ duration: 2.2, ease: "easeOut" }}
+                                viewport={{ once: true }}
+                            />
 
-                                <div className={`ml-20 md:ml-0 md:w-1/2 ${i % 2 === 0 ? 'md:pl-12 text-left' : 'md:pr-12 md:text-right'}`}>
-                                    <div className="p-6 rounded-2xl bg-slate-900/80 border border-white/5 hover:border-indigo-500/30 transition-colors backdrop-blur-sm shadow-xl">
-                                        <h3 className="text-lg font-bold text-indigo-300 mb-2">{item.title}</h3>
-                                        <p className="text-xs text-slate-400 leading-relaxed">{item.desc}</p>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
+                            <div className="grid grid-cols-6 gap-4">
+                                {[
+                                    { title: "Electricity Act 2003", short: "Primary law" },
+                                    { title: "National Electricity Policy", short: "National direction" },
+                                    { title: "Tariff Policy", short: "Pricing framework" },
+                                    { title: "CERC / SERC Regulations", short: "Regulatory rules" },
+                                    { title: "Grid Code & Standards", short: "Technical rules" },
+                                    { title: "Utility Circulars / SOPs", short: "Operational execution" },
+                                ].map((step, i) => (
+                                    <motion.div
+                                        key={step.title}
+                                        initial={{ opacity: 0, y: 18 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.45, delay: i * 0.16 }}
+                                        viewport={{ once: true, margin: "-80px" }}
+                                        className="relative"
+                                    >
+                                        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-500/30 bg-slate-900 text-indigo-300 shadow-[0_0_18px_rgba(99,102,241,0.22)]">
+                                            <BrainCircuit className="h-5 w-5" />
+                                        </div>
+                                        <div className="rounded-2xl border border-white/8 bg-slate-900/75 p-4 text-center backdrop-blur-sm">
+                                            <h3 className="text-sm font-semibold leading-snug text-white">{step.title}</h3>
+                                            <p className="mt-2 text-xs text-slate-400">{step.short}</p>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Mobile path */}
+                        <div className="relative md:hidden">
+                            <div className="absolute left-3 top-1 bottom-1 w-px bg-slate-800" />
+                            <motion.div
+                                className="absolute left-3 top-1 w-px bg-indigo-500 origin-top"
+                                initial={{ height: 0 }}
+                                whileInView={{ height: "100%" }}
+                                transition={{ duration: 1.8, ease: "easeOut" }}
+                                viewport={{ once: true }}
+                            />
+
+                            <div className="space-y-5">
+                                {[
+                                    { title: "Electricity Act 2003", short: "Primary law" },
+                                    { title: "National Electricity Policy", short: "National direction" },
+                                    { title: "Tariff Policy", short: "Pricing framework" },
+                                    { title: "CERC / SERC Regulations", short: "Regulatory rules" },
+                                    { title: "Grid Code & Standards", short: "Technical rules" },
+                                    { title: "Utility Circulars / SOPs", short: "Operational execution" },
+                                ].map((step, i) => (
+                                    <motion.div
+                                        key={step.title}
+                                        initial={{ opacity: 0, x: 14 }}
+                                        whileInView={{ opacity: 1, x: 0 }}
+                                        transition={{ duration: 0.4, delay: i * 0.14 }}
+                                        viewport={{ once: true, margin: "-80px" }}
+                                        className="relative pl-9"
+                                    >
+                                        <div className="absolute left-0 top-5 flex h-6 w-6 items-center justify-center rounded-full border border-indigo-500/35 bg-slate-900 text-indigo-300">
+                                            <BrainCircuit className="h-3.5 w-3.5" />
+                                        </div>
+                                        <div className="rounded-xl border border-white/8 bg-slate-900/75 p-4 backdrop-blur-sm">
+                                            <h3 className="text-sm font-semibold text-white">{step.title}</h3>
+                                            <p className="mt-1 text-xs text-slate-400">{step.short}</p>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </motion.section>
 
-            {/* Institutional Hierarchy Flowchart */}
+            {/* Institutional Architecture */}
             <motion.section
                 id="institutional"
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ duration: 1 }}
-                className="py-32 px-6 bg-slate-950 relative border-t border-white/5"
+                className="relative border-t border-white/5 bg-slate-950 px-6 py-28"
             >
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-slate-950 to-slate-950" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/18 via-slate-950 to-slate-950" />
 
-                <div className="max-w-7xl mx-auto relative z-10">
-                    <div className="sticky top-20 z-20 py-10 mb-12">
-                        <div className="text-center">
-                            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">The Power Sector <span className="text-indigo-400">Ecosystem.</span></h2>
-                            <p className="text-slate-400 max-w-2xl mx-auto text-sm leading-relaxed">
-                                A unified view of the authorities, regulators, and operators that define the Indian Power Sector. GridMind AI maps every node to its corresponding mandate.
-                            </p>
-                        </div>
+                <div className="relative z-10 mx-auto max-w-6xl">
+                    <div className="mb-14 text-center">
+                        <h2 className="text-3xl font-bold tracking-tight md:text-5xl">
+                            Institutional Architecture
+                        </h2>
+                        <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-400 md:text-base">
+                            A clear governance chain from policy authority to field execution.
+                        </p>
                     </div>
 
-                    {/* Flowchart Container */}
-                    <div className="flex flex-col items-center max-w-5xl mx-auto relative cursor-default">
-                        {/* Connecting Lines (Background) */}
-                        <div className="absolute top-0 bottom-0 left-1/2 w-px bg-slate-800 -translate-x-1/2 z-0 hidden md:block" />
+                    <div className="relative mx-auto max-w-5xl">
+                        {/* Central signal spine */}
+                        <div className="absolute left-1/2 top-0 hidden h-full w-px -translate-x-1/2 bg-slate-800 lg:block" />
+                        <motion.div
+                            className="absolute left-1/2 top-0 hidden w-px -translate-x-1/2 bg-indigo-500 lg:block"
+                            initial={{ height: 0 }}
+                            whileInView={{ height: "100%" }}
+                            transition={{ duration: 2, ease: "easeOut" }}
+                            viewport={{ once: true }}
+                        />
 
-                        {/* Level 1: Gov */}
-                        <div className="relative z-10 bg-slate-900 border border-white/10 px-8 py-4 rounded-2xl shadow-xl mb-12 flex flex-col items-center">
-                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Government of India</span>
-                            <span className="text-white font-bold text-lg">Ministry of Power (MoP)</span>
-                        </div>
-
-                        {/* Level 2: CEA & CERC */}
-                        <div className="relative z-10 w-full flex flex-col md:flex-row justify-center gap-8 md:gap-32 mb-12">
-                            {/* Horizontal connector */}
-                            <div className="absolute top-1/2 left-1/4 right-1/4 h-px bg-slate-800 -translate-y-1/2 z-0 hidden md:block" />
-
-                            <motion.div whileHover={{ scale: 1.05 }} className="bg-slate-900/80 backdrop-blur border border-indigo-500/30 px-6 py-4 rounded-2xl shadow-lg shadow-indigo-500/5 text-center relative z-10 w-full md:w-64">
-                                <h3 className="text-indigo-300 font-bold">CEA</h3>
-                                <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider">Technical Standards & Planning</p>
-                            </motion.div>
-
-                            <motion.div whileHover={{ scale: 1.05 }} className="bg-slate-900/80 backdrop-blur border border-blue-500/30 px-6 py-4 rounded-2xl shadow-lg shadow-blue-500/5 text-center relative z-10 w-full md:w-64">
-                                <h3 className="text-blue-300 font-bold">CERC</h3>
-                                <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider">Interstate Markets & Tariff</p>
-                            </motion.div>
-                        </div>
-
-                        {/* Level 3: Grid Controllers */}
-                        <div className="relative z-10 bg-slate-900/60 border border-white/10 p-6 rounded-3xl w-full max-w-3xl mb-12 backdrop-blur-sm">
-                            <h4 className="text-center text-xs font-bold text-slate-500 mb-6 uppercase tracking-[0.2em]">Grid Operation Supervision</h4>
-
-                            <div className="flex flex-col items-center mb-6">
-                                <div className="bg-amber-500/10 border border-amber-500/20 px-6 py-3 rounded-xl text-center w-full sm:w-auto">
-                                    <span className="text-amber-400 font-bold text-sm block">Grid Controller of India</span>
-                                    <span className="text-[10px] text-amber-500/70 uppercase tracking-widest mt-1 block">NLDC</span>
-                                </div>
-                            </div>
-
-                            {/* RLDCs */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 relative">
-                                {['Northern', 'Western', 'Eastern', 'Southern/NE'].map((rldc) => (
-                                    <div key={rldc} className="bg-slate-950 border border-slate-800 p-3 rounded-lg text-center relative z-10">
-                                        <span className="text-xs text-slate-300 font-medium">{rldc} RLDC</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* SLDCs & SERCs */}
-                            <div className="flex flex-col sm:flex-row justify-center gap-4 border-t border-white/5 pt-6">
-                                <div className="bg-slate-950 border border-slate-700 p-4 rounded-xl text-center flex-1">
-                                    <span className="text-xs font-bold text-slate-300 block mb-1">SLDCs</span>
-                                    <span className="text-[9px] text-slate-500 uppercase tracking-widest">State Load Dispatch</span>
-                                </div>
-                                <div className="bg-indigo-950/30 border border-indigo-500/20 p-4 rounded-xl text-center flex-1">
-                                    <span className="text-xs font-bold text-indigo-300 block mb-1">SERCs</span>
-                                    <span className="text-[9px] text-indigo-500/70 uppercase tracking-widest">State Regulators</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Level 4: Utilities & Consumers */}
-                        <div className="relative z-10 w-full max-w-4xl">
-                            <div className="absolute -top-12 left-1/2 w-px h-12 bg-slate-800 -translate-x-1/2 z-0 hidden md:block" />
-                            <div className="grid md:grid-cols-3 gap-6">
-                                <motion.div whileHover={{ y: -5 }} className="bg-white/5 border border-white/10 p-6 rounded-2xl text-center group">
-                                    <div className="w-10 h-10 mx-auto rounded-full bg-rose-500/10 flex items-center justify-center mb-3 group-hover:bg-rose-500/20 transition-colors">
-                                        <Zap className="w-5 h-5 text-rose-400" />
-                                    </div>
-                                    <h4 className="text-sm font-bold text-slate-200">Generation</h4>
-                                    <p className="text-[10px] text-slate-500 mt-2 uppercase tracking-wider">GENCOs / IPPs</p>
-                                </motion.div>
-                                <motion.div whileHover={{ y: -5 }} className="bg-white/5 border border-white/10 p-6 rounded-2xl text-center group">
-                                    <div className="w-10 h-10 mx-auto rounded-full bg-indigo-500/10 flex items-center justify-center mb-3 group-hover:bg-indigo-500/20 transition-colors">
-                                        <Globe className="w-5 h-5 text-indigo-400" />
-                                    </div>
-                                    <h4 className="text-sm font-bold text-slate-200">Transmission</h4>
-                                    <p className="text-[10px] text-slate-500 mt-2 uppercase tracking-wider">STU / CTU</p>
-                                </motion.div>
-                                <motion.div whileHover={{ y: -5 }} className="bg-white/5 border border-white/10 p-6 rounded-2xl text-center group flex flex-col justify-between">
-                                    <div>
-                                        <div className="w-10 h-10 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center mb-3 group-hover:bg-blue-500/20 transition-colors">
-                                            <Cpu className="w-5 h-5 text-blue-400" />
+                        <div className="space-y-6">
+                            {[
+                                {
+                                    title: "Policy Authority",
+                                    primary: "Ministry of Power (MoP)",
+                                    chips: ["Government of India", "National policy leadership"],
+                                    icon: Shield,
+                                    tone: "from-indigo-500/20 to-indigo-400/10 border-indigo-500/30 text-indigo-300",
+                                },
+                                {
+                                    title: "Regulation Layer",
+                                    primary: "CEA | CERC | SERCs",
+                                    chips: ["Technical standards", "Tariff and compliance"],
+                                    icon: Activity,
+                                    tone: "from-blue-500/20 to-blue-400/10 border-blue-500/30 text-blue-300",
+                                },
+                                {
+                                    title: "System Operations",
+                                    primary: "Grid Controller | RLDCs | SLDCs",
+                                    chips: ["Real-time dispatch", "Reliability supervision"],
+                                    icon: BrainCircuit,
+                                    tone: "from-amber-500/20 to-amber-400/10 border-amber-500/30 text-amber-300",
+                                },
+                                {
+                                    title: "Execution Layer",
+                                    primary: "Generation | Transmission | Distribution | Consumers",
+                                    chips: ["Utility operations", "End-user delivery"],
+                                    icon: Cpu,
+                                    tone: "from-emerald-500/20 to-emerald-400/10 border-emerald-500/30 text-emerald-300",
+                                },
+                            ].map((layer, i) => {
+                                const Icon = layer.icon;
+                                return (
+                                    <motion.div
+                                        key={layer.title}
+                                        initial={{ opacity: 0, y: 24 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.5, delay: i * 0.15 }}
+                                        viewport={{ once: true, margin: "-80px" }}
+                                        className="relative"
+                                    >
+                                        <div className={`rounded-3xl border bg-gradient-to-r p-[1px] ${layer.tone}`}>
+                                            <div className="rounded-[1.45rem] border border-white/6 bg-slate-950/85 p-5 backdrop-blur-sm md:p-6">
+                                                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                                    <div className="flex items-start gap-4">
+                                                        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border bg-slate-900 ${layer.tone}`}>
+                                                            <Icon className="h-5 w-5" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">{layer.title}</p>
+                                                            <h3 className="mt-1 text-base font-semibold text-white md:text-lg">{layer.primary}</h3>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {layer.chips.map((chip) => (
+                                                            <span
+                                                                key={chip}
+                                                                className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] font-medium text-slate-300"
+                                                            >
+                                                                {chip}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <h4 className="text-sm font-bold text-slate-200">Distribution</h4>
-                                        <p className="text-[10px] text-slate-500 mt-2 uppercase tracking-wider">DISCOMs</p>
-                                    </div>
-                                    <div className="mt-4 pt-4 border-t border-white/10">
-                                        <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Consumers</p>
-                                    </div>
-                                </motion.div>
-                            </div>
+                                    </motion.div>
+                                );
+                            })}
                         </div>
-
                     </div>
                 </div>
             </motion.section>
@@ -545,29 +616,17 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
-                className="py-24 px-6 max-w-7xl mx-auto relative z-10"
+                className="relative z-10 border-y border-white/6 bg-slate-950 py-28"
             >
+                <div className="mx-auto max-w-7xl px-6">
                 <div className="mb-14 flex flex-col items-center text-center">
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="mb-4 inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-indigo-300"
-                    >
-                        <Sparkles className="w-3 h-3" />
-                        Pricing
-                    </motion.div>
                     <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white">
-                        Simple plans.
+                        Simple Pricing
                     </h2>
-                    <p className="mt-3 max-w-xl text-sm text-slate-400 md:text-base">
-                        Pick a plan and start querying.
-                    </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {PLANS.map((plan, index) => {
-                        const Icon = plan.icon;
                         const isPro = plan.id === 'pro';
                         return (
                             <motion.div
@@ -579,36 +638,31 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                                 className={`relative flex flex-col rounded-[1.75rem] border bg-slate-950/75 p-6 shadow-xl backdrop-blur-sm ${isPro ? "border-indigo-500/70 shadow-indigo-500/10" : "border-white/8"
                                     }`}
                             >
-                                {isPro && (
-                                    <div className="absolute -top-3 inset-x-0 flex justify-center">
-                                        <span className="rounded-full bg-indigo-500 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg">
-                                            Popular
-                                        </span>
-                                    </div>
-                                )}
                                 <div className="mb-6 flex items-start justify-between gap-4">
                                     <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${plan.color}`}>
-                                        <Icon className="w-6 h-6 text-white" />
+                                        <BrainCircuit className="w-6 h-6 text-white" />
                                     </div>
                                     <div className="text-right">
                                         <h3 className="text-lg font-bold text-white">{plan.name}</h3>
-                                        <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{plan.limit}</p>
+                                        <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{plan.duration}</p>
                                     </div>
                                 </div>
                                 <div className="mb-5 border-b border-white/8 pb-5">
                                     <span className="text-4xl font-extrabold tracking-tight text-white">₹{plan.price}</span>
                                     <span className="ml-2 text-sm text-slate-500">/ month</span>
                                 </div>
-                                <p className="mb-6 min-h-10 text-sm leading-6 text-slate-400">
-                                    {plan.description}
+                                <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                                    {plan.limit}
                                 </p>
                                 <ul className="mb-8 flex-1 space-y-3">
-                                    {plan.features.map((feature, i) => (
-                                        <li key={i} className="flex items-center gap-3 text-sm text-slate-300">
-                                            <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/5">
-                                                <Check className="w-3 h-3 text-indigo-400" />
-                                            </div>
-                                            {feature}
+                                    {CAPABILITY_ROWS.map((row) => (
+                                        <li key={row.key} className="flex items-center justify-between gap-2 text-sm text-slate-300">
+                                            <span>{row.label}</span>
+                                            {plan.capabilities[row.key] ? (
+                                                <Check className="h-4 w-4 flex-shrink-0 text-emerald-400" />
+                                            ) : (
+                                                <X className="h-4 w-4 flex-shrink-0 text-slate-600" />
+                                            )}
                                         </li>
                                     ))}
                                 </ul>
@@ -625,15 +679,8 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                         );
                     })}
                 </div>
+                </div>
             </motion.section>
-
-            <div className="h-32 flex justify-center items-center overflow-hidden">
-                <motion.div
-                    animate={{ height: ["0%", "100%", "0%"] }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                    className="w-[1px] bg-gradient-to-b from-transparent via-indigo-500 to-transparent"
-                />
-            </div>
 
             {/* Footer / CTA Section */}
             <motion.section
