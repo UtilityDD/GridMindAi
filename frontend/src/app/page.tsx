@@ -681,31 +681,34 @@ export default function Home() {
               </AnimatePresence>
 
               <div className="w-full max-w-2xl">
-                <div className="relative group mb-8">
-                  <div className="relative flex items-center gap-3 bg-white border border-slate-300 rounded-2xl px-5 py-2.5 focus-within:border-blue-400 transition-all duration-200 shadow-xl">
+                <div className="relative group mb-6">
+                  <div className="relative flex flex-col gap-0 bg-white border border-slate-300 rounded-xl focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-200 transition-all duration-200 shadow-sm hover:shadow-md">
                     <textarea
                       ref={inputRef}
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={handleKeyDown}
                       placeholder={placeholder || "Ask GridMind Tactical..."}
-                      rows={1}
-                      className="flex-1 bg-transparent text-[14px] text-slate-900 placeholder:text-slate-500 outline-none resize-none leading-relaxed"
-                      style={{ minHeight: "22px", maxHeight: "200px" }}
+                      rows={3}
+                      className="flex-1 bg-transparent text-[14px] text-slate-900 placeholder:text-slate-500 outline-none resize-none leading-relaxed p-4"
+                      style={{ minHeight: "80px", maxHeight: "240px" }}
                       onInput={(e) => {
                         const target = e.target as HTMLTextAreaElement;
-                        target.style.height = "22px";
+                        target.style.height = "80px";
                         target.style.height = target.scrollHeight + "px";
                       }}
                     />
-                    <motion.button
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => handleSubmit()}
-                      disabled={loading || !query.trim()}
-                      className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-indigo-600/20"
-                    >
-                      <ArrowUp className="w-5 h-5" />
-                    </motion.button>
+                    <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50 rounded-b-[10px]">
+                      <span className="text-[11px] text-slate-500 font-medium"></span>
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleSubmit()}
+                        disabled={loading || !query.trim()}
+                        className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                      >
+                        <ArrowUp className="w-4 h-4" />
+                      </motion.button>
+                    </div>
                   </div>
 
                   {/* Response Length Slider moved here */}
@@ -876,42 +879,45 @@ export default function Home() {
               >
                 <div className="max-w-4xl mx-auto">
                   <div className="relative group">
-                    <div className="relative flex items-center gap-3 bg-white border border-slate-300 rounded-[1.8rem] px-5 py-2.5 focus-within:border-blue-400 transition-all duration-300">
+                    <div className="relative flex flex-col gap-0 bg-white border border-slate-300 rounded-xl focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-200 transition-all duration-300">
                       <textarea
                         ref={!result && !loading ? undefined : inputRef}
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Ask a follow-up..."
-                        rows={1}
-                        className="flex-1 bg-transparent text-[14px] text-slate-900 placeholder:text-slate-500 outline-none resize-none leading-relaxed"
-                        style={{ minHeight: "22px", maxHeight: "200px" }}
+                        rows={2}
+                        className="flex-1 bg-transparent text-[14px] text-slate-900 placeholder:text-slate-500 outline-none resize-none leading-relaxed p-4"
+                        style={{ minHeight: "56px", maxHeight: "240px" }}
                         onInput={(e) => {
                           const target = e.target as HTMLTextAreaElement;
-                          target.style.height = "22px";
+                          target.style.height = "56px";
                           target.style.height = target.scrollHeight + "px";
                         }}
                       />
-                      <AnimatePresence mode="wait">
-                        <motion.button
-                          key={loading ? "loading" : "idle"}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.9 }}
-                          onClick={() => handleSubmit()}
-                          disabled={loading || !query.trim()}
-                          className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-[0.9] disabled:cursor-not-allowed ${loading
-                            ? "bg-indigo-600/20 text-indigo-400"
-                            : "bg-indigo-600 hover:bg-indigo-500 text-white"
-                            }`}
-                        >
-                          {loading ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <ArrowUp className="w-5 h-5" />
-                          )}
-                        </motion.button>
-                      </AnimatePresence>
+                      <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50 rounded-b-[10px]">
+                        <span className="text-[11px] text-slate-500 font-medium"></span>
+                        <AnimatePresence mode="wait">
+                          <motion.button
+                            key={loading ? "loading" : "idle"}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            onClick={() => handleSubmit()}
+                            disabled={loading || !query.trim()}
+                            className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all active:scale-[0.95] disabled:cursor-not-allowed ${loading
+                              ? "bg-blue-100 text-blue-600"
+                              : "bg-blue-600 hover:bg-blue-700 text-white"
+                              }`}
+                          >
+                            {loading ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <ArrowUp className="w-4 h-4" />
+                            )}
+                          </motion.button>
+                        </AnimatePresence>
+                      </div>
                     </div>
 
                     {/* Response Length Slider moved here */}

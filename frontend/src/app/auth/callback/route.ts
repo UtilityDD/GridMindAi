@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
     const requestUrl = new URL(request.url);
     const code = requestUrl.searchParams.get("code");
@@ -8,6 +10,9 @@ export async function GET(request: Request) {
     const origin = requestUrl.origin;
 
     console.log("Auth callback received. Origin:", origin);
+    console.log("Code param:", code ? "present" : "missing");
+    
+    // If we have a code (authorization code flow), exchange it
     if (code) {
         console.log("Exchanging code for session...");
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -20,10 +25,12 @@ export async function GET(request: Request) {
             return NextResponse.redirect(`${origin}${next}`);
         }
         console.error("Auth helper error during exchange:", error.message);
-    } else {
-        console.warn("No auth code found in callback URL.");
+        return NextResponse.redirect(`${origin}/?error=auth_failed`);
     }
 
-    // In case of error or no code, send back to login with a clear error
-    return NextResponse.redirect(`${origin}/?error=auth_failed`);
+    // If no code, the tokens are in the URL fragment (implicit flow)
+    // The client will detect them automatically via detectSessionInUrl: true
+    // Just redirect to the target page
+    console.log("No code found - tokens in fragment. Redirecting to:", `${origin}${next}`);
+    return NextResponse.redirect(`${origin}${next}`);
 }
