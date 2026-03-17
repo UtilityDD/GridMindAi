@@ -209,6 +209,12 @@ export default function Home() {
     setFeaturedQuestions(selected);
   }, []);
 
+  // Auto-load dashboard when user is authenticated
+  useEffect(() => {
+    if (user && session) {
+      setShowDashboard(true);
+    }
+  }, [user, session]);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
