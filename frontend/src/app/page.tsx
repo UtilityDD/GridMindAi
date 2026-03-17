@@ -134,7 +134,7 @@ function ScanningPulse() {
         <motion.div
           animate={{ scale: [1, 1.6], opacity: [0.4, 0] }}
           transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut" }}
-          className="absolute inset-0 border-2 border-indigo-500/40 rounded-full"
+          className="absolute inset-0 border-2 border-blue-500/40 rounded-full"
         />
         <motion.div
           animate={{ scale: [1, 1.3], opacity: [0.6, 0] }}
@@ -143,15 +143,15 @@ function ScanningPulse() {
         />
 
         {/* Core brain icon */}
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-900 rounded-full border border-slate-700 shadow-sm">
-          <BrainCircuit className="w-12 h-12 text-indigo-400" />
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-full border border-slate-300 shadow-sm">
+          <BrainCircuit className="w-12 h-12 text-blue-600" />
         </div>
 
         {/* Scanning line */}
         <motion.div
           animate={{ top: ["5%", "95%", "5%"] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute left-[15%] right-[15%] h-[2px] bg-gradient-to-r from-transparent via-indigo-400 to-transparent z-10 opacity-70 blur-sm"
+          className="absolute left-[15%] right-[15%] h-[2px] bg-gradient-to-r from-transparent via-blue-400 to-transparent z-10 opacity-70 blur-sm"
         />
       </div>
 
@@ -163,7 +163,7 @@ function ScanningPulse() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.5 }}
-            className="text-[11px] font-bold text-indigo-300 tracking-[0.3em] uppercase leading-relaxed max-w-xs"
+            className="text-[11px] font-bold text-blue-600 tracking-[0.3em] uppercase leading-relaxed max-w-xs"
           >
             {LOADING_STEPS[step]}
           </motion.p>
@@ -175,7 +175,7 @@ function ScanningPulse() {
               key={i}
               animate={{ opacity: [0.2, 1, 0.2], scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
-              className="w-1.5 h-1.5 rounded-full bg-indigo-500/60"
+              className="w-1.5 h-1.5 rounded-full bg-blue-500/60"
             />
           ))}
         </div>
@@ -417,10 +417,10 @@ export default function Home() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-          <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-500">Initializing Core...</p>
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+          <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-600">Initializing Core...</p>
         </div>
       </div>
     );
@@ -558,22 +558,22 @@ export default function Home() {
 
       <div
         ref={scrollContainerRef}
-        className="flex-1 flex flex-col min-w-0 relative bg-slate-950 overflow-y-auto scroll-smooth"
+        className="flex-1 flex flex-col min-w-0 relative bg-white overflow-y-auto scroll-smooth"
       >
         {/* Ambient background effects (Simplified) */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-          <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-indigo-500/[0.03] rounded-full blur-[120px]" />
+          <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-500/[0.02] rounded-full blur-[120px]" />
         </div>
 
         {/* Top Header / Bar */}
         <header
-          className="relative z-50 bg-slate-900 border-b border-slate-800 sticky top-0 px-6 py-3 flex items-center justify-between shadow-sm"
+          className="relative z-50 bg-white border-b border-slate-200 sticky top-0 px-6 py-3 flex items-center justify-between shadow-sm"
         >
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+                className="md:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all"
                 aria-label="Open menu"
               >
                 <Menu className="w-5 h-5" />
@@ -601,7 +601,7 @@ export default function Home() {
         </header>
 
         {/* ── MOBILE LIVE STATS BAR ── */}
-        <div className="md:hidden bg-slate-900/80 backdrop-blur-md border-b border-slate-800 px-4 py-2 flex justify-center sticky top-[61px] z-40 shadow-sm">
+        <div className="md:hidden bg-white border-b border-slate-200 px-4 py-2 flex justify-center sticky top-[61px] z-40 shadow-sm">
           <LiveStats />
         </div>
 
@@ -622,10 +622,10 @@ export default function Home() {
                 transition={{ delay: 0.15 }}
                 className="text-center mb-10"
               >
-                <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.1] mb-3">
+                <h2 className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.1] mb-3">
                   What can I help with?
                 </h2>
-                <p className="text-sm text-slate-500 max-w-md mx-auto">
+                <p className="text-sm text-slate-600 max-w-md mx-auto">
                   Power sector regulations, operational frameworks, and institutional knowledge — instantly.
                 </p>
               </motion.div>
@@ -649,17 +649,17 @@ export default function Home() {
                       initial={{ opacity: 0, scale: 0.95, y: -10 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="w-full max-w-2xl mb-8 p-6 glass-panel border-indigo-500/30 bg-indigo-500/5 shadow-xl shadow-indigo-500/5 flex flex-col sm:flex-row items-center gap-6 rounded-3xl"
+                      className="w-full max-w-2xl mb-8 p-6 glass-panel border-blue-300/30 bg-blue-50 shadow-xl shadow-blue-100/20 flex flex-col sm:flex-row items-center gap-6 rounded-3xl"
                     >
-                      <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center shrink-0 border border-indigo-500/20 overflow-hidden">
+                      <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center shrink-0 border border-blue-300/50 overflow-hidden">
                         <LottieCDNWrapper src="/unlock.lottie" className="w-full h-full transform scale-125" />
                       </div>
                       <div className="flex-1 text-center sm:text-left">
-                        <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-1.5 flex items-center justify-center sm:justify-start gap-2">
+                        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-1.5 flex items-center justify-center sm:justify-start gap-2">
                           Limit reached!
-                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
                         </h3>
-                        <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                        <p className="text-xs text-slate-700 leading-relaxed font-medium">
                           Quota reached. Upgrade for expanded strategic insights and zero cooling periods.
                         </p>
                       </div>
@@ -682,7 +682,7 @@ export default function Home() {
 
               <div className="w-full max-w-2xl">
                 <div className="relative group mb-8">
-                  <div className="relative flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-2xl px-5 py-2.5 focus-within:border-slate-700 transition-all duration-200 shadow-xl">
+                  <div className="relative flex items-center gap-3 bg-white border border-slate-300 rounded-2xl px-5 py-2.5 focus-within:border-blue-400 transition-all duration-200 shadow-xl">
                     <textarea
                       ref={inputRef}
                       value={query}
@@ -690,7 +690,7 @@ export default function Home() {
                       onKeyDown={handleKeyDown}
                       placeholder={placeholder || "Ask GridMind Tactical..."}
                       rows={1}
-                      className="flex-1 bg-transparent text-[14px] text-white placeholder:text-slate-600 outline-none resize-none leading-relaxed"
+                      className="flex-1 bg-transparent text-[14px] text-slate-900 placeholder:text-slate-500 outline-none resize-none leading-relaxed"
                       style={{ minHeight: "22px", maxHeight: "200px" }}
                       onInput={(e) => {
                         const target = e.target as HTMLTextAreaElement;
@@ -733,12 +733,12 @@ export default function Home() {
                           setQuery(q.text);
                           handleSubmit(q.text);
                         }}
-                        className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900 border border-slate-800 hover:border-indigo-500/30 hover:bg-slate-800/50 transition-all text-left max-w-[280px] group"
+                        className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-300 hover:border-blue-400/50 hover:bg-blue-50 transition-all text-left max-w-[280px] group"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0 group-hover:bg-indigo-500/20 transition-colors">
-                          <Icon className="w-4 h-4 text-indigo-400" />
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0 group-hover:bg-blue-200 transition-colors">
+                          <Icon className="w-4 h-4 text-blue-600" />
                         </div>
-                        <span className="text-[11px] font-medium text-slate-300 leading-tight group-hover:text-white transition-colors line-clamp-2">
+                        <span className="text-[11px] font-medium text-slate-700 leading-tight group-hover:text-slate-900 transition-colors line-clamp-2">
                           {q.text}
                         </span>
                       </motion.button>
@@ -783,18 +783,18 @@ export default function Home() {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="p-4 rounded-2xl bg-slate-900 border border-red-500/20 shadow-2xl flex items-center gap-3"
+                        className="p-4 rounded-2xl bg-white border border-red-300 shadow-2xl flex items-center gap-3"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
-                          <X className="w-4 h-4 text-red-400" />
+                        <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
+                          <X className="w-4 h-4 text-red-600" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[11px] font-bold text-red-400 uppercase tracking-widest leading-tight">Query Failed</p>
-                          <p className="text-xs text-slate-400 truncate">{error}</p>
+                          <p className="text-[11px] font-bold text-red-700 uppercase tracking-widest leading-tight">Query Failed</p>
+                          <p className="text-xs text-slate-700 truncate">{error}</p>
                         </div>
                         <button
                           onClick={() => setError("")}
-                          className="p-1.5 rounded-lg hover:bg-white/5 text-slate-500 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 transition-colors"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -814,33 +814,33 @@ export default function Home() {
                     >
                       {/* User Query Bubble */}
                       <div className="flex justify-end">
-                        <div className="max-w-[80%] px-5 py-3 rounded-2xl rounded-br-md bg-indigo-600/20 border border-indigo-500/20 text-sm text-indigo-200">
+                        <div className="max-w-[80%] px-5 py-3 rounded-2xl rounded-br-md bg-blue-100 border border-blue-300 text-sm text-blue-900">
                           {activeQuestion}
                         </div>
                       </div>
 
                       {/* AI Response */}
-                      <div ref={resultsRef} className="glass-panel rounded-[2rem] overflow-hidden shadow-2xl shadow-black/40">
+                      <div ref={resultsRef} className="glass-panel rounded-[2rem] overflow-hidden shadow-2xl shadow-slate-200/20">
                         {/* Result Header */}
-                        <div className="px-8 py-4 bg-white/[0.02] border-b border-white/5 flex items-center justify-between">
+                        <div className="px-8 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 flex items-center justify-center shrink-0">
-                              <BrainCircuit className="w-6 h-6 text-indigo-400" />
+                              <BrainCircuit className="w-6 h-6 text-blue-600" />
                             </div>
-                            <h1 className="text-sm font-bold tracking-tight text-white leading-tight animate-in fade-in slide-in-from-left-2 duration-300">
-                              GridMind <span className="text-indigo-400">AI</span>
+                            <h1 className="text-sm font-bold tracking-tight text-slate-900 leading-tight animate-in fade-in slide-in-from-left-2 duration-300">
+                              GridMind <span className="text-blue-600">AI</span>
                             </h1>
                           </div>
 
-                          <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/5">
-                            <div className="flex items-center gap-1.5 text-slate-500 hover:text-indigo-400/80 transition-colors group cursor-default">
+                          <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-300">
+                            <div className="flex items-center gap-1.5 text-slate-700 hover:text-blue-600 transition-colors group cursor-default">
                               <Cpu className="w-3.5 h-3.5" />
                               <span className="text-[9px] font-bold uppercase tracking-[0.1em] max-w-0 group-hover:max-w-[200px] opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap overflow-hidden">
                                 {result.model_used}
                               </span>
                             </div>
-                            <div className="w-[1px] h-2.5 bg-white/10" />
-                            <div className="flex items-center gap-1.5 text-slate-500">
+                            <div className="w-[1px] h-2.5 bg-slate-300" />
+                            <div className="flex items-center gap-1.5 text-slate-700">
                               <Clock className="w-3.5 h-3.5" />
                               <span className="text-[9px] font-bold uppercase tracking-[0.1em]">{(result.elapsed_ms / 1000).toFixed(1)}s</span>
                             </div>
@@ -849,7 +849,7 @@ export default function Home() {
 
                         {/* Answer Content Area with Typing Animation */}
                         <div className="px-8 py-8">
-                          <div className="markdown-content text-[15px] text-slate-200 leading-[1.7] font-normal">
+                          <div className="markdown-content text-[15px] text-slate-800 leading-[1.7] font-normal">
                             <TypingMarkdown text={result.answer} speed={8} />
                           </div>
                         </div>
@@ -872,11 +872,11 @@ export default function Home() {
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, type: "spring", damping: 20, stiffness: 200 }}
-                className="sticky bottom-0 left-0 right-0 z-40 px-8 pb-8 bg-gradient-to-t from-[#020617] via-[#020617]/95 to-transparent pt-10"
+                className="sticky bottom-0 left-0 right-0 z-40 px-8 pb-8 bg-gradient-to-t from-white via-white/95 to-transparent pt-10"
               >
                 <div className="max-w-4xl mx-auto">
                   <div className="relative group">
-                    <div className="relative flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-[1.8rem] px-5 py-2.5 focus-within:border-slate-700 transition-all duration-300">
+                    <div className="relative flex items-center gap-3 bg-white border border-slate-300 rounded-[1.8rem] px-5 py-2.5 focus-within:border-blue-400 transition-all duration-300">
                       <textarea
                         ref={!result && !loading ? undefined : inputRef}
                         value={query}
@@ -884,7 +884,7 @@ export default function Home() {
                         onKeyDown={handleKeyDown}
                         placeholder="Ask a follow-up..."
                         rows={1}
-                        className="flex-1 bg-transparent text-[14px] text-white placeholder:text-slate-600 outline-none resize-none leading-relaxed"
+                        className="flex-1 bg-transparent text-[14px] text-slate-900 placeholder:text-slate-500 outline-none resize-none leading-relaxed"
                         style={{ minHeight: "22px", maxHeight: "200px" }}
                         onInput={(e) => {
                           const target = e.target as HTMLTextAreaElement;
@@ -1005,7 +1005,7 @@ function TypingMarkdown({ text, speed = 8 }: { text: string; speed?: number }) {
   return (
     <div>
       <ReactMarkdown>{text.slice(0, displayedLength)}</ReactMarkdown>
-      <span className="inline-block w-0.5 h-5 bg-indigo-400 animate-pulse ml-0.5 align-middle" />
+      <span className="inline-block w-0.5 h-5 bg-blue-600 animate-pulse ml-0.5 align-middle" />
     </div>
   );
 }
@@ -1042,11 +1042,11 @@ function ShareBar({ result, query }: { result: QueryResult; query: string }) {
   };
 
   return (
-    <div className="px-8 py-4 border-t border-white/5 flex items-center gap-3 bg-white/[0.01]">
+    <div className="px-8 py-4 border-t border-slate-300 flex items-center gap-3 bg-slate-50">
       <button
         onClick={handleCopy}
         title="Copy Intelligence"
-        className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500/20 border border-transparent transition-all duration-200"
+        className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-100 hover:border-blue-300 border border-transparent transition-all duration-200"
       >
         {copied ? (
           <Check className="w-4 h-4 text-emerald-400" />
@@ -1057,7 +1057,7 @@ function ShareBar({ result, query }: { result: QueryResult; query: string }) {
       <button
         onClick={handleShare}
         title="Distribute Strategy"
-        className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 border border-transparent transition-all duration-200"
+        className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-100 border border-transparent transition-all duration-200"
       >
         <Share2 className="w-4 h-4" />
       </button>
@@ -1071,7 +1071,7 @@ function ShareBar({ result, query }: { result: QueryResult; query: string }) {
           )}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center p-2 rounded-lg hover:bg-rose-500/5 transition-all text-slate-500 hover:text-rose-400 group-hover/feedback:text-rose-400"
+          className="flex items-center justify-center p-2 rounded-lg hover:bg-rose-100 transition-all text-slate-600 hover:text-rose-600 group-hover/feedback:text-rose-600"
           title="Report missing latest info or an error"
         >
           <div className="relative">
@@ -1082,17 +1082,17 @@ function ShareBar({ result, query }: { result: QueryResult; query: string }) {
 
         {/* Minimal Tooltip Prompt */}
         <div className="absolute right-0 bottom-full mb-3 pointer-events-none opacity-0 group-hover/feedback:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-200">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 shadow-2xl flex flex-col gap-1 w-56">
+          <div className="bg-white border border-slate-300 rounded-xl px-4 py-2 shadow-2xl flex flex-col gap-1 w-56">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-3 h-3 text-rose-400" />
-              <span className="text-[10px] font-bold text-white uppercase tracking-widest">Feedback</span>
+              <AlertCircle className="w-3 h-3 text-rose-600" />
+              <span className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">Feedback</span>
             </div>
-            <p className="text-[10px] text-slate-400 leading-relaxed">
+            <p className="text-[10px] text-slate-700 leading-relaxed">
               Report missing latest info on this topic or report an analytical error.
             </p>
           </div>
           {/* Tooltip arrow */}
-          <div className="absolute top-full right-4 -translate-y-1 w-2 h-2 bg-slate-900 border-r border-b border-slate-800 rotate-45" />
+          <div className="absolute top-full right-4 -translate-y-1 w-2 h-2 bg-white border-r border-b border-slate-300 rotate-45" />
         </div>
       </div>
     </div>
@@ -1116,15 +1116,15 @@ function VerbositySlider({
   return (
     <div className="flex items-center gap-4 px-1 py-1 flex-1">
       <div className="flex items-center gap-2.5 shrink-0">
-        <Cpu className="w-3.5 h-3.5 text-indigo-500" />
-        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest w-20 text-center">
+        <Cpu className="w-3.5 h-3.5 text-blue-600" />
+        <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest w-20 text-center">
           {VERBOSITY_LABELS[value - 1]}
         </span>
       </div>
       <div className="relative flex-1 flex items-center h-6 group">
-        <div className="absolute inset-x-0 h-1 rounded-full bg-slate-800" />
+        <div className="absolute inset-x-0 h-1 rounded-full bg-slate-300" />
         <div
-          className="absolute left-0 h-1 rounded-full bg-indigo-600 transition-all duration-300"
+          className="absolute left-0 h-1 rounded-full bg-blue-600 transition-all duration-300"
           style={{ width: `${((value - 1) / 4) * 100}%` }}
         />
         <div className="absolute inset-x-0 flex justify-between px-0.5 pointer-events-none">
@@ -1134,16 +1134,16 @@ function VerbositySlider({
               <div
                 key={step}
                 className={`relative w-2.5 h-2.5 rounded-full transition-all duration-200 border-2 ${step <= value
-                  ? "bg-indigo-500 border-indigo-400 shadow-sm shadow-indigo-500/20"
-                  : "bg-slate-800 border-slate-700"
+                  ? "bg-blue-600 border-blue-500 shadow-sm shadow-blue-600/20"
+                  : "bg-slate-300 border-slate-400"
                   }`}
               >
                 {isLocked && (
-                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 pointer-events-none z-50 whitespace-nowrap shadow-2xl flex flex-col items-center gap-1">
-                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">{VERBOSITY_LABELS[step - 1]}</span>
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-                      <Lock className="w-2.5 h-2.5 text-amber-500" />
-                      <span className="text-[8px] font-bold text-amber-500 uppercase tracking-widest">Upgrade</span>
+                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white border border-slate-300 rounded-xl px-3 py-1.5 pointer-events-none z-50 whitespace-nowrap shadow-2xl flex flex-col items-center gap-1">
+                    <span className="text-[9px] font-black text-slate-900 uppercase tracking-[0.2em]">{VERBOSITY_LABELS[step - 1]}</span>
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-100 border border-amber-300">
+                      <Lock className="w-2.5 h-2.5 text-amber-600" />
+                      <span className="text-[8px] font-bold text-amber-600 uppercase tracking-widest">Upgrade</span>
                     </div>
                   </div>
                 )}
@@ -1186,10 +1186,10 @@ function SourcesSection({ sources }: { sources: Source[] }) {
   const visible = expanded ? sources : sources.slice(0, 5);
 
   return (
-    <div className="border-t border-slate-800 px-8 py-5 space-y-1 bg-slate-900/50">
+    <div className="border-t border-slate-300 px-8 py-5 space-y-1 bg-slate-50">
       <div className="flex items-center gap-2 mb-3">
-        <FileText className="w-3 h-3 text-indigo-400" />
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <FileText className="w-3 h-3 text-blue-600" />
+        <span className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">
           Sources · {sources.length}
         </span>
       </div>
@@ -1207,21 +1207,21 @@ function SourcesSection({ sources }: { sources: Source[] }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Open document"
-                className="shrink-0 w-6 h-6 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all"
+                className="shrink-0 w-6 h-6 flex items-center justify-center rounded bg-slate-200 hover:bg-slate-300 border border-slate-400 transition-all"
               >
-                <FileText className="w-3 h-3 text-indigo-400" />
+                <FileText className="w-3 h-3 text-blue-600" />
               </a>
             ) : (
-              <span className="shrink-0 w-6 h-6 flex items-center justify-center rounded bg-slate-800 border border-slate-700">
+              <span className="shrink-0 w-6 h-6 flex items-center justify-center rounded bg-slate-200 border border-slate-400">
                 <FileText className="w-3 h-3 text-slate-600" />
               </span>
             )}
 
             {/* Label */}
-            <span className="text-[10px] font-black text-indigo-500/70 uppercase tracking-tight shrink-0">
+            <span className="text-[10px] font-black text-blue-700 uppercase tracking-tight shrink-0">
               [{source.ref || `SRC-${i + 1}`}]
             </span>
-            <span className="text-[11px] text-slate-400 truncate leading-tight">
+            <span className="text-[11px] text-slate-700 truncate leading-tight">
               {source.title}
             </span>
             {source.date && (

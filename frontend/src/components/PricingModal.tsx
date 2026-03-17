@@ -127,7 +127,7 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-slate-950/90"
+                        className="absolute inset-0 bg-black/30"
                         onClick={onClose}
                     />
 
@@ -135,19 +135,19 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                         initial={{ scale: 0.9, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                        className="relative w-full max-w-7xl bg-slate-900 border border-slate-800 rounded-[2rem] shadow-2xl overflow-hidden p-8 md:p-10 max-h-[95vh] overflow-y-auto"
+                        className="relative w-full max-w-7xl bg-white border border-slate-200 rounded-[2rem] shadow-2xl overflow-hidden p-8 md:p-10 max-h-[95vh] overflow-y-auto"
                     >
                         <div className="text-center mb-10">
                             <motion.div
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 }}
-                                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-900/30 border border-indigo-500/30 text-indigo-400 text-[10px] font-bold tracking-widest uppercase mb-4"
+                                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 border border-blue-300 text-blue-700 text-[10px] font-bold tracking-widest uppercase mb-4"
                             >
                                 <Sparkles className="w-3 h-3" />
                                 PLAN LIMITS
                             </motion.div>
-                            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
                                 {promoData ? (
                                     <span className="flex items-center justify-center gap-3">
                                         Promo Applied!
@@ -155,7 +155,7 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                     </span>
                                 ) : "Choose Your Plan"}
                             </h2>
-                            <p className="text-slate-400 max-w-xl mx-auto text-sm leading-relaxed">
+                            <p className="text-slate-700 max-w-xl mx-auto text-sm leading-relaxed">
                                 {promoData
                                     ? `Strategic discount activated! Your exclusive pricing for ${promoData.code} is now live.`
                                     : "Pick the plan that best fits your search and analysis needs."}
@@ -176,12 +176,12 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.2 + idx * 0.1 }}
                                         className={`relative flex flex-col p-6 rounded-3xl border transition-all duration-300 ${isCurrent
-                                            ? "bg-slate-800 border-indigo-500/50 shadow-lg shadow-indigo-500/5"
-                                            : "bg-slate-800 border-slate-700 hover:border-slate-600"
+                                            ? "bg-blue-50 border-blue-400 shadow-lg shadow-blue-200/50"
+                                            : "bg-slate-50 border-slate-300 hover:border-slate-400"
                                             }`}
                                     >
                                         {isCurrent && (
-                                            <div className="absolute top-4 right-4 px-2 py-0.5 rounded-md bg-indigo-500 text-[8px] font-bold text-white uppercase">
+                                            <div className="absolute top-4 right-4 px-2 py-0.5 rounded-md bg-blue-600 text-[8px] font-bold text-white uppercase">
                                                 Current
                                             </div>
                                         )}
@@ -190,10 +190,10 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                             <Icon className="w-6 h-6 text-white" />
                                         </div>
 
-                                        <h3 className="text-lg font-bold text-white mb-1">{plan.name}</h3>
+                                        <h3 className="text-lg font-bold text-slate-900 mb-1">{plan.name}</h3>
                                         <div className="flex flex-col mb-4">
                                             <div className="flex items-baseline gap-1">
-                                                <span className={`text-2xl font-bold text-white ${promoData && plan.price > 0 ? "line-through opacity-30 text-lg" : ""}`}>
+                                                <span className={`text-2xl font-bold text-slate-900 ${promoData && plan.price > 0 ? "line-through opacity-30 text-lg" : ""}`}>
                                                     ₹{plan.price}
                                                 </span>
                                                 {promoData && plan.price > 0 && (
@@ -201,7 +201,7 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                                         ₹{finalPrice}
                                                     </span>
                                                 )}
-                                                <span className="text-xs text-slate-500">/month</span>
+                                                <span className="text-xs text-slate-700">/month</span>
                                             </div>
                                             {promoData && plan.price > 0 && (
                                                 <div className="mt-1 flex flex-col gap-0.5">
@@ -216,18 +216,18 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                             )}
                                         </div>
 
-                                        <p className="text-xs text-slate-400 mb-6 leading-relaxed flex-1">
+                                        <p className="text-xs text-slate-700 mb-6 leading-relaxed flex-1">
                                             {plan.description}
                                         </p>
 
                                         <div className="space-y-3 mb-8">
-                                            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-400">
+                                            <div className="flex items-center gap-2 text-xs font-semibold text-blue-600">
                                                 <Zap className="w-3 h-3" />
                                                 {plan.limit}
                                             </div>
                                             {plan.features.map((feature, fIdx) => (
-                                                <div key={fIdx} className="flex items-center gap-2 text-[11px] text-slate-300">
-                                                    <Check className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                                                <div key={fIdx} className="flex items-center gap-2 text-[11px] text-slate-700">
+                                                    <Check className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                                                     <span>{feature}</span>
                                                 </div>
                                             ))}
@@ -237,8 +237,8 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                             onClick={() => handleSelect(plan.id)}
                                             disabled={isCurrent || (!!selectedPlanId)}
                                             className={`w-full py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${isCurrent
-                                                ? "bg-slate-800 text-slate-500 cursor-default"
-                                                : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                                                ? "bg-slate-200 text-slate-600 cursor-default"
+                                                : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                                                 }`}
                                         >
                                             {selectedPlanId === plan.id && <Loader2 className="w-3 h-3 animate-spin" />}
@@ -253,11 +253,11 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                         </div>
 
                         {/* Promo Code Section */}
-                        <div className="max-w-md mx-auto pt-6 border-t border-white/5">
+                        <div className="max-w-md mx-auto pt-6 border-t border-slate-300">
                             {!showPromoInput && !promoData ? (
                                 <button
                                     onClick={() => setShowPromoInput(true)}
-                                    className="w-full flex items-center justify-center gap-2 text-indigo-400 hover:text-indigo-300 font-bold text-xs transition-colors py-2"
+                                    className="w-full flex items-center justify-center gap-2 text-blue-600 hover:text-blue-700 font-bold text-xs transition-colors py-2"
                                 >
                                     <Tag className="w-3.5 h-3.5" />
                                     Have a Promo code?
@@ -265,8 +265,8 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                             ) : (
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center justify-between px-1">
-                                        <div className="flex items-center gap-2 text-slate-400">
-                                            <Tag className="w-3.5 h-3.5 text-indigo-400" />
+                                        <div className="flex items-center gap-2 text-slate-700">
+                                            <Tag className="w-3.5 h-3.5 text-blue-600" />
                                             <span className="text-[10px] font-bold uppercase tracking-widest">PROMO CODE</span>
                                         </div>
                                         {(promoData || showPromoInput) && (
@@ -276,7 +276,7 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                                     setPromoData(null);
                                                     setShowPromoInput(false);
                                                 }}
-                                                className="text-[9px] font-bold text-slate-500 hover:text-indigo-400 uppercase tracking-tighter"
+                                                className="text-[9px] font-bold text-slate-600 hover:text-blue-600 uppercase tracking-tighter"
                                             >
                                                 {promoData ? "Remove Code" : "Cancel"}
                                             </button>
@@ -290,26 +290,26 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                             onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                                             placeholder="ENTER PROMO CODE"
                                             disabled={!!promoData || isValidating}
-                                            className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white placeholder:text-slate-600 focus:border-indigo-500/50 outline-none transition-all disabled:opacity-50"
+                                            className="flex-1 bg-white border border-slate-300 rounded-xl px-4 py-3 text-xs text-slate-900 placeholder:text-slate-500 focus:border-blue-500 outline-none transition-all disabled:opacity-50"
                                             autoFocus
                                         />
                                         {!promoData ? (
                                             <button
                                                 onClick={handleValidatePromo}
                                                 disabled={!promoCode || isValidating}
-                                                className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-indigo-500/30"
+                                                className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-blue-600/50"
                                             >
                                                 {isValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
                                             </button>
                                         ) : (
-                                            <div className="px-6 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-2">
+                                            <div className="px-6 py-3 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-bold flex items-center gap-2">
                                                 <Check className="w-3.5 h-3.5" />
                                                 Applied
                                             </div>
                                         )}
                                     </div>
                                     {promoError && (
-                                        <div className="flex items-center gap-1.5 px-1 text-[10px] font-bold text-red-400 uppercase tracking-tighter">
+                                        <div className="flex items-center gap-1.5 px-1 text-[10px] font-bold text-red-600 uppercase tracking-tighter">
                                             <AlertCircle className="w-3 h-3" />
                                             {promoError}
                                         </div>
@@ -320,7 +320,7 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
 
                         <button
                             onClick={onClose}
-                            className="mt-12 w-full text-center text-[10px] text-slate-600 hover:text-slate-400 font-bold tracking-widest uppercase transition-colors"
+                            className="mt-12 w-full text-center text-[10px] text-slate-600 hover:text-slate-900 font-bold tracking-widest uppercase transition-colors"
                         >
                             Close
                         </button>

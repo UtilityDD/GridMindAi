@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 function OdometerDigit({ digit, index }: { digit: string, index: number }) {
     return (
-        <div className="relative w-[13px] h-[20px] bg-[#020617] border border-white/5 rounded-sm overflow-hidden flex flex-col items-center shadow-inner">
+        <div className="relative w-[13px] h-[20px] bg-white border border-slate-300 rounded-sm overflow-hidden flex flex-col items-center shadow-inner">
             <motion.div
                 key={digit}
                 initial={{ y: "100%" }}
@@ -17,11 +17,11 @@ function OdometerDigit({ digit, index }: { digit: string, index: number }) {
                     stiffness: 110,
                     delay: (index * 0.05)
                 }}
-                className="absolute inset-0 flex items-center justify-center text-[12px] font-black text-emerald-400 font-mono tracking-tighter"
+                className="absolute inset-0 flex items-center justify-center text-[12px] font-black text-emerald-600 font-mono tracking-tighter"
             >
                 {digit}
             </motion.div>
-            <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-200/30 to-transparent pointer-events-none" />
         </div>
     );
 }
