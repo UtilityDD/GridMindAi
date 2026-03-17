@@ -2,62 +2,9 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Sparkles, Rocket, Zap, ShieldCheck, Tag, Loader2, AlertCircle, BrainCircuit } from "lucide-react";
+import { Check, Sparkles, Tag, Loader2, AlertCircle, Zap } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
-
-interface Plan {
-    id: string;
-    name: string;
-    price: number;
-    limit: string;
-    description: string;
-    features: string[];
-    color: string;
-    icon: React.ComponentType<{ className?: string }>;
-}
-
-const PLANS: Plan[] = [
-    {
-        id: "free",
-        name: "Basic",
-        price: 0,
-        limit: "20 queries / day",
-        description: "Standard regulatory lookup for general users.",
-        features: ["Standard search", "Basic history", "Web access"],
-        color: "from-slate-500 to-slate-700",
-        icon: Rocket,
-    },
-    {
-        id: "basic",
-        name: "Basic+",
-        price: 200,
-        limit: "100 queries / day",
-        description: "Enhanced bandwidth for active policy research.",
-        features: ["High-speed search", "Priority support", "Extended history"],
-        color: "from-blue-500 to-indigo-600",
-        icon: Zap,
-    },
-    {
-        id: "advance",
-        name: "Advance",
-        price: 300,
-        limit: "300 queries / day",
-        description: "Professional grade strategic intelligence.",
-        features: ["Full database access", "Extended context", "Priority support"],
-        color: "from-purple-500 to-indigo-600",
-        icon: BrainCircuit,
-    },
-    {
-        id: "pro",
-        name: "Pro",
-        price: 500,
-        limit: "500 queries / day",
-        description: "Maximum bandwidth for enterprise-level operations.",
-        features: ["Enterprise support", "Unlimited history", "Advanced analytics"],
-        color: "from-indigo-500 to-amber-600",
-        icon: ShieldCheck,
-    },
-];
+import { PLANS, CAPABILITY_ROWS } from "@/lib/plans";
 
 interface PricingModalProps {
     isOpen: boolean;
@@ -225,10 +172,21 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                                 <Zap className="w-3 h-3" />
                                                 {plan.limit}
                                             </div>
-                                            {plan.features.map((feature, fIdx) => (
-                                                <div key={fIdx} className="flex items-center gap-2 text-[11px] text-slate-700">
-                                                    <Check className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                                                    <span>{feature}</span>
+                                            {plan.duration && (
+                                                <div className="text-[10px] font-semibold text-slate-600 italic">
+                                                    {plan.duration}
+                                                </div>
+                                            )}
+                                            {CAPABILITY_ROWS.map((row, idx) => (
+                                                <div key={idx} className="flex items-center gap-2 text-[11px] text-slate-700">
+                                                    {plan.capabilities[row.key as keyof typeof plan.capabilities] ? (
+                                                        <Check className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                                    ) : (
+                                                        <div className="w-3.5 h-3.5" />
+                                                    )}
+                                                    <span className={plan.capabilities[row.key as keyof typeof plan.capabilities] ? "" : "opacity-40"}>
+                                                        {row.label}
+                                                    </span>
                                                 </div>
                                             ))}
                                         </div>

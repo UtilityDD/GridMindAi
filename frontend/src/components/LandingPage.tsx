@@ -5,6 +5,7 @@ import { BrainCircuit, Zap, Shield, BarChart3, ArrowRight, Menu, Globe, Cpu, Act
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { PLANS, CAPABILITY_ROWS } from "@/lib/plans";
 
 interface LandingPageProps {
     onGetStarted: () => void;
@@ -38,72 +39,6 @@ const QA_PAIRS = [
         source: "Consumer Grievance Redressal Forum Regulations"
     }
 ];
-
-const PLANS = [
-    {
-        id: "free",
-        name: "Basic",
-        price: 0,
-        limit: "10 queries / day",
-        duration: "30 days only",
-        capabilities: {
-            standard: true,
-            better: false,
-            detailed: false,
-            highSpeed: false,
-        },
-        color: "from-slate-500 to-slate-700",
-    },
-    {
-        id: "basic",
-        name: "Basic+",
-        price: 100,
-        limit: "10 queries / day",
-        duration: "No expiry",
-        capabilities: {
-            standard: true,
-            better: true,
-            detailed: false,
-            highSpeed: false,
-        },
-        color: "from-blue-500 to-indigo-600",
-    },
-    {
-        id: "advance",
-        name: "Advance",
-        price: 200,
-        limit: "50 queries / day",
-        duration: "No expiry",
-        capabilities: {
-            standard: true,
-            better: true,
-            detailed: true,
-            highSpeed: false,
-        },
-        color: "from-purple-500 to-indigo-600",
-    },
-    {
-        id: "pro",
-        name: "Pro",
-        price: 300,
-        limit: "150 queries / day",
-        duration: "No expiry",
-        capabilities: {
-            standard: true,
-            better: true,
-            detailed: true,
-            highSpeed: true,
-        },
-        color: "from-indigo-500 to-amber-600",
-    },
-];
-
-const CAPABILITY_ROWS = [
-    { key: "standard", label: "Standard response" },
-    { key: "better", label: "Better response" },
-    { key: "detailed", label: "Detailed/In-depth response" },
-    { key: "highSpeed", label: "High-speed search" },
-] as const;
 
 const NAV_LINKS = [
     { name: "The Solution", id: "hero" },
