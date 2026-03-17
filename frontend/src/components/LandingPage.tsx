@@ -220,15 +220,15 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-indigo-500/30 overflow-x-hidden">
+        <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100 overflow-x-hidden">
             {/* Navigation */}
-            <nav className="fixed top-0 w-full z-50 border-b border-white/5 bg-slate-950/50 backdrop-blur-xl">
+            <nav className="fixed top-0 w-full z-50 border-b border-slate-200 bg-white">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex items-center justify-center">
-                            <BrainCircuit className="w-8 h-8 text-indigo-500" />
+                            <BrainCircuit className="w-8 h-8 text-blue-600" />
                         </div>
-                        <span className="text-xl font-bold tracking-tight">GridMind <span className="text-indigo-400">AI</span></span>
+                        <span className="text-xl font-bold tracking-tight">GridMind <span className="text-blue-600">AI</span></span>
                     </div>
 
                     <div className="hidden md:flex items-center gap-10">
@@ -237,14 +237,14 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                                 key={link.id}
                                 href={`#${link.id}`}
                                 onClick={(e) => handleNavClick(e, link.id)}
-                                className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-all relative ${activeSection === link.id ? "text-indigo-400" : "text-slate-500 hover:text-white"
+                                className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-all relative ${ activeSection === link.id ? "text-blue-600" : "text-slate-600 hover:text-slate-900"
                                     }`}
                             >
                                 {link.name}
                                 {activeSection === link.id && (
                                     <motion.div
                                         layoutId="activeNav"
-                                        className="absolute -bottom-2 left-0 right-0 h-0.5 bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,0.5)]"
+                                        className="absolute -bottom-2 left-0 right-0 h-0.5 bg-blue-600"
                                     />
                                 )}
                             </a>
@@ -253,7 +253,7 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
 
                     <button
                         onClick={onGetStarted}
-                        className="px-6 py-2.5 rounded-full bg-white text-slate-950 text-xs font-bold uppercase tracking-widest hover:bg-indigo-50 transition-all active:scale-95 shadow-xl shadow-white/5"
+                        className="px-6 py-2.5 rounded-full bg-blue-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-blue-700 transition-all active:scale-95"
                     >
                         {isLoggedIn ? "Dashboard" : "Sign In"}
                     </button>
@@ -261,18 +261,10 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
             </nav>
 
             {/* Progress Bar */}
-            <motion.div className="fixed top-0 left-0 right-0 h-1 bg-indigo-500 origin-left z-[60] shadow-[0_0_15px_rgba(79,70,229,0.8)]" style={{ scaleX }} />
-
-            {/* Scanline Overlay */}
-            <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.03] scanline" />
+            <motion.div className="fixed top-0 left-0 right-0 h-1 bg-blue-600 origin-left z-[60]" style={{ scaleX }} />
 
             {/* Hero Section */}
             <section id="hero" className="relative pt-40 pb-32 px-6 overflow-hidden min-h-screen flex items-center">
-                {/* Background Atmosphere */}
-                <div className="absolute inset-0 z-0">
-                    <div className="absolute top-[-10%] left-[-10%] w-[1000px] h-[1000px] bg-indigo-600/10 rounded-full blur-[120px] animate-pulse" />
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[1000px] h-[1000px] bg-blue-600/10 rounded-full blur-[120px] animate-pulse" />
-                </div>
 
                 <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10">
                     <motion.div
@@ -281,23 +273,23 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                         variants={containerVariants}
                         className="flex flex-col gap-8"
                     >
-                        <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 w-fit">
-                            <Zap className="w-4 h-4 text-indigo-400" />
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300">Decide Fast. Act Fast.</span>
+                        <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-200 w-fit">
+                            <Zap className="w-4 h-4 text-blue-600" />
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600">Decide Fast. Act Fast.</span>
                         </motion.div>
 
-                        <motion.h1 variants={itemVariants} className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05]">
-                            Stop scrolling through PDFs. <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-blue-400">Get the exact clause.</span>
+                        <motion.h1 variants={itemVariants} className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05] text-slate-900">
+                            Stop scrolling through PDFs. <br /> <span className="text-blue-600">Get the exact clause.</span>
                         </motion.h1>
 
-                        <motion.p variants={itemVariants} className="text-lg text-slate-400 leading-relaxed max-w-xl">
+                        <motion.p variants={itemVariants} className="text-lg text-slate-600 leading-relaxed max-w-xl">
                             Electricity Act, Tariff Policy, MoP guidelines, SERC rules, CEA standards, DISCOM circulars, financial and purchase rules, and IS codes, aligned with CVC and financial discipline. GridMind turns changing notifications into instant, actionable answers.
                         </motion.p>
 
                         <motion.div variants={itemVariants} className="flex flex-wrap gap-4 pt-4">
                             <button
                                 onClick={onGetStarted}
-                                className="group px-8 py-4 rounded-2xl bg-indigo-600 text-white font-bold uppercase tracking-widest text-xs flex items-center gap-3 hover:bg-indigo-500 transition-all shadow-2xl shadow-indigo-600/20 active:scale-95 relative overflow-hidden"
+                                className="group px-8 py-4 rounded-2xl bg-blue-600 text-white font-bold uppercase tracking-widest text-xs flex items-center gap-3 hover:bg-blue-700 transition-all active:scale-95 relative overflow-hidden"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
                                 {buttonLabel}
@@ -306,11 +298,11 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                         </motion.div>
 
                         {/* Sector Labels */}
-                        <motion.div variants={itemVariants} className="flex items-center gap-8 pt-6 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all">
+                        <motion.div variants={itemVariants} className="flex items-center gap-8 pt-6 opacity-60 hover:opacity-100 transition-all">
                             {['Generation', 'Transmission', 'Distribution'].map((sector) => (
                                 <div key={sector} className="flex items-center gap-2">
-                                    <Globe className="w-4 h-4 text-slate-500" />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{sector}</span>
+                                    <Globe className="w-4 h-4 text-slate-600" />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">{sector}</span>
                                 </div>
                             ))}
                         </motion.div>
@@ -322,7 +314,7 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                         transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
                         className="hidden lg:block relative perspective-1000"
                     >
-                        <div className="relative rounded-[3rem] overflow-hidden border border-white/10 shadow-3xl bg-slate-950 aspect-[4/3] flex items-center justify-center">
+                        <div className="relative rounded-[3rem] overflow-hidden border border-slate-300 shadow-lg bg-white aspect-[4/3] flex items-center justify-center">
                             {/* Chaos: Floating Manuals */}
                             {[
                                 { text: "Electricity Act 2003", top: "10%", left: "10%", delay: 0 },
@@ -341,7 +333,7 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                                         filter: ["blur(2px)", "blur(0px)", "blur(2px)"]
                                     }}
                                     transition={{ duration: 6 + i, repeat: Infinity, ease: "easeInOut", delay: doc.delay }}
-                                    className="absolute p-3 rounded-xl bg-white border border-slate-200 shadow-xl w-32 md:w-40 text-[8px] md:text-[10px] text-slate-800 font-serif opacity-30 z-0"
+                                    className="absolute p-3 rounded-xl bg-gray-50 border border-slate-300 shadow-md w-32 md:w-40 text-[8px] md:text-[10px] text-slate-800 font-serif opacity-40 z-0"
                                     style={{ top: doc.top, left: doc.left }}
                                 >
                                     <div className="w-full h-1 bg-red-500/20 mb-2 rounded" />
@@ -352,8 +344,7 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                                 </motion.div>
                             ))}
 
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10" />
-                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent z-10" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent z-10" />
 
                             {/* Clarity: The Answer */}
                             <motion.div
@@ -362,39 +353,39 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                                 transition={{ delay: 1, duration: 1 }}
                                 className="relative z-20 w-3/4 max-w-sm"
                             >
-                                <div className="p-4 rounded-t-2xl border border-white/10 bg-slate-900 shadow-xl flex items-center gap-3">
-                                    <BrainCircuit className="w-5 h-5 text-indigo-400" />
-                                    <div className="w-full h-8 bg-slate-800 rounded-lg flex items-center px-3 border border-white/5 overflow-hidden">
-                                        <span className="text-[10px] text-slate-400 font-mono truncate">{displayedQ}<span className="animate-pulse">|</span></span>
+                                <div className="p-4 rounded-t-2xl border border-slate-300 bg-white shadow-sm flex items-center gap-3">
+                                    <BrainCircuit className="w-5 h-5 text-blue-600" />
+                                    <div className="w-full h-8 bg-gray-100 rounded-lg flex items-center px-3 border border-slate-300 overflow-hidden">
+                                        <span className="text-[10px] text-slate-600 font-mono truncate">{displayedQ}<span className="animate-pulse">|</span></span>
                                     </div>
                                 </div>
-                                <div className="p-5 rounded-b-2xl border-x border-b border-white/10 bg-slate-900/95 backdrop-blur shadow-2xl space-y-3">
+                                <div className="p-5 rounded-b-2xl border-x border-b border-slate-300 bg-white shadow-sm space-y-3">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <Zap className="w-4 h-4 text-indigo-400" />
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">
+                                        <Zap className="w-4 h-4 text-blue-600" />
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600">
                                             {qaPhase === 'typing-q' ? 'Searching...' : 'Target Acquired'}
                                         </span>
                                     </div>
-                                    <p className="text-sm text-slate-300 leading-relaxed font-serif min-h-[80px]">
+                                    <p className="text-sm text-slate-700 leading-relaxed font-serif min-h-[80px]">
                                         {qaPhase !== 'typing-q' ? (
                                             <>
                                                 "{displayedAPre}
-                                                {displayedAHighlight && <strong className="text-white bg-indigo-500/20 px-1 rounded">{displayedAHighlight}</strong>}
+                                                {displayedAHighlight && <strong className="text-slate-900 bg-blue-100 px-1 rounded">{displayedAHighlight}</strong>}
                                                 {qaPhase !== 'showing' && <span className="animate-pulse">|</span>}
                                                 {qaPhase === 'showing' && '"'}
                                             </>
                                         ) : (
-                                            <span className="text-slate-600 italic">Scanning regulatory database...</span>
+                                            <span className="text-slate-500 italic">Scanning regulatory database...</span>
                                         )}
                                     </p>
-                                    <div className="pt-2 border-t border-white/10 flex justify-between items-center h-6 overflow-hidden">
+                                    <div className="pt-2 border-t border-slate-300 flex justify-between items-center h-6 overflow-hidden">
                                         {qaPhase !== 'typing-q' && (
-                                            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[9px] text-slate-500 font-mono truncate mr-2 flex items-center gap-1.5">
-                                                <FileText className="w-3 h-3 text-red-400" />
+                                            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[9px] text-slate-600 font-mono truncate mr-2 flex items-center gap-1.5">
+                                                <FileText className="w-3 h-3 text-red-500" />
                                                 {QA_PAIRS[qaIndex].source}
                                             </motion.span>
                                         )}
-                                        {qaPhase !== 'typing-q' && <ArrowRight className="w-3 h-3 text-slate-500 flex-shrink-0" />}
+                                        {qaPhase !== 'typing-q' && <ArrowRight className="w-3 h-3 text-slate-600 flex-shrink-0" />}
                                     </div>
                                 </div>
                             </motion.div>
@@ -410,12 +401,12 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                className="relative bg-slate-900/40 px-6 py-28"
+                className="relative bg-gray-50 px-6 py-28 border-t border-slate-200"
             >
                 <div className="mx-auto max-w-6xl">
                     <div className="mb-14 text-center">
-                        <h2 className="text-3xl font-bold tracking-tight md:text-5xl">Regulatory Scope</h2>
-                        <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-400 md:text-base">
+                        <h2 className="text-3xl font-bold tracking-tight md:text-5xl text-slate-900">Regulatory Scope</h2>
+                        <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-600 md:text-base">
                             One clean path from law to field execution.
                         </p>
                     </div>
@@ -423,9 +414,9 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                     <div className="relative mx-auto max-w-5xl">
                         {/* Desktop path */}
                         <div className="relative hidden md:block">
-                            <div className="absolute left-0 right-0 top-8 h-px bg-slate-800" />
+                            <div className="absolute left-0 right-0 top-8 h-px bg-slate-300" />
                             <motion.div
-                                className="absolute left-0 top-8 h-px bg-indigo-500"
+                                className="absolute left-0 top-8 h-px bg-blue-600"
                                 initial={{ width: 0 }}
                                 whileInView={{ width: "100%" }}
                                 transition={{ duration: 2.2, ease: "easeOut" }}
@@ -449,12 +440,12 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                                         viewport={{ once: true, margin: "-80px" }}
                                         className="relative"
                                     >
-                                        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-500/30 bg-slate-900 text-indigo-300 shadow-[0_0_18px_rgba(99,102,241,0.22)]">
+                                        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 text-blue-600">
                                             <BrainCircuit className="h-5 w-5" />
                                         </div>
-                                        <div className="rounded-2xl border border-white/8 bg-slate-900/75 p-4 text-center backdrop-blur-sm">
-                                            <h3 className="text-sm font-semibold leading-snug text-white">{step.title}</h3>
-                                            <p className="mt-2 text-xs text-slate-400">{step.short}</p>
+                                        <div className="rounded-2xl border border-slate-300 bg-white p-4 text-center shadow-sm">
+                                            <h3 className="text-sm font-semibold leading-snug text-slate-900">{step.title}</h3>
+                                            <p className="mt-2 text-xs text-slate-600">{step.short}</p>
                                         </div>
                                     </motion.div>
                                 ))}
@@ -463,9 +454,9 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
 
                         {/* Mobile path */}
                         <div className="relative md:hidden">
-                            <div className="absolute left-3 top-1 bottom-1 w-px bg-slate-800" />
+                            <div className="absolute left-3 top-1 bottom-1 w-px bg-slate-300" />
                             <motion.div
-                                className="absolute left-3 top-1 w-px bg-indigo-500 origin-top"
+                                className="absolute left-3 top-1 w-px bg-blue-600 origin-top"
                                 initial={{ height: 0 }}
                                 whileInView={{ height: "100%" }}
                                 transition={{ duration: 1.8, ease: "easeOut" }}
@@ -489,12 +480,12 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                                         viewport={{ once: true, margin: "-80px" }}
                                         className="relative pl-9"
                                     >
-                                        <div className="absolute left-0 top-5 flex h-6 w-6 items-center justify-center rounded-full border border-indigo-500/35 bg-slate-900 text-indigo-300">
+                                        <div className="absolute left-0 top-5 flex h-6 w-6 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-blue-600">
                                             <BrainCircuit className="h-3.5 w-3.5" />
                                         </div>
-                                        <div className="rounded-xl border border-white/8 bg-slate-900/75 p-4 backdrop-blur-sm">
-                                            <h3 className="text-sm font-semibold text-white">{step.title}</h3>
-                                            <p className="mt-1 text-xs text-slate-400">{step.short}</p>
+                                        <div className="rounded-xl border border-slate-300 bg-white p-4 shadow-sm">
+                                            <h3 className="text-sm font-semibold text-slate-900">{step.title}</h3>
+                                            <p className="mt-1 text-xs text-slate-600">{step.short}</p>
                                         </div>
                                     </motion.div>
                                 ))}
@@ -511,25 +502,23 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ duration: 1 }}
-                className="relative border-t border-white/5 bg-slate-950 px-6 py-28"
+                className="relative border-t border-slate-200 bg-white px-6 py-28"
             >
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/18 via-slate-950 to-slate-950" />
-
                 <div className="relative z-10 mx-auto max-w-6xl">
                     <div className="mb-14 text-center">
-                        <h2 className="text-3xl font-bold tracking-tight md:text-5xl">
+                        <h2 className="text-3xl font-bold tracking-tight md:text-5xl text-slate-900">
                             Institutional Architecture
                         </h2>
-                        <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-400 md:text-base">
+                        <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-600 md:text-base">
                             A clear governance chain from policy authority to field execution.
                         </p>
                     </div>
 
                     <div className="relative mx-auto max-w-5xl">
                         {/* Central signal spine */}
-                        <div className="absolute left-1/2 top-0 hidden h-full w-px -translate-x-1/2 bg-slate-800 lg:block" />
+                        <div className="absolute left-1/2 top-0 hidden h-full w-px -translate-x-1/2 bg-slate-300 lg:block" />
                         <motion.div
-                            className="absolute left-1/2 top-0 hidden w-px -translate-x-1/2 bg-indigo-500 lg:block"
+                            className="absolute left-1/2 top-0 hidden w-px -translate-x-1/2 bg-blue-600 lg:block"
                             initial={{ height: 0 }}
                             whileInView={{ height: "100%" }}
                             transition={{ duration: 2, ease: "easeOut" }}
@@ -543,28 +532,28 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                                     primary: "Ministry of Power (MoP)",
                                     chips: ["Government of India", "National policy leadership"],
                                     icon: Shield,
-                                    tone: "from-indigo-500/20 to-indigo-400/10 border-indigo-500/30 text-indigo-300",
+                                    tone: "from-blue-50 to-blue-50 border-blue-200 text-blue-600",
                                 },
                                 {
                                     title: "Regulation Layer",
                                     primary: "CEA | CERC | SERCs",
                                     chips: ["Technical standards", "Tariff and compliance"],
                                     icon: Activity,
-                                    tone: "from-blue-500/20 to-blue-400/10 border-blue-500/30 text-blue-300",
+                                    tone: "from-slate-50 to-slate-50 border-slate-300 text-slate-600",
                                 },
                                 {
                                     title: "System Operations",
                                     primary: "Grid Controller | RLDCs | SLDCs",
                                     chips: ["Real-time dispatch", "Reliability supervision"],
                                     icon: BrainCircuit,
-                                    tone: "from-amber-500/20 to-amber-400/10 border-amber-500/30 text-amber-300",
+                                    tone: "from-amber-50 to-amber-50 border-amber-200 text-amber-600",
                                 },
                                 {
                                     title: "Execution Layer",
                                     primary: "Generation | Transmission | Distribution | Consumers",
                                     chips: ["Utility operations", "End-user delivery"],
                                     icon: Cpu,
-                                    tone: "from-emerald-500/20 to-emerald-400/10 border-emerald-500/30 text-emerald-300",
+                                    tone: "from-emerald-50 to-emerald-50 border-emerald-200 text-emerald-600",
                                 },
                             ].map((layer, i) => {
                                 const Icon = layer.icon;
@@ -578,22 +567,22 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                                         className="relative"
                                     >
                                         <div className={`rounded-3xl border bg-gradient-to-r p-[1px] ${layer.tone}`}>
-                                            <div className="rounded-[1.45rem] border border-white/6 bg-slate-950/85 p-5 backdrop-blur-sm md:p-6">
+                                            <div className="rounded-[1.45rem] border border-slate-200 bg-white p-5 md:p-6">
                                                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                                     <div className="flex items-start gap-4">
-                                                        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border bg-slate-900 ${layer.tone}`}>
+                                                        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${layer.tone}`}>
                                                             <Icon className="h-5 w-5" />
                                                         </div>
                                                         <div>
-                                                            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">{layer.title}</p>
-                                                            <h3 className="mt-1 text-base font-semibold text-white md:text-lg">{layer.primary}</h3>
+                                                            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-600">{layer.title}</p>
+                                                            <h3 className="mt-1 text-base font-semibold text-slate-900 md:text-lg">{layer.primary}</h3>
                                                         </div>
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
                                                         {layer.chips.map((chip) => (
                                                             <span
                                                                 key={chip}
-                                                                className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] font-medium text-slate-300"
+                                                                className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-[11px] font-medium text-slate-600"
                                                             >
                                                                 {chip}
                                                             </span>
@@ -616,11 +605,11 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
-                className="relative z-10 border-y border-white/6 bg-slate-950 py-28"
+                className="relative z-10 border-y border-slate-200 bg-gray-50 py-28"
             >
                 <div className="mx-auto max-w-7xl px-6">
                 <div className="mb-14 flex flex-col items-center text-center">
-                    <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white">
+                    <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-900">
                         Simple Pricing
                     </h2>
                 </div>
@@ -635,7 +624,7 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ delay: index * 0.1 }}
-                                className={`relative flex flex-col rounded-[1.75rem] border bg-slate-950/75 p-6 shadow-xl backdrop-blur-sm ${isPro ? "border-indigo-500/70 shadow-indigo-500/10" : "border-white/8"
+                                className={`relative flex flex-col rounded-[1.75rem] border bg-white p-6 shadow-sm ${isPro ? "border-blue-300 shadow-blue-100" : "border-slate-300"
                                     }`}
                             >
                                 <div className="mb-6 flex items-start justify-between gap-4">
@@ -643,25 +632,25 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                                         <BrainCircuit className="w-6 h-6 text-white" />
                                     </div>
                                     <div className="text-right">
-                                        <h3 className="text-lg font-bold text-white">{plan.name}</h3>
-                                        <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{plan.duration}</p>
+                                        <h3 className="text-lg font-bold text-slate-900">{plan.name}</h3>
+                                        <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-600">{plan.duration}</p>
                                     </div>
                                 </div>
-                                <div className="mb-5 border-b border-white/8 pb-5">
-                                    <span className="text-4xl font-extrabold tracking-tight text-white">₹{plan.price}</span>
-                                    <span className="ml-2 text-sm text-slate-500">/ month</span>
+                                <div className="mb-5 border-b border-slate-300 pb-5">
+                                    <span className="text-4xl font-extrabold tracking-tight text-slate-900">₹{plan.price}</span>
+                                    <span className="ml-2 text-sm text-slate-600">/ month</span>
                                 </div>
-                                <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                                <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">
                                     {plan.limit}
                                 </p>
                                 <ul className="mb-8 flex-1 space-y-3">
                                     {CAPABILITY_ROWS.map((row) => (
-                                        <li key={row.key} className="flex items-center justify-between gap-2 text-sm text-slate-300">
+                                        <li key={row.key} className="flex items-center justify-between gap-2 text-sm text-slate-700">
                                             <span>{row.label}</span>
                                             {plan.capabilities[row.key] ? (
-                                                <Check className="h-4 w-4 flex-shrink-0 text-emerald-400" />
+                                                <Check className="h-4 w-4 flex-shrink-0 text-emerald-500" />
                                             ) : (
-                                                <X className="h-4 w-4 flex-shrink-0 text-slate-600" />
+                                                <X className="h-4 w-4 flex-shrink-0 text-slate-400" />
                                             )}
                                         </li>
                                     ))}
@@ -669,8 +658,8 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                                 <button
                                     onClick={onGetStarted}
                                     className={`w-full rounded-2xl py-3 text-xs font-bold uppercase tracking-widest transition-all ${isPro
-                                        ? "bg-indigo-600 text-white shadow-xl shadow-indigo-600/20 hover:bg-indigo-500"
-                                        : "bg-white/5 text-white hover:bg-white/10"
+                                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                                        : "bg-slate-200 text-slate-900 hover:bg-slate-300"
                                         }`}
                                 >
                                     Choose Plan
@@ -687,22 +676,21 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                className="py-32 px-6 text-center border-t border-white/5 relative"
-            >
-                <div className="absolute inset-0 bg-indigo-600/5 blur-[100px] opacity-30" />
+                className="py-32 px-6 text-center border-t border-slate-200 relative bg-white">
+                <div className="absolute inset-0 bg-blue-50/30 blur-3xl opacity-30" />
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     className="max-w-3xl mx-auto flex flex-col gap-10 items-center"
                 >
-                    <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight">
+                    <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight text-slate-900">
                         Stop digging through folders. <br />
-                        <span className="text-indigo-400">Start acting on intelligence.</span>
+                        <span className="text-blue-600">Start acting on intelligence.</span>
                     </h2>
                     <button
                         onClick={onGetStarted}
-                        className="px-12 py-5 rounded-2xl bg-white text-slate-950 font-bold uppercase tracking-widest text-sm hover:bg-slate-200 transition-all active:scale-95 shadow-2xl shadow-white/10"
+                        className="px-12 py-5 rounded-2xl bg-blue-600 text-white font-bold uppercase tracking-widest text-sm hover:bg-blue-700 transition-all active:scale-95"
                     >
                         Decide Fast. Act Fast.
                     </button>
@@ -710,27 +698,27 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
             </motion.section>
 
             {/* About Section */}
-            <section id="about" className="border-t border-white/5">
+            <section id="about" className="border-t border-slate-200">
                 {/* About body */}
                 <div className="max-w-6xl mx-auto px-6 py-28 grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
                     {/* Left — identity */}
                     <div className="flex flex-col gap-8">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-indigo-500/15 flex items-center justify-center">
-                                <BrainCircuit className="w-5 h-5 text-indigo-400" />
+                            <div className="w-10 h-10 rounded-2xl bg-blue-100 flex items-center justify-center">
+                                <BrainCircuit className="w-5 h-5 text-blue-600" />
                             </div>
-                            <span className="text-base font-bold tracking-tight">GridMind <span className="text-indigo-400">AI</span></span>
+                            <span className="text-base font-bold tracking-tight">GridMind <span className="text-blue-600">AI</span></span>
                         </div>
-                        <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-[1.1]">
+                        <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-[1.1] text-slate-900">
                             Built for the<br />
-                            <span className="text-indigo-400">people who decide.</span>
+                            <span className="text-blue-600">people who decide.</span>
                         </h2>
-                        <p className="text-slate-400 text-base leading-relaxed max-w-md">
+                        <p className="text-slate-600 text-base leading-relaxed max-w-md">
                             GridMind AI turns dense regulations, circulars, and standards into precise, actionable answers — in seconds. No searching. No second-guessing.
                         </p>
                         <button
                             onClick={onGetStarted}
-                            className="self-start px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold uppercase tracking-widest text-xs transition-all active:scale-95 shadow-xl shadow-indigo-600/20"
+                            className="self-start px-8 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase tracking-widest text-xs transition-all active:scale-95"
                         >
                             Get Started Free
                         </button>
@@ -744,21 +732,21 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                             { stat: "100%", label: "Indian Electrical Standards" },
                             { stat: "24 / 7", label: "Always Available" },
                         ].map(({ stat, label }) => (
-                            <div key={label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-6 flex flex-col gap-2">
-                                <span className="text-3xl font-bold text-white tracking-tight">{stat}</span>
-                                <span className="text-xs text-slate-500 uppercase tracking-[0.2em] font-semibold">{label}</span>
+                            <div key={label} className="rounded-2xl border border-slate-300 bg-white p-6 flex flex-col gap-2 shadow-sm">
+                                <span className="text-3xl font-bold text-slate-900 tracking-tight">{stat}</span>
+                                <span className="text-xs text-slate-600 uppercase tracking-[0.2em] font-semibold">{label}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* Footer bar */}
-                <div className="border-t border-white/5 py-6 px-6">
+                <div className="border-t border-slate-200 py-6 px-6">
                     <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
                         <p className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.22em]">Decide Fast. Act Fast.</p>
-                        <div className="flex items-center gap-6 text-[10px] text-slate-500 uppercase tracking-widest">
-                            <Link href="/legal#privacy" className="hover:text-indigo-400 transition-colors">Privacy</Link>
-                            <Link href="/legal#terms" className="hover:text-indigo-400 transition-colors">Terms</Link>
+                        <div className="flex items-center gap-6 text-[10px] text-slate-600 uppercase tracking-widest">
+                            <Link href="/legal#privacy" className="hover:text-blue-600 transition-colors">Privacy</Link>
+                            <Link href="/legal#terms" className="hover:text-blue-600 transition-colors">Terms</Link>
                             <span>© 2026 GridMind AI</span>
                         </div>
                     </div>

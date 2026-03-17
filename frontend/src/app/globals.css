@@ -1,31 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0f172a;
-  /* Slate 900 */
-  --foreground: #f8fafc;
-  /* Slate 50 */
-  --accent: #4f46e5;
-  /* Indigo 600 */
-  --accent-glow: rgba(79, 70, 229, 0.1);
-  --card: #1e293b;
-  /* Slate 800 */
-  --card-border: #334155;
-  /* Slate 700 */
-  --muted: #64748b;
-  /* Slate 500 */
-  --sidebar: #020617;
-  /* Slate 950 */
+  --background: #ffffff;
+  --background-secondary: #f7f7f7;
+  --foreground: #0d0d0d;
+  --border: #d0d0d0;
+  --muted: #747474;
+  --accent: #3b82f6;
+  /* Professional blue */
+  --card: #fafafa;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-secondary: var(--background-secondary);
   --color-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-card: var(--card);
-  --color-card-border: var(--card-border);
-  --color-muted: var(--muted);
-  --color-sidebar: var(--sidebar);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -36,20 +29,20 @@ html {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #334155 transparent;
+  scrollbar-color: #d0d0d0 transparent;
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 10px;
+  background: #d0d0d0;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #a0a0a0;
 }
 
 body {
@@ -60,67 +53,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Technical Animations */
-@keyframes scanline {
-  0% {
-    transform: translateY(-100%);
-  }
-
-  100% {
-    transform: translateY(100%);
-  }
-}
-
-.scanline::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent, rgba(79, 70, 229, 0.05), transparent);
-  height: 100px;
-  width: 100%;
-  animation: scanline 8s linear infinite;
-  pointer-events: none;
-  z-index: 50;
-}
-
-@keyframes flicker {
-
-  0%,
-  19.999%,
-  22%,
-  62.999%,
-  64%,
-  64.999%,
-  70%,
-  100% {
-    opacity: 1;
-  }
-
-  20%,
-  21.999%,
-  63%,
-  63.999%,
-  65%,
-  69.999% {
-    opacity: 0.4;
-  }
-}
-
-.flicker {
-  animation: flicker 0.5s infinite;
-}
-
-.glow-line {
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  height: 1px;
-  width: 100%;
-  opacity: 0.3;
-}
-
 .minimal-panel {
   background: var(--card);
-  border: 1px solid var(--card-border);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 .noise-bg {
@@ -133,21 +69,20 @@ body {
   font-weight: 600;
   margin-top: 1.25em;
   margin-bottom: 0.6em;
-  color: #fff;
+  color: #0d0d0d;
 }
 
 .markdown-content p {
   margin-bottom: 1em;
   line-height: 1.75;
-  color: #cbd5e1;
-  /* Slate 300 */
+  color: #525252;
 }
 
 .markdown-content ul,
 .markdown-content ol {
   padding-left: 1.5em;
   margin-bottom: 1em;
-  color: #cbd5e1;
+  color: #525252;
 }
 
 .markdown-content li {
@@ -155,15 +90,16 @@ body {
 }
 
 .markdown-content strong {
-  color: #fff;
+  color: #0d0d0d;
   font-weight: 600;
 }
 
 .markdown-content code {
-  background: #020617;
+  background: #f3f3f3;
   padding: 0.2em 0.4em;
-  border: 1px solid #1e293b;
+  border: 1px solid #e5e5e5;
   border-radius: 4px;
   font-size: 0.85em;
   font-family: var(--font-mono, monospace);
+  color: #0d0d0d;
 }

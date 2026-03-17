@@ -67,13 +67,7 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
   const submitLabel = mode === "login" ? "Sign In" : mode === "signup" ? "Create Account" : "Send Reset Link";
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[linear-gradient(180deg,_#020617_0%,_#0d1424_50%,_#020617_100%)] px-4 text-white">
-      {/* Subtle ambient glow */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-1/2 top-0 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-indigo-500/10 blur-[120px]" />
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-      </div>
-
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white px-4 text-slate-900">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
@@ -82,32 +76,32 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
       >
         {/* ── Brand ── */}
         <div className="mb-10 flex flex-col items-center gap-4 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-[1.6rem] border border-white/12 bg-white/5 shadow-[0_0_40px_rgba(99,102,241,0.25)]">
-            <BrainCircuit className="h-8 w-8 text-indigo-300" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-[1.6rem] border border-blue-200 bg-blue-50">
+            <BrainCircuit className="h-8 w-8 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">GridMind AI</h1>
-            <p className="mt-1 text-xs uppercase tracking-[0.3em] text-slate-500">Grid Regulations Intelligence</p>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">GridMind AI</h1>
+            <p className="mt-1 text-xs uppercase tracking-[0.3em] text-slate-600">Grid Regulations Intelligence</p>
           </div>
         </div>
 
         {/* ── Card ── */}
-        <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/70 p-7 shadow-[0_24px_80px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+        <div className="rounded-[1.75rem] border border-slate-300 bg-white p-7 shadow-sm">
 
           {/* Google — primary action */}
           <button
             type="button"
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="group flex w-full items-center gap-4 rounded-2xl border border-white/10 bg-white px-5 py-4 text-slate-900 transition hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(255,255,255,0.12)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+            className="group flex w-full items-center gap-4 rounded-2xl border border-slate-300 bg-gray-50 px-5 py-4 text-slate-900 transition hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? (
-              <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+              <Loader2 className="h-5 w-5 animate-spin text-slate-600" />
             ) : (
               <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" className="h-5 w-5" />
             )}
             <span className="flex-1 text-left text-sm font-semibold">Login with Google</span>
-            <ArrowRight className="h-4 w-4 text-slate-400 transition group-hover:translate-x-0.5" />
+            <ArrowRight className="h-4 w-4 text-slate-600 transition group-hover:translate-x-0.5" />
           </button>
 
           {/* Error / message */}
@@ -119,7 +113,7 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
                 exit={{ opacity: 0, height: 0, marginTop: 0 }}
                 className="overflow-hidden"
               >
-                <div className={`rounded-xl border px-4 py-3 text-sm ${error ? "border-red-500/20 bg-red-500/10 text-red-300" : "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"}`}>
+                <div className={`rounded-xl border px-4 py-3 text-sm ${error ? "border-red-300 bg-red-50 text-red-700" : "border-emerald-300 bg-emerald-50 text-emerald-700"}`}>
                   {error || message}
                 </div>
               </motion.div>
@@ -128,19 +122,19 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
 
           {/* Email option toggle */}
           {!showEmail ? (
-            <div className="mt-6 flex items-center justify-center gap-4 text-xs text-slate-500">
+            <div className="mt-6 flex items-center justify-center gap-4 text-xs text-slate-600">
               <button
                 type="button"
                 onClick={() => { setShowEmail(true); setMode("login"); setError(""); setMessage(""); }}
-                className="transition hover:text-white"
+                className="transition hover:text-slate-900"
               >
                 Sign in with email
               </button>
-              <span className="text-white/20">·</span>
+              <span className="text-slate-400">·</span>
               <button
                 type="button"
                 onClick={() => { setShowEmail(true); setMode("signup"); setError(""); setMessage(""); }}
-                className="transition hover:text-white"
+                className="transition hover:text-slate-900"
               >
                 Create account
               </button>
@@ -155,13 +149,13 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
                 transition={{ duration: 0.2 }}
               >
                 {/* Mode tabs */}
-                <div className="mt-6 flex items-center justify-center gap-5 border-t border-white/8 pt-6 text-xs">
+                <div className="mt-6 flex items-center justify-center gap-5 border-t border-slate-300 pt-6 text-xs">
                   {(["login", "signup", "forgot"] as Mode[]).map((m) => (
                     <button
                       key={m}
                       type="button"
                       onClick={() => { setMode(m); setError(""); setMessage(""); }}
-                      className={`font-semibold uppercase tracking-[0.2em] transition ${mode === m ? "text-white" : "text-slate-500 hover:text-slate-300"}`}
+                      className={`font-semibold uppercase tracking-[0.2em] transition ${mode === m ? "text-slate-900" : "text-slate-600 hover:text-slate-700"}`}
                     >
                       {m === "login" ? "Sign In" : m === "signup" ? "Sign Up" : "Reset"}
                     </button>
@@ -171,20 +165,20 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
                 {/* Email form */}
                 <form onSubmit={handleSubmit} className="mt-5 space-y-3">
                   <div className="group relative">
-                    <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 transition group-focus-within:text-indigo-400" />
+                    <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600 transition group-focus-within:text-blue-600" />
                     <input
                       type="email"
                       placeholder="Email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="h-12 w-full rounded-xl border border-white/10 bg-white/5 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-500/50 focus:bg-white/8"
+                      className="h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
 
                   {mode !== "forgot" && (
                     <div className="group relative">
-                      <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 transition group-focus-within:text-indigo-400" />
+                      <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600 transition group-focus-within:text-blue-600" />
                       <input
                         type={showPassword ? "text" : "password"}
                         placeholder="Password"
@@ -192,12 +186,12 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         minLength={6}
-                        className="h-12 w-full rounded-xl border border-white/10 bg-white/5 pl-11 pr-11 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-500/50 focus:bg-white/8"
+                        className="h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-11 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-white"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 transition hover:text-slate-900"
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
@@ -207,7 +201,7 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-400"
+                    className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500"
                   >
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : submitLabel}
                   </button>
@@ -217,7 +211,7 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
                       <button
                         type="button"
                         onClick={() => { setMode("forgot"); setError(""); setMessage(""); }}
-                        className="text-xs text-slate-500 transition hover:text-slate-300"
+                        className="text-xs text-slate-600 transition hover:text-slate-900"
                       >
                         Forgot password?
                       </button>
@@ -235,7 +229,7 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
             <button
               type="button"
               onClick={onBack}
-              className="text-xs text-slate-500 transition hover:text-slate-300"
+              className="text-xs text-slate-600 transition hover:text-slate-900"
             >
               ← Back to home
             </button>

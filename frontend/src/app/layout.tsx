@@ -25,12 +25,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark min-h-screen">
+    <html lang="en" className="light min-h-screen">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-indigo-500/30`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-blue-100`}
       >
         <AuthProvider>
-          <div className="flex min-h-screen bg-[#020617] text-slate-200">
+          <div className="flex min-h-screen bg-white text-slate-900">
             {/* Sidebar Placeholder / Space for the future sidebar */}
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
