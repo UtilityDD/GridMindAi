@@ -291,7 +291,7 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                         </motion.h1>
 
                         <motion.p variants={itemVariants} className="text-lg text-slate-400 leading-relaxed max-w-xl">
-                            Electricity Act. Tariff Policies. MoP Guidelines. SERC Regulations. CEA Standards. DISCOM Circulars. Financial Rules. Purchase Policies. IS Codes. All within the larger aspect of CVC Guidelines and Financial Discipline. We turn the chaos of changing power sector notifications into instant, actionable answers.
+                            Electricity Act, Tariff Policy, MoP guidelines, SERC rules, CEA standards, DISCOM circulars, financial and purchase rules, and IS codes, aligned with CVC and financial discipline. GridMind turns changing notifications into instant, actionable answers.
                         </motion.p>
 
                         <motion.div variants={itemVariants} className="flex flex-wrap gap-4 pt-4">
