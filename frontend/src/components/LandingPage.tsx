@@ -552,6 +552,7 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {PLANS.map((plan, index) => {
                         const isPro = plan.id === 'pro';
+                        const Icon = plan.icon;
                         return (
                             <motion.div
                                 key={plan.id}
@@ -564,7 +565,7 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                             >
                                 <div className="mb-6 flex items-start justify-between gap-4">
                                     <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${plan.color}`}>
-                                        <BrainCircuit className="w-6 h-6 text-white" />
+                                        <Icon className="w-6 h-6 text-white" />
                                     </div>
                                     <div className="text-right">
                                         <h3 className="text-lg font-bold text-slate-900">{plan.name}</h3>
