@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   if (userId) {
     const { data: profileData, error: profileError } = await getSupabaseAdmin()
       .from("profiles")
-      .select("tier_id, is_enabled, custom_daily_limit, custom_monthly_limit, user_tiers(daily_limit, monthly_limit)")
+      .select("tier_id, is_enabled, custom_daily_limit, custom_monthly_limit, created_at, user_tiers(daily_limit, monthly_limit)")
       .eq("id", userId)
       .single();
 
@@ -45,6 +45,20 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      // 1b. Check Trial Expiry (30 days) - ONLY for Free Users
+      if (userTier === "free" && profileData.created_at) {
+        const registrationDate = new Date(profileData.created_at);
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        if (registrationDate < thirtyDaysAgo) {
+          return NextResponse.json(
+            { detail: "Your 30-day Basic trial has expired. Please upgrade your Strategic Intelligence plan to continue access." },
+            { status: 403 }
+          );
+        }
+      }
+
       // 2. Burst Protection (Rapid Fire Prevention) - ONLY for Free Users
       if (userTier === "free") {
         const isUnderBurstLimit = await checkBurstFromAnalytics(userId, 3, 30);
@@ -56,15 +70,21 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      interface TierInfo {
+        name: string;
+        daily_limit: number;
+        monthly_limit: number;
+      }
+
       // Fallback to free tier if profile or user_tiers is missing
       const tierInfo = (profileData.user_tiers as unknown as TierInfo) || {
         name: "free",
-        daily_limit: 20,
+        daily_limit: 10,
         monthly_limit: 150
       };
 
-      let dailyLimit = profileData.custom_daily_limit ?? tierInfo.daily_limit ?? 20;
-      if (userTier === "free") dailyLimit = Math.max(dailyLimit, 20);
+      let dailyLimit = profileData.custom_daily_limit ?? tierInfo.daily_limit ?? 10;
+      if (userTier === "free") dailyLimit = Math.min(dailyLimit, 10); // Strict limit for free
       const monthlyLimit = profileData.custom_monthly_limit ?? tierInfo.monthly_limit ?? 150;
 
       // 3. Check daily limit

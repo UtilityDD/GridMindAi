@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BrainCircuit, ChevronRight, History, LogOut, MessageSquare, X, PanelLeftClose, PanelLeftOpen, Cpu, Menu } from "lucide-react";
+import { BrainCircuit, ChevronRight, History, LogOut, MessageSquare, X, PanelLeftClose, PanelLeftOpen, Cpu, Menu, AlertCircle, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Source {
@@ -37,7 +37,10 @@ interface SidebarProps {
         monthlyCount: number;
         monthlyLimit: number;
         tierName: string;
+        tierId: string;
         hasCustomLimit?: boolean;
+        isTrialExpired?: boolean;
+        daysUntilExpiry?: number;
     } | null;
 }
 
@@ -205,6 +208,11 @@ function SidebarContent({
                                             Promo Active
                                         </span>
                                     )}
+                                    {usage.isTrialExpired && (
+                                        <span className="text-[8px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300 uppercase tracking-tighter">
+                                            Expired
+                                        </span>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -222,8 +230,19 @@ function SidebarContent({
                     </div>
                     {!collapsed && (
                         <p className="text-[9px] text-slate-600 font-medium leading-tight">
-                            Daily limit resets in ~{24 - new Date().getHours()}h.
+                            {usage.isTrialExpired 
+                                ? "Your 30-day trial has concluded." 
+                                : <>Daily limit resets in ~{24 - new Date().getHours()}h. {usage.daysUntilExpiry ? <span className="text-red-500 font-bold ml-1">Expires in {usage.daysUntilExpiry} days.</span> : ""}</>}
                         </p>
+                    )}
+                    {usage.isTrialExpired && !collapsed && (
+                        <button 
+                            onClick={onUpgradeClick}
+                            className="w-full py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                        >
+                            <Lock className="w-3 h-3" />
+                            Renew Access
+                        </button>
                     )}
                 </div>
             )}

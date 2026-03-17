@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
         // Fetch profile and tier limits
         const { data: profile, error: profileError } = await getSupabaseAdmin()
             .from("profiles")
-            .select("tier_id, custom_daily_limit, custom_monthly_limit, user_tiers(id, daily_limit, monthly_limit)")
+            .select("tier_id, custom_daily_limit, custom_monthly_limit, created_at, user_tiers(id, daily_limit, monthly_limit)")
             .eq("id", userId)
             .single();
 
@@ -44,16 +44,29 @@ export async function GET(req: NextRequest) {
         // Fallback to free tier if profile or user_tiers is missing
         const tierInfo = (profile?.user_tiers as unknown as TierInfo) || {
             id: "free",
-            daily_limit: 20,
+            daily_limit: 10,
             monthly_limit: 150
         };
 
         const tierName = tierInfo.id || "free";
         const tierId = profile?.tier_id || "free";
 
-        let dailyLimit = profile?.custom_daily_limit ?? tierInfo.daily_limit ?? 20;
-        if (tierId === "free" || tierName === "free") dailyLimit = Math.max(dailyLimit, 20);
+        let dailyLimit = profile?.custom_daily_limit ?? tierInfo.daily_limit ?? 10;
+        if (tierId === "free" || tierName === "free") dailyLimit = Math.min(dailyLimit, 10);
         const monthlyLimit = profile?.custom_monthly_limit ?? tierInfo.monthly_limit ?? 150;
+
+        // Expiry Logic
+        const registrationDate = profile?.created_at ? new Date(profile.created_at) : new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        // Calculate days remaining
+        const expiryDate = new Date(registrationDate);
+        expiryDate.setDate(expiryDate.getDate() + 30);
+        const diffTime = expiryDate.getTime() - new Date().getTime();
+        const daysUntilExpiry = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+
+        const isTrialExpired = (tierId === "free" || tierName === "free") && registrationDate < thirtyDaysAgo;
 
         // Calculate daily usage
         const today = new Date();
@@ -83,7 +96,10 @@ export async function GET(req: NextRequest) {
             monthlyLimit,
             tierName,
             tierId,
-            hasCustomLimit
+            hasCustomLimit,
+            registeredAt: registrationDate.toISOString(),
+            isTrialExpired,
+            daysUntilExpiry
         });
     } catch {
         return NextResponse.json({ detail: "Internal server error during usage check" }, { status: 500 });

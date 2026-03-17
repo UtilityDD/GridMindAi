@@ -54,7 +54,10 @@ interface UsageData {
   monthlyCount: number;
   monthlyLimit: number;
   tierName: string;
+  tierId: string;
   hasCustomLimit?: boolean;
+  isTrialExpired?: boolean;
+  daysUntilExpiry?: number;
 }
 
 const ALL_INTERESTING_QUERIES = [
@@ -198,23 +201,9 @@ export default function Home() {
   const [showLogin, setShowLogin] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
 
-  // Randomize featured questions on mount
-  useEffect(() => {
-    const shuffled = [...ALL_INTERESTING_QUERIES].sort(() => 0.5 - Math.random());
-    const icons = [Sparkles, Zap, BrainCircuit, Wand2, Cpu];
-    const selected = shuffled.slice(0, 3).map((q, i) => ({
-      text: q,
-      icon: icons[i % icons.length]
-    }));
-    setFeaturedQuestions(selected);
-  }, []);
 
-  // Auto-load dashboard when user is authenticated
-  useEffect(() => {
-    if (user && session) {
-      setShowDashboard(true);
-    }
-  }, [user, session]);
+
+
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -228,12 +217,7 @@ export default function Home() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+
 
   const refreshUsage = useCallback(async () => {
     if (!session?.access_token) return;
@@ -257,6 +241,38 @@ export default function Home() {
     if (!user || !session) return;
     refreshUsage();
   }, [user, session, refreshUsage]);
+
+  // Randomize featured questions on mount
+  useEffect(() => {
+    const shuffled = [...ALL_INTERESTING_QUERIES].sort(() => 0.5 - Math.random());
+    const icons = [Sparkles, Zap, BrainCircuit, Wand2, Cpu];
+    const selected = shuffled.slice(0, 3).map((q, i) => ({
+      text: q,
+      icon: icons[i % icons.length]
+    }));
+    setFeaturedQuestions(selected);
+  }, []);
+
+  // Auto-load dashboard when user is authenticated
+  useEffect(() => {
+    if (user && session) {
+      setShowDashboard(true);
+    }
+  }, [user, session]);
+
+  // Auto-open pricing modal if trial expired
+  useEffect(() => {
+    if (usage?.isTrialExpired && userTier === "free") {
+      setIsPricingOpen(true);
+    }
+  }, [usage?.isTrialExpired, userTier]);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -647,26 +663,28 @@ export default function Home() {
                     lowerErr.includes("lockout") ||
                     lowerErr.includes("cooling") ||
                     lowerErr.includes("bandwidth");
+                  
+                  const isExpired = lowerErr.includes("expired") || lowerErr.includes("trial");
 
-                  if (!isLimit) return null;
+                  if (!isLimit && !isExpired) return null;
 
                   return (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.95, y: -10 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="w-full max-w-2xl mb-8 p-6 glass-panel border-blue-300/30 bg-blue-50 shadow-xl shadow-blue-100/20 flex flex-col sm:flex-row items-center gap-6 rounded-3xl"
+                      className={`w-full max-w-2xl mb-8 p-6 glass-panel border-blue-300/30 shadow-xl shadow-blue-100/20 flex flex-col sm:flex-row items-center gap-6 rounded-3xl ${isExpired ? "bg-amber-50" : "bg-blue-50"}`}
                     >
-                      <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center shrink-0 border border-blue-300/50 overflow-hidden">
-                        <LottieCDNWrapper src="/unlock.lottie" className="w-full h-full transform scale-125" />
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border border-blue-300/50 overflow-hidden ${isExpired ? "bg-amber-100" : "bg-blue-100"}`}>
+                        <LottieCDNWrapper src={isExpired ? "/lock.lottie" : "/unlock.lottie"} className="w-full h-full transform scale-125" />
                       </div>
                       <div className="flex-1 text-center sm:text-left">
                         <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-1.5 flex items-center justify-center sm:justify-start gap-2">
-                          Limit reached!
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                          {isExpired ? "Trial Expired" : "Limit reached!"}
+                          <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isExpired ? "bg-amber-500" : "bg-blue-500"}`} />
                         </h3>
                         <p className="text-xs text-slate-700 leading-relaxed font-medium">
-                          Quota reached. Upgrade for expanded strategic insights and zero cooling periods.
+                          {error}
                         </p>
                       </div>
                       <button
