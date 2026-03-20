@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo, MouseEvent as ReactMouseEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Loader2,
   FileText,
@@ -93,6 +94,34 @@ const MOBILE_EXAMPLE_QUERIES = [
   "SOP Connection Time?",
 ];
 
+const CLARIFICATION_MAP: Record<string, { title: string, options: string[] }> = {
+  "tariff": {
+    title: "Which Tariff Category?",
+    options: ["Domestic", "Commercial", "Industrial", "Agricultural", "Public Water Works", "Street Light"]
+  },
+  "connection": {
+    title: "Query regarding what type of Connection?",
+    options: ["New Connection", "Load Enhancement", "Change of Name", "Category Conversion", "Disconnection", "Quotation/Load"]
+  },
+  "theft": {
+    title: "Which type of Theft/Unauthorized use?",
+    options: ["Section 135 (Direct)", "Section 126 (Unauthorized)", "Meter Tampering", "Hooking"]
+  },
+  "dop": {
+    title: "Delegation of Power for?",
+    options: ["Technical Sanction", "Administrative Approval", "Store Requisition", "Financial Powers"]
+  },
+  "meter": {
+    title: "Meter related issue?",
+    options: ["Defective Meter", "Burnt Meter", "Meter Testing", "Reading Dispute", "Smart Meter"]
+  },
+  "safety": {
+    title: "Safety protocol for?",
+    options: ["PPE Requirements", "Earthing Standards", "Shutdown Procedure", "Accident Reporting"]
+  }
+};
+
+
 
 
 function ThinkingIndicator() {
@@ -145,8 +174,9 @@ export default function Home() {
   const [userTier, setUserTier] = useState<string>("free");
   const [activeQuestion, setActiveQuestion] = useState("");
   const [activeSource, setActiveSource] = useState<{ url: string; title: string } | null>(null);
-  const [showLogin, setShowLogin] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
+  const [clarificationData, setClarificationData] = useState<{ keyword: string, title: string, options: string[], originalQuery: string } | null>(null);
+
 
 
 
@@ -449,6 +479,19 @@ export default function Home() {
   const handleSubmit = async (q?: string, cachedResult?: QueryResult) => {
     const question = (q || query).trim();
     if (!question || loading) return;
+
+    // Intermediate Clarification Step (Non-AI)
+    if (!q) { // Only check if user is typing a new query, not clicking a history item
+      const lowerQ = question.toLowerCase();
+      for (const [key, data] of Object.entries(CLARIFICATION_MAP)) {
+        // If the query IS just the keyword, or starts with it, or contains it as a whole word
+        const regex = new RegExp(`\\b${key}\\b`, 'i');
+        if (regex.test(lowerQ) && !lowerQ.includes(' ')) { // Only trigger if it's broad (single word)
+          setClarificationData({ keyword: key, title: data.title, options: data.options, originalQuery: question });
+          return;
+        }
+      }
+    }
 
     // If we have a cached result, restore it instantly and skip the fetch
     if (cachedResult) {
@@ -771,6 +814,57 @@ export default function Home() {
                           </button>
                         </motion.div>
                       )}
+
+                      {/* Local Clarification Overlay */}
+                      <AnimatePresence>
+                        {clarificationData && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            className="absolute inset-0 z-40 bg-white/95 backdrop-blur-sm p-4 flex flex-col justify-center items-center text-center gap-4 rounded-xl border border-blue-200 shadow-xl"
+                          >
+                            <div className="flex flex-col gap-1">
+                              <h4 className="text-[12px] font-black text-blue-900 uppercase tracking-widest">{clarificationData.title}</h4>
+                              <p className="text-[10px] text-slate-500 font-medium italic">Please refine your question to save time and get a better answer.</p>
+                            </div>
+                            <div className="flex flex-wrap justify-center gap-2 max-w-sm">
+                              {clarificationData.options.map((opt) => (
+                                <button
+                                  key={opt}
+                                  onClick={() => {
+                                    const refined = `${opt} ${clarificationData.originalQuery}`;
+                                    setQuery(refined);
+                                    setClarificationData(null);
+                                    // Trigger submission with refined query
+                                    setTimeout(() => handleSubmit(refined), 50);
+                                  }}
+                                  className="px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-bold hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all active:scale-95 shadow-sm"
+                                >
+                                  {opt}
+                                </button>
+                              ))}
+                              <button
+                                onClick={() => {
+                                  // Skip clarification and go straight to AI
+                                  const q = clarificationData.originalQuery;
+                                  setClarificationData(null);
+                                  setTimeout(() => handleSubmit(q), 50);
+                                }}
+                                className="px-3 py-1.5 rounded-full bg-slate-100 border border-slate-300 text-slate-600 text-[11px] font-bold hover:bg-slate-200 transition-all active:scale-95"
+                              >
+                                Skip & Ask Anyway
+                              </button>
+                            </div>
+                            <button 
+                              onClick={() => setClarificationData(null)}
+                              className="absolute top-2 right-2 p-2 text-slate-400 hover:text-slate-600"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                     <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50 rounded-b-[10px]">
                       <span className="text-[11px] text-slate-500 font-medium"></span>
@@ -1202,7 +1296,76 @@ function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: {
       return url;
     });
 
-    return newText;
+    // 3. Markdown Table Fixer — Structured Parser (handles LLM squashing entire tables into one line)
+    const repairSquashedTables = (input: string): string => {
+      const lines = input.split('\n');
+      const result: string[] = [];
+
+      for (const line of lines) {
+        // Check if this line has a squashed table (separator + data pipes on same line)
+        const hasSep = /\|\s*---\s*\|/.test(line);
+        const pipeCount = (line.match(/\|/g) || []).length;
+
+        if (hasSep && pipeCount > 6) {
+          console.log('[GridMind Table Repair] DETECTED squashed table. Pipes:', pipeCount);
+          // Find where the table starts (first |)
+          const firstPipeIdx = line.indexOf('|');
+          const beforeTable = firstPipeIdx > 0 ? line.substring(0, firstPipeIdx).trimEnd() : '';
+          const tableStr = line.substring(firstPipeIdx);
+
+          // Find where the table ends (last |) and any text after
+          const lastPipeIdx = tableStr.lastIndexOf('|');
+          const afterTable = tableStr.substring(lastPipeIdx + 1).trim();
+          const pureTable = tableStr.substring(0, lastPipeIdx + 1);
+
+          // Count columns from separator row
+          const sepMatch = pureTable.match(/((?:\|\s*-{3,}\s*)+\|)/);
+          if (!sepMatch) { result.push(line); continue; }
+          const colCount = (sepMatch[0].match(/-{3,}/g) || []).length;
+
+          // Split the pure table by | and remove leading/trailing empties
+          const parts = pureTable.split('|');
+          const cells = parts.slice(1, -1); // ["cell1", "cell2", ..., "", "---", ...]
+
+          // Group into rows: colCount cells + 1 empty/whitespace separator between rows
+          const rowSize = colCount + 1;
+          const rows: string[] = [];
+          for (let i = 0; i < cells.length; i += rowSize) {
+            const rowCells = cells.slice(i, i + colCount);
+            if (rowCells.length > 0) {
+              rows.push('| ' + rowCells.map(c => c.trim()).join(' | ') + ' |');
+            }
+          }
+
+          // Handle remainder (last row may not have a trailing separator)
+          const remainder = cells.length % rowSize;
+          if (remainder > 0 && remainder === colCount) {
+            // Already handled by loop — the last slice picks up exactly colCount cells
+          } else if (remainder > 0 && remainder < colCount) {
+            // Partial last row (shouldn't happen with well-formed tables, but be safe)
+            const lastCells = cells.slice(cells.length - remainder);
+            rows.push('| ' + lastCells.map(c => c.trim()).join(' | ') + ' |');
+          }
+
+          // Reconstruct with proper newlines
+          if (beforeTable) {
+            result.push(beforeTable);
+            result.push(''); // blank line before table
+          }
+          result.push(...rows);
+          if (afterTable) {
+            result.push('');
+            result.push(afterTable);
+          }
+        } else {
+          result.push(line);
+        }
+      }
+
+      return result.join('\n');
+    };
+
+    return repairSquashedTables(newText);
   }, [safeText, sources]);
 
   const isSourceUrl = (url: string) => {
@@ -1245,10 +1408,29 @@ function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: {
         </a>
       );
     },
+    table: ({ children }: any) => (
+      <div className="my-6 overflow-x-auto border border-slate-200 rounded-xl shadow-sm">
+        <table className="min-w-full divide-y divide-slate-200 text-[13px]">
+          {children}
+        </table>
+      </div>
+    ),
+    thead: ({ children }: any) => <thead className="bg-slate-50">{children}</thead>,
+    th: ({ children }: any) => (
+      <th className="px-4 py-3 text-left font-black text-slate-700 uppercase tracking-widest border-b border-slate-200">
+        {children}
+      </th>
+    ),
+    td: ({ children }: any) => (
+      <td className="px-4 py-3 text-slate-600 border-b border-slate-100 last:border-b-0 leading-relaxed font-medium">
+        {children}
+      </td>
+    ),
+    tr: ({ children }: any) => <tr className="hover:bg-slate-50/50 transition-colors last:border-b-0">{children}</tr>,
   };
   if (isComplete) {
     return (
-      <ReactMarkdown components={MarkdownComponents}>
+      <ReactMarkdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>
         {processedText}
       </ReactMarkdown>
     );
@@ -1280,8 +1462,8 @@ function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: {
   const effectiveLength = getEffectiveLength(displayedLength, processedText);
 
   return (
-    <div>
-      <ReactMarkdown components={MarkdownComponents}>
+    <div className="w-full overflow-hidden">
+      <ReactMarkdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>
         {safeText.length > 0 ? processedText.slice(0, effectiveLength) : ""}
       </ReactMarkdown>
       <span className="inline-block w-0.5 h-5 bg-blue-600 animate-pulse ml-0.5 align-middle" />
