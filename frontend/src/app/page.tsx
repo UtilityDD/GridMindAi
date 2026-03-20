@@ -145,7 +145,6 @@ export default function Home() {
   const [userTier, setUserTier] = useState<string>("free");
   const [activeQuestion, setActiveQuestion] = useState("");
   const [activeSource, setActiveSource] = useState<{ url: string; title: string } | null>(null);
-  const [featuredQuestions, setFeaturedQuestions] = useState<{ text: string, icon: any }[]>([]);
   const [showLogin, setShowLogin] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
 
@@ -224,16 +223,6 @@ export default function Home() {
     };
   }, []);
 
-  // Randomize featured questions on mount
-  useEffect(() => {
-    const shuffled = [...ALL_INTERESTING_QUERIES].sort(() => 0.5 - Math.random());
-    const icons = [Sparkles, Zap, BrainCircuit, Wand2, Cpu];
-    const selected = shuffled.slice(0, 3).map((q, i) => ({
-      text: q,
-      icon: icons[i % icons.length]
-    }));
-    setFeaturedQuestions(selected);
-  }, []);
 
   // Auto-load dashboard when user is authenticated
   useEffect(() => {
@@ -375,7 +364,7 @@ export default function Home() {
     const queries = isMobile ? MOBILE_EXAMPLE_QUERIES : ALL_INTERESTING_QUERIES;
     const currentQuery = queries[queryIndex] || queries[0];
     const typingSpeed = isDeleting ? 40 : 80;
-    const pauseDuration = 2000;
+    const pauseDuration = 3500; // Increased to give users time to read and click "Ask this"
 
     const handleTyping = () => {
       if (!isDeleting && charIndex < currentQuery.length) {
@@ -713,21 +702,76 @@ export default function Home() {
               <div className="w-full max-w-2xl">
                 <div className="relative group mb-6">
                   <div className="relative flex flex-col gap-0 bg-white border border-slate-300 rounded-xl focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-200 transition-all duration-200 shadow-sm hover:shadow-md">
-                    <textarea
-                      ref={inputRef}
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder={placeholder || "Ask GridMind Tactical..."}
-                      rows={3}
-                      className="flex-1 bg-transparent text-[14px] text-slate-900 placeholder:text-slate-500 outline-none resize-none leading-relaxed p-4"
-                      style={{ minHeight: "80px", maxHeight: "240px" }}
-                      onInput={(e) => {
-                        const target = e.target as HTMLTextAreaElement;
-                        target.style.height = "80px";
-                        target.style.height = target.scrollHeight + "px";
-                      }}
-                    />
+                    <div className="relative w-full">
+                      <textarea
+                        ref={inputRef}
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        rows={3}
+                        className="w-full bg-transparent text-[14px] text-slate-900 outline-none resize-none leading-relaxed p-4 z-10 relative"
+                        style={{ minHeight: "80px", maxHeight: "240px" }}
+                        onInput={(e) => {
+                          const target = e.target as HTMLTextAreaElement;
+                          target.style.height = "80px";
+                          target.style.height = target.scrollHeight + "px";
+                        }}
+                      />
+                      {/* Simulated Placeholder overlay */}
+                      {!query && (
+                        <div className="absolute inset-0 p-4 pointer-events-none flex flex-wrap items-start gap-2 z-20">
+                          <span className="text-[14px] text-slate-500 leading-relaxed font-normal">
+                            {placeholder || "Ask GridMind Tactical..."}
+                          </span>
+                          <AnimatePresence>
+                            {!isDeleting && charIndex > 0 && charIndex === (isMobile ? MOBILE_EXAMPLE_QUERIES : ALL_INTERESTING_QUERIES)[queryIndex]?.length && (
+                              <motion.button
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                className="pointer-events-auto inline-flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 hover:text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all shadow-sm translate-y-[2px]"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  const q = (isMobile ? MOBILE_EXAMPLE_QUERIES : ALL_INTERESTING_QUERIES)[queryIndex];
+                                  if (q) {
+                                    setQuery(q);
+                                    inputRef.current?.focus();
+                                    setTimeout(() => handleSubmit(q), 50);
+                                  }
+                                }}
+                              >
+                                Ask this <Sparkles className="w-3 h-3" />
+                              </motion.button>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )}
+                      
+                      {/* Top Right "Try Demo" Action */}
+                      {!query && (
+                        <motion.div 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.5 }}
+                          className="absolute top-3 right-3 z-30"
+                        >
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              const q = ALL_INTERESTING_QUERIES[Math.floor(Math.random() * ALL_INTERESTING_QUERIES.length)];
+                              setQuery(q);
+                              inputRef.current?.focus();
+                              setTimeout(() => handleSubmit(q), 50);
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-50/80 to-blue-50/80 backdrop-blur-sm border border-indigo-100/50 text-indigo-700/80 rounded-full text-[10px] font-bold uppercase tracking-widest hover:text-indigo-700 hover:shadow-sm hover:border-indigo-200 hover:from-indigo-50 hover:to-blue-50 transition-all active:scale-95 group overflow-hidden relative"
+                          >
+                            <Wand2 className="w-3 h-3 text-indigo-500/80 group-hover:animate-pulse" />
+                            <span>Try Demo</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </div>
                     <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50 rounded-b-[10px]">
                       <span className="text-[11px] text-slate-500 font-medium"></span>
                       <motion.button
@@ -751,34 +795,8 @@ export default function Home() {
                     />
                   </div>
                 </div>
-
-                {/* Featured Questions Grid */}
-                <div className="flex flex-wrap justify-center gap-3">
-                  {featuredQuestions.map((q, idx) => {
-                    const Icon = q.icon;
-                    return (
-                      <motion.button
-                        key={idx}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 + idx * 0.1 }}
-                        onClick={() => {
-                          setQuery(q.text);
-                          handleSubmit(q.text);
-                        }}
-                        className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-300 hover:border-blue-400/50 hover:bg-blue-50 transition-all text-left max-w-[280px] group"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0 group-hover:bg-blue-200 transition-colors">
-                          <Icon className="w-4 h-4 text-blue-600" />
-                        </div>
-                        <span className="text-[11px] font-medium text-slate-700 leading-tight group-hover:text-slate-900 transition-colors line-clamp-2">
-                          {q.text}
-                        </span>
-                      </motion.button>
-                    );
-                  })}
-                </div>
               </div>
+
             </motion.div>
           )}
         </AnimatePresence>
