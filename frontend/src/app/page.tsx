@@ -121,6 +121,23 @@ const CLARIFICATION_MAP: Record<string, { title: string, options: string[] }> = 
   }
 };
 
+// Anti-scraping patterns — detect broad listing/browsing/bulk-requesting queries
+const ANTI_SCRAPING_PATTERNS = [
+  // "list/show/give/provide" + "all" + document type
+  /\b(list|show|give|provide|send|share|download)\b.*\b(all|every|complete|full)\b.*\b(circular|order|regulation|document|notification|guideline)/i,
+  /\b(all|every|complete|full)\b.*\b(circular|order|regulation|document|notification|guideline)/i,
+  // "list of / index of / catalog"
+  /\b(list of|index of|catalog|catalogue|directory)\b.*\b(circular|order|regulation|document)/i,
+  /\bhow many (circular|order|regulation|document)/i,
+  /\b(circular|order|regulation)\s*(list|index|number)/i,
+  // BROAD: "provide/give/show/send + the/me + circulars/orders/regulations" (plural = browsing intent)
+  /\b(provide|give|show|send|share|get)\b.*\b(the|me|us)?\s*(circulars|orders|regulations|documents|notifications|guidelines)\b/i,
+  // "circulars/orders for/about/regarding/related/on <topic>" (requesting documents, not answers)
+  /\b(circulars|office orders|orders|regulations)\s+(for|about|regarding|related|on|of)\b/i,
+  // "related/relevant/applicable circulars/orders"
+  /\b(related|relevant|applicable|available|existing|issued)\s+(circulars|orders|regulations|documents)\b/i,
+];
+
 
 
 
@@ -490,6 +507,16 @@ export default function Home() {
           setClarificationData({ keyword: key, title: data.title, options: data.options, originalQuery: question });
           return;
         }
+      }
+    }
+
+    // Anti-Scraping Guard (blocks broad listing/downloading queries before API call)
+    if (!q) {
+      const isScrapingAttempt = ANTI_SCRAPING_PATTERNS.some(pattern => pattern.test(question));
+      if (isScrapingAttempt) {
+        setError("This platform is designed for answering specific regulatory and operational questions. Please describe the particular issue, topic, or scenario you need guidance on \u2014 e.g., \"What is the procedure for Section 135 theft cases?\" rather than listing all documents.");
+        setActiveQuestion(question);
+        return;
       }
     }
 
