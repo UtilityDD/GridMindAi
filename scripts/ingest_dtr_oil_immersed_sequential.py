@@ -26,20 +26,20 @@ def _make_doc_id(entry: dict) -> str:
 
 def main():
     # Source file path
-    md_file = Path(r"D:\Dipankar\MyCodes\AI Projects\indian_standards_markdown\Indian Standard Steel Sections.md")
+    md_file = Path(r"D:\Dipankar\MyCodes\AI Projects\indian_standards_markdown\Indian Standard DTR Oil Immersed.md")
     
     if not md_file.exists():
         logger.error(f"MD file not found at {md_file}")
         return
 
-    # Metadata for IS 808 (1989)
+    # Metadata for IS 1180 (Part 1) : 2014
     entry = {
-        "filename": "Indian Standard Steel Sections.pdf",
-        "ref": "IS-808-1989",
+        "filename": "Indian Standard DTR Oil Immersed.pdf",
+        "ref": "IS-1180-Part-1-2014",
         "date": "20.03.2026",
-        "title": "IS 808 (1989): Dimensions for Hot Rolled Steel Beam, Column, Channel and Angle Sections (Third Revision)",
-        "source_url": "https://github.com/smartlinemanapp/GridMind/blob/main/Indian%20Standard%20Steel%20Sections.pdf",
-        "keywords": "Steel Sections, Hot Rolled, IS 808, Beam, Column, Channel, Angle, ISJB, ISLB, ISMB, ISWB, ISSC, ISHB, ISJC, ISLC, ISMC, ISMCP, ISA, Structural Engineering, Dimensional Properties"
+        "title": "IS 1180 (Part 1) : 2014 - Outdoor Type Oil Immersed Distribution Transformers Upto and Including 2500 kVA, 33kV — Specification, Part 1 Mineral Oil Immersed",
+        "source_url": "https://github.com/smartlinemanapp/GridMind/blob/main/Indian%20Standard%20DTR%20Oil%20Immersed.pdf",
+        "keywords": "Distribution Transformer, DTR, Oil Immersed, 2500 kVA, 33kV, IS 1180, Energy Efficiency, Star Rating, BEE, Losses, Impedance, Terminal Arrangement, Fourth Revision"
     }
 
     doc_id = _make_doc_id(entry)

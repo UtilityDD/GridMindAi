@@ -26,20 +26,20 @@ def _make_doc_id(entry: dict) -> str:
 
 def main():
     # Source file path
-    md_file = Path(r"D:\Dipankar\MyCodes\AI Projects\indian_standards_markdown\Indian Standard Steel Sections.md")
+    md_file = Path(r"D:\Dipankar\MyCodes\AI Projects\indian_standards_markdown\Indian Standard OH Line upto 11KV Sec-2.md")
     
     if not md_file.exists():
         logger.error(f"MD file not found at {md_file}")
         return
 
-    # Metadata for IS 808 (1989)
+    # Metadata for IS 5613-1-2 (1985)
     entry = {
-        "filename": "Indian Standard Steel Sections.pdf",
-        "ref": "IS-808-1989",
+        "filename": "Indian Standard OH Line upto 11KV Sec-2.pdf",
+        "ref": "IS-5613-1-2-1985",
         "date": "20.03.2026",
-        "title": "IS 808 (1989): Dimensions for Hot Rolled Steel Beam, Column, Channel and Angle Sections (Third Revision)",
-        "source_url": "https://github.com/smartlinemanapp/GridMind/blob/main/Indian%20Standard%20Steel%20Sections.pdf",
-        "keywords": "Steel Sections, Hot Rolled, IS 808, Beam, Column, Channel, Angle, ISJB, ISLB, ISMB, ISWB, ISSC, ISHB, ISJC, ISLC, ISMC, ISMCP, ISA, Structural Engineering, Dimensional Properties"
+        "title": "IS 5613 (Part 1/Sec 2): 1985 - Code of practice for design, installation and maintenance of overhead power lines, Part 1: Lines up to and including 11 kV, Section 2: Installation and Maintenance",
+        "source_url": "https://github.com/smartlinemanapp/GridMind/blob/main/Indian%20Standard%20OH%20Line%20upto%2011KV%20Sec-2.pdf",
+        "keywords": "OH Line, 11kV, Installation, Maintenance, IS 5613, Foundation, Erection, Stays, Conductors, Guarding, Earthing, First Revision"
     }
 
     doc_id = _make_doc_id(entry)

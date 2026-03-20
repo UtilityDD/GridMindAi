@@ -26,20 +26,20 @@ def _make_doc_id(entry: dict) -> str:
 
 def main():
     # Source file path
-    md_file = Path(r"D:\Dipankar\MyCodes\AI Projects\indian_standards_markdown\Indian Standard Steel Sections.md")
+    md_file = Path(r"D:\Dipankar\MyCodes\AI Projects\indian_standards_markdown\Indian Standard PTR.md")
     
     if not md_file.exists():
         logger.error(f"MD file not found at {md_file}")
         return
 
-    # Metadata for IS 808 (1989)
+    # Metadata for IS 2026 (Part 1) : 2011
     entry = {
-        "filename": "Indian Standard Steel Sections.pdf",
-        "ref": "IS-808-1989",
+        "filename": "Indian Standard PTR.pdf",
+        "ref": "IS-2026-Part-1-2011",
         "date": "20.03.2026",
-        "title": "IS 808 (1989): Dimensions for Hot Rolled Steel Beam, Column, Channel and Angle Sections (Third Revision)",
-        "source_url": "https://github.com/smartlinemanapp/GridMind/blob/main/Indian%20Standard%20Steel%20Sections.pdf",
-        "keywords": "Steel Sections, Hot Rolled, IS 808, Beam, Column, Channel, Angle, ISJB, ISLB, ISMB, ISWB, ISSC, ISHB, ISJC, ISLC, ISMC, ISMCP, ISA, Structural Engineering, Dimensional Properties"
+        "title": "IS 2026 (Part 1) : 2011 - Power Transformers, Part 1: General (Second Revision)",
+        "source_url": "https://github.com/smartlinemanapp/GridMind/blob/main/Indian%20Standard%20PTR.pdf",
+        "keywords": "Power Transformer, PTR, IS 2026, Winding, Rating, Tappings, Losses, No-load Current, Impedance, Connection Symbol, Star Connection, Delta Connection, ONAN, ONAF, Second Revision"
     }
 
     doc_id = _make_doc_id(entry)

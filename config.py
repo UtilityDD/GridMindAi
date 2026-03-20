@@ -14,6 +14,7 @@ GEMINI_KEY_POOL = (
     os.getenv("GEMINI_API_KEY", "")
 ).split(",")
 GEMINI_KEY_POOL = [k.strip() for k in GEMINI_KEY_POOL if k.strip()]
+GEMINI_PAID_KEY = os.getenv("GEMINI_PAID_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
@@ -32,14 +33,14 @@ CHROMA_DIR = BASE_DIR / "data" / "chroma"
 PROMPTS_DIR = BASE_DIR / "prompts"
 
 # --- Chunking ---
-CHUNK_SIZE = 512          # tokens (approx ~400 words)
-CHUNK_OVERLAP = 128       # tokens – large overlap for ~700 files
+CHUNK_SIZE = 350          # tokens (stricter limit for TPM safety)
+CHUNK_OVERLAP = 60        # tokens
 SENTENCE_BOUNDARY = True  # prefer splitting on sentence boundaries
 
 # --- Embedding ---
 EMBEDDING_MODEL = "models/gemini-embedding-001"
 EMBEDDING_DIMENSIONS = 768
-EMBEDDING_BATCH_SIZE = 10
+EMBEDDING_BATCH_SIZE = 1  # Sequential (batch size 1) as requested
 EMBEDDING_RATE_LIMIT_RPM = 120  # 30 RPM per key (1 chunk / 2s) * 4 keys
 
 # --- LLM ---

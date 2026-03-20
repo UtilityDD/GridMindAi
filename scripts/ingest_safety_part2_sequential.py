@@ -26,20 +26,20 @@ def _make_doc_id(entry: dict) -> str:
 
 def main():
     # Source file path
-    md_file = Path(r"D:\Dipankar\MyCodes\AI Projects\indian_standards_markdown\Indian Standard Steel Sections.md")
+    md_file = Path(r"D:\Dipankar\MyCodes\AI Projects\indian_standards_markdown\Indian Standard Safety Part 2.md")
     
     if not md_file.exists():
         logger.error(f"MD file not found at {md_file}")
         return
 
-    # Metadata for IS 808 (1989)
+    # Metadata for IS 5216-2-1982
     entry = {
-        "filename": "Indian Standard Steel Sections.pdf",
-        "ref": "IS-808-1989",
+        "filename": "Indian Standard Safety Part 2.pdf",
+        "ref": "IS-5216-2-1982",
         "date": "20.03.2026",
-        "title": "IS 808 (1989): Dimensions for Hot Rolled Steel Beam, Column, Channel and Angle Sections (Third Revision)",
-        "source_url": "https://github.com/smartlinemanapp/GridMind/blob/main/Indian%20Standard%20Steel%20Sections.pdf",
-        "keywords": "Steel Sections, Hot Rolled, IS 808, Beam, Column, Channel, Angle, ISJB, ISLB, ISMB, ISWB, ISSC, ISHB, ISJC, ISLC, ISMC, ISMCP, ISA, Structural Engineering, Dimensional Properties"
+        "title": "IS 5216-2 (1982): Recommendations on Safety Procedures and Practices in Electrical Work, Part II: Life Saving Techniques",
+        "source_url": "https://github.com/smartlinemanapp/GridMind/blob/main/Indian%20Standard%20Safety%20Part%202.pdf",
+        "keywords": "Safety, Life Saving, Electrical Shock, Resuscitation, Artificial Respiration, First Aid, IS 5216, CPR"
     }
 
     doc_id = _make_doc_id(entry)

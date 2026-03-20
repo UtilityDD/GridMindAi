@@ -26,20 +26,20 @@ def _make_doc_id(entry: dict) -> str:
 
 def main():
     # Source file path
-    md_file = Path(r"D:\Dipankar\MyCodes\AI Projects\indian_standards_markdown\Indian Standard Steel Sections.md")
+    md_file = Path(r"D:\Dipankar\MyCodes\AI Projects\indian_standards_markdown\Indian Standard HV Test Part 2.md")
     
     if not md_file.exists():
         logger.error(f"MD file not found at {md_file}")
         return
 
-    # Metadata for IS 808 (1989)
+    # Metadata for IS 2071 (Part 2) - 1974
     entry = {
-        "filename": "Indian Standard Steel Sections.pdf",
-        "ref": "IS-808-1989",
+        "filename": "Indian Standard HV Test Part 2.pdf",
+        "ref": "IS-2071-Part-2-1974",
         "date": "20.03.2026",
-        "title": "IS 808 (1989): Dimensions for Hot Rolled Steel Beam, Column, Channel and Angle Sections (Third Revision)",
-        "source_url": "https://github.com/smartlinemanapp/GridMind/blob/main/Indian%20Standard%20Steel%20Sections.pdf",
-        "keywords": "Steel Sections, Hot Rolled, IS 808, Beam, Column, Channel, Angle, ISJB, ISLB, ISMB, ISWB, ISSC, ISHB, ISJC, ISLC, ISMC, ISMCP, ISA, Structural Engineering, Dimensional Properties"
+        "title": "IS 2071 (Part 2) - 1974: Methods of High Voltage Testing, Part II: Test Procedures",
+        "source_url": "https://github.com/smartlinemanapp/GridMind/blob/main/Indian%20Standard%20HV%20Test%20Part%202.pdf",
+        "keywords": "High Voltage, HV Testing, Test Procedures, Direct Voltage, Alternating Voltage, Lightning Impulse, Switching Impulse, Impulse Current, Statistical Analysis, Class 1 Tests, Class 2 Tests, First Revision"
     }
 
     doc_id = _make_doc_id(entry)

@@ -1,8 +1,9 @@
+import os
 import sys
 import logging
+import hashlib
 import time
 from pathlib import Path
-import hashlib
 
 # Add project root to sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -14,6 +15,7 @@ from pipeline.summarize import summarize_document
 from pipeline.embed import embed_texts, embed_single
 from pipeline.supabase_writer import upsert_chunks, upsert_summary, upsert_title
 
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(levelname)-8s  %(name)s  %(message)s",
@@ -25,21 +27,21 @@ def _make_doc_id(entry: dict) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
 def main():
-    # Source file path
-    md_file = Path(r"D:\Dipankar\MyCodes\AI Projects\indian_standards_markdown\Indian Standard Steel Sections.md")
+    # Setup paths
+    input_file = Path(r"D:\Dipankar\MyCodes\AI Projects\indian_standards_markdown\Indian Standard PCC Pole.md")
+    source_url = "https://github.com/smartlinemanapp/GridMind/blob/main/Indian%20Standard%20PCC%20Pole.pdf"
     
-    if not md_file.exists():
-        logger.error(f"MD file not found at {md_file}")
+    if not input_file.exists():
+        logger.error(f"Input file not found: {input_file}")
         return
 
-    # Metadata for IS 808 (1989)
+    # Metadata for this document (IS 1678:1998)
     entry = {
-        "filename": "Indian Standard Steel Sections.pdf",
-        "ref": "IS-808-1989",
-        "date": "20.03.2026",
-        "title": "IS 808 (1989): Dimensions for Hot Rolled Steel Beam, Column, Channel and Angle Sections (Third Revision)",
-        "source_url": "https://github.com/smartlinemanapp/GridMind/blob/main/Indian%20Standard%20Steel%20Sections.pdf",
-        "keywords": "Steel Sections, Hot Rolled, IS 808, Beam, Column, Channel, Angle, ISJB, ISLB, ISMB, ISWB, ISSC, ISHB, ISJC, ISLC, ISMC, ISMCP, ISA, Structural Engineering, Dimensional Properties"
+        "ref": "IS 1678:1998",
+        "date": "1998",
+        "title": "IS 1678:1998 Prestressed Concrete Poles for Overhead Power, Traction and Telecommunication Lines",
+        "source_url": source_url,
+        "keywords": "PCC Pole, Prestressed Concrete, Overhead Lines, Power Transmission, IS 1678, M40 Concrete, Transverse Strength, Load Factor, Planting Depth"
     }
 
     doc_id = _make_doc_id(entry)
@@ -52,23 +54,19 @@ def main():
 
     logger.info(f"Processing doc_id={doc_id} for {entry['title']}")
 
-    # 1. Read MD content
-    with open(md_file, "r", encoding="utf-8") as f:
-        text = f.read()
+    # Read content
+    with open(input_file, 'r', encoding='utf-8') as f:
+        content = f.read()
 
-    if not text.strip():
-        logger.error("MD file is empty")
-        return
-
-    # 2. Chunking
+    # 1. Chunking
     logger.info("Chunking text...")
-    chunks = chunk_text(text)
+    chunks = chunk_text(content)
     if not chunks:
         logger.error("No chunks produced")
         return
     logger.info(f"Produced {len(chunks)} chunks")
 
-    # 3. Concurrent Embedding
+    # 2. Embedding
     logger.info(f"Ingesting {len(chunks)} chunks concurrently using key pool...")
     try:
         embeddings = embed_texts(chunks)
@@ -77,17 +75,17 @@ def main():
         logger.error(f"Embedding failed: {e}")
         return
 
-    # 4. Summarization
+    # 3. Summarization
     logger.info("Generating/Embedding summary...")
     try:
-        summary = summarize_document(text, ref=entry["ref"], date=entry["date"])
+        summary = summarize_document(content, ref=entry["ref"], date=entry["date"])
         summary_embedding = embed_single(summary)
     except Exception as e:
         logger.warning(f"Summary generation or embedding failed: {e}")
         summary = None
         summary_embedding = None
 
-    # 5. Title Embedding
+    # 4. Title Embedding
     logger.info("Embedding title...")
     title_text = entry["title"]
     if entry.get("keywords"):
@@ -99,7 +97,7 @@ def main():
     except Exception as e:
         logger.error(f"Title embedding failed: {e}")
 
-    # 6. Upserting to Supabase
+    # 5. Upserting to Supabase
     logger.info("Upserting to Supabase...")
     try:
         upsert_chunks(doc_id, chunks, embeddings, metadata)
@@ -110,6 +108,9 @@ def main():
         logger.info("Ingestion complete!")
     except Exception as e:
         logger.error(f"Supabase upsert failed: {e}")
+
+if __name__ == "__main__":
+    main()
 
 if __name__ == "__main__":
     main()

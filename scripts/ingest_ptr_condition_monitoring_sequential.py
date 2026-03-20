@@ -26,20 +26,20 @@ def _make_doc_id(entry: dict) -> str:
 
 def main():
     # Source file path
-    md_file = Path(r"D:\Dipankar\MyCodes\AI Projects\indian_standards_markdown\Indian Standard Steel Sections.md")
+    md_file = Path(r"D:\Dipankar\MyCodes\AI Projects\indian_standards_markdown\Indian Standard PTR Condition Monitoring.md")
     
     if not md_file.exists():
         logger.error(f"MD file not found at {md_file}")
         return
 
-    # Metadata for IS 808 (1989)
+    # Metadata for PTR Condition Monitoring (Draft 2023)
     entry = {
-        "filename": "Indian Standard Steel Sections.pdf",
-        "ref": "IS-808-1989",
+        "filename": "Indian Standard PTR Condition Monitoring.pdf",
+        "ref": "Draft-BIS-2023-ETD16",
         "date": "20.03.2026",
-        "title": "IS 808 (1989): Dimensions for Hot Rolled Steel Beam, Column, Channel and Angle Sections (Third Revision)",
-        "source_url": "https://github.com/smartlinemanapp/GridMind/blob/main/Indian%20Standard%20Steel%20Sections.pdf",
-        "keywords": "Steel Sections, Hot Rolled, IS 808, Beam, Column, Channel, Angle, ISJB, ISLB, ISMB, ISWB, ISSC, ISHB, ISJC, ISLC, ISMC, ISMCP, ISA, Structural Engineering, Dimensional Properties"
+        "title": "Draft Indian Standard (2023): Onsite diagnostic testing of power transformers for condition/health assessment",
+        "source_url": "https://github.com/smartlinemanapp/GridMind/blob/main/Indian%20Standard%20PTR%20Condition%20Monitoring.pdf",
+        "keywords": "Power Transformers, Condition Monitoring, Health Assessment, Diagnostic Testing, Offline Monitoring, Online Monitoring, DGA, IR, Tan Delta, Bushing, OLTC, BIS 2023, ETD 16, IS 1866, IEC 60422, Dissolved Gas Analysis, Incipient Faults"
     }
 
     doc_id = _make_doc_id(entry)
@@ -68,7 +68,8 @@ def main():
         return
     logger.info(f"Produced {len(chunks)} chunks")
 
-    # 3. Concurrent Embedding
+    # 3. Concurrent Embedding (using the same embed_texts but with larger delay if needed)
+    # Actually, for 1426 lines, it might produce ~30-40 chunks.
     logger.info(f"Ingesting {len(chunks)} chunks concurrently using key pool...")
     try:
         embeddings = embed_texts(chunks)

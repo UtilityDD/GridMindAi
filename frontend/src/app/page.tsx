@@ -193,6 +193,7 @@ export default function Home() {
   const [activeSource, setActiveSource] = useState<{ url: string; title: string } | null>(null);
   const [showDashboard, setShowDashboard] = useState(false);
   const [clarificationData, setClarificationData] = useState<{ keyword: string, title: string, options: string[], originalQuery: string } | null>(null);
+  const [showLogin, setShowLogin] = useState(false);
 
 
 
