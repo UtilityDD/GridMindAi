@@ -57,9 +57,11 @@ def _embed_batch(batch: list[str], batch_idx: int) -> tuple[int, list[list[float
                 "429" in msg or 
                 "RESOURCE_EXHAUSTED" in msg or 
                 "400" in msg or 
+                "403" in msg or
                 "INVALID_ARGUMENT" in msg or
                 "API key expired" in msg or
-                "authorized" in msg.lower()
+                "authorized" in msg.lower() or
+                "leaked" in msg.lower()
             )
             
             if is_key_error and attempt < max_retries - 1:

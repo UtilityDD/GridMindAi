@@ -8,7 +8,11 @@ BASE_DIR = Path(__file__).resolve().parent
 
 # --- API Keys ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_KEY_POOL = os.getenv("GEMINI_API_KEYS", os.getenv("GEMINI_API_KEY", "")).split(",")
+GEMINI_KEY_POOL = (
+    os.getenv("GEMINI_KEY_POOL") or 
+    os.getenv("GEMINI_API_KEYS") or 
+    os.getenv("GEMINI_API_KEY", "")
+).split(",")
 GEMINI_KEY_POOL = [k.strip() for k in GEMINI_KEY_POOL if k.strip()]
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")

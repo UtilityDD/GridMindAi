@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, MouseEvent as ReactMouseEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import {
@@ -21,6 +21,7 @@ import {
   X,
   AlertCircle,
   MessageSquare,
+  Download,
 } from "lucide-react";
 
 import { useAuth } from "@/components/AuthProvider";
@@ -61,131 +62,77 @@ interface UsageData {
 }
 
 const ALL_INTERESTING_QUERIES = [
-  "What is the financial Delegation of Power (DOP) for a Divisional Engineer for transformer repair?",
-  "Explain the difference between Section 126 and Section 135 of Electricity Act 2003 regarding theft.",
-  "What are the mandatory CEA Safety Regulations (2023) for earthing in 11kV networks?",
-  "Explain the CVC guidelines for 'Integrity Pact' in high-value procurement tenders.",
-  "What are the latest WBERC (Terms and Conditions of Tariff) norms for the current control period?",
-  "How to handle 'Right of Way' compensation for transmission lines under the Indian Telegraph Act?",
-  "What is the procedure for 'Suo-Moto' power restoration under SOP 2024 regulations?",
-  "Explain the 'Merit Order Despatch' (MOD) protocols for state distribution companies.",
-  "What are the 'CVC' guidelines on rotation of officials in sensitive positions within utilities?",
-  "How to apply for 100kW Rooftop Solar under WBERC 2024 Net-Metering norms?",
-  "What are the technical criteria for 33kV dedicated feeder connection for industries?",
-  "Explain the EMD and Bank Guarantee rules in recent WBSEDCL tenders.",
-  "What documents are required for Name Transfer of a domestic connection in WB?",
-  "What are the harmonic limits for arc furnaces under the latest Supply Code?",
-  "Explain the 'Standard of Performance' (SOP) penalties for delayed transformer repair.",
-  "How to calculate the Security Deposit for an additional load of 50kVA?",
-  "What are the technical clearance norms for underground cabling in municipal areas?",
-  "Explain the 'Open Access' procedure for a 1MW industrial consumer in West Bengal.",
-  "What is the timeline for 'Feasibility Study' for a new 132kV Substations?",
-  "What are the 'Right of Way' (Row) compensation rules for transmission lines?",
-  "Explain the procedure for 'Load Shifting' of a transformer due to road widening.",
-  "What are the pre-bid qualification norms for EPC contractors in rural electrification?",
-  "How to challenge a 'Provisional Assessment' in a power theft (Section 135) case?",
-  "What are the mandatory bush-fire and lightning safety norms for grid substations?",
-  "Define the 'Voltage Flicker' limits for large motor starting in industrial zones.",
-  "What are the 'Force Majeure' clauses typically found in WB PPA agreements?",
-  "How to register as an 'Approved Vendor' for distribution accessories in WB?",
-  "Explain the 'Net-Billing' vs 'Net-Metering' calculations for 500kW solar plants.",
-  "What are the 'Technical Loss' benchmarks for urban vs rural distribution circles?",
+  "IS 1180 (Part 1): Distribution transformer losses?",
+  "IS 2026: Power transformer testing requirements?",
+  "WBERC Billing Code: KVAh vs kWh billing?",
+  "Late Payment Surcharge calculations (2024)?",
+  "Smart Meter reading frequency protocols?",
+  "Accuracy class for CT/PT in 33kV meters?",
+  "WBERC SOP: Timeline for new 3-phase connection?",
+  "ERC regulations on Rooftop Solar (Gross vs Net)?",
+  "Section 135: Evidence required for tapping?",
+  "Provisional assessment procedure for Section 126?",
+  "Network Design: Voltage Drop limits for 11kV?",
+  "11kV Feasibility: Fault level calculation norms?",
+  "IS 732: Wiring and safety earthing standards?",
+  "Security Deposit: 2 months vs 3 months rules?",
+  "Procedure for meter bypass theft detection?",
+  "HT connection: Transformation loss calculations?",
+  "Network basic: Capacitor bank sizing rules?",
+  "IS 3043: Code of practice for earthing?",
+  "ERC norms for 'Standard Performance' penalties?",
+  "Sag-tension limits for Dog conductor (33kV)?",
 ];
 
 const MOBILE_EXAMPLE_QUERIES = [
-  "DOP for Transformer Repair?",
-  "Section 126 vs 135 Act?",
-  "CEA Safety Earthing Norms?",
-  "CVC Integrity Pact Rules?",
-  "WBERC Tariff Control Period?",
-  "WBERC 2024 Net-Metering?",
-  "33kV Connection Criteria?",
-  "EMD & Bank Guarantee Rules?",
-  "Supply Code Harmonic Limits?",
-  "Open Access 1MW Procedure?",
+  "IS 1180 Loss Norms?",
+  "Smart Meter Reading?",
+  "Act Section 135?",
+  "11kV Design Limits?",
+  "ERC Solar Rules?",
+  "SOP Connection Time?",
 ];
 
 
 
-const LOADING_STEPS = [
-  "Initializing Neural Mapping...",
-  "Scanning Tier 1 Grid Regulations...",
-  "Analyzing Operational Frameworks...",
-  "Synthesizing Strategic Response...",
-  "Verifying Institutional Alignment...",
-];
-
-function ScanningPulse() {
-  const [step, setStep] = useState(0);
+function ThinkingIndicator() {
+  const [seconds, setSeconds] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setStep((prev) => (prev + 1) % LOADING_STEPS.length);
-    }, 2500);
+    const timer = setInterval(() => setSeconds(s => s + 1), 1000);
     return () => clearInterval(timer);
   }, []);
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="flex flex-col items-center justify-center py-24 gap-10"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className="flex flex-col items-center justify-center py-20 gap-4"
     >
-      <div className="relative w-32 h-32">
-        {/* Pulsing rings */}
-        <motion.div
-          animate={{ scale: [1, 1.6], opacity: [0.4, 0] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut" }}
-          className="absolute inset-0 border-2 border-blue-500/40 rounded-full"
-        />
-        <motion.div
-          animate={{ scale: [1, 1.3], opacity: [0.6, 0] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut", delay: 0.8 }}
-          className="absolute inset-0 border-2 border-blue-400/30 rounded-full"
-        />
-
-        {/* Core brain icon */}
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-full border border-slate-300 shadow-sm">
-          <BrainCircuit className="w-12 h-12 text-blue-600" />
+      <div className="relative">
+        <div className="w-12 h-12 bg-blue-50 rounded-2xl border border-blue-100 flex items-center justify-center shadow-sm">
+          <BrainCircuit className="w-6 h-6 text-blue-600" />
         </div>
-
-        {/* Scanning line */}
         <motion.div
-          animate={{ top: ["5%", "95%", "5%"] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute left-[15%] right-[15%] h-[2px] bg-gradient-to-r from-transparent via-blue-400 to-transparent z-10 opacity-70 blur-sm"
+          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -inset-1 bg-blue-400/20 rounded-2xl blur-md -z-10"
         />
       </div>
-
-      <div className="flex flex-col items-center gap-4 text-center">
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={step}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.5 }}
-            className="text-[11px] font-bold text-blue-600 tracking-[0.3em] uppercase leading-relaxed max-w-xs"
-          >
-            {LOADING_STEPS[step]}
-          </motion.p>
-        </AnimatePresence>
-
-        <div className="flex gap-2">
-          {[0, 1, 2].map((i) => (
-            <motion.div
-              key={i}
-              animate={{ opacity: [0.2, 1, 0.2], scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
-              className="w-1.5 h-1.5 rounded-full bg-blue-500/60"
-            />
-          ))}
-        </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest animate-pulse">
+          Thinking
+        </span>
+        <div className="w-[1px] h-3 bg-slate-200" />
+        <span className="text-xs font-mono font-bold text-blue-600/70">
+          {seconds}s
+        </span>
       </div>
     </motion.div>
   );
 }
+
 
 export default function Home() {
   const { user, session, loading: authLoading, signOut } = useAuth();
@@ -197,6 +144,7 @@ export default function Home() {
   const [verbosity, setVerbosity] = useState(3);
   const [userTier, setUserTier] = useState<string>("free");
   const [activeQuestion, setActiveQuestion] = useState("");
+  const [activeSource, setActiveSource] = useState<{ url: string; title: string } | null>(null);
   const [featuredQuestions, setFeaturedQuestions] = useState<{ text: string, icon: any }[]>([]);
   const [showLogin, setShowLogin] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
@@ -241,6 +189,40 @@ export default function Home() {
     if (!user || !session) return;
     refreshUsage();
   }, [user, session, refreshUsage]);
+
+  // Split-view panel width (percentage for main content)
+  const [splitRatio, setSplitRatio] = useState(55);
+  const isDragging = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleDragStart = useCallback(() => {
+    isDragging.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, []);
+
+  useEffect(() => {
+    const handleDragMove = (e: globalThis.MouseEvent) => {
+      if (!isDragging.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const pct = (x / rect.width) * 100;
+      setSplitRatio(Math.max(30, Math.min(70, pct)));
+    };
+    const handleDragEnd = () => {
+      if (isDragging.current) {
+        isDragging.current = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    };
+    window.addEventListener('mousemove', handleDragMove);
+    window.addEventListener('mouseup', handleDragEnd);
+    return () => {
+      window.removeEventListener('mousemove', handleDragMove);
+      window.removeEventListener('mouseup', handleDragEnd);
+    };
+  }, []);
 
   // Randomize featured questions on mount
   useEffect(() => {
@@ -437,6 +419,13 @@ export default function Home() {
     inputRef.current?.focus();
   }, [user]);
 
+  // Auto-focus input when result is cleared
+  useEffect(() => {
+    if (!result && !loading && showDashboard) {
+      inputRef.current?.focus();
+    }
+  }, [result, loading, showDashboard]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -554,6 +543,18 @@ export default function Home() {
     }
   };
 
+  const handleNewInquiry = () => {
+    setResult(null);
+    setQuery("");
+    setError("");
+    setLoading(false);
+    setActiveSource(null);
+    // Explicitly focus the input after state clear
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+  };
+
   return (
     <div className="flex h-screen overflow-hidden">
       <DisclaimerModal />
@@ -566,6 +567,7 @@ export default function Home() {
         onClose={() => setSidebarOpen(false)}
         userTier={userTier}
         onUpgradeClick={() => setIsPricingOpen(true)}
+        onNewInquiry={handleNewInquiry}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         usage={usage}
@@ -578,10 +580,14 @@ export default function Home() {
         onSelectPlan={handleSelectPlan}
       />
 
-      <div
-        ref={scrollContainerRef}
-        className="flex-1 flex flex-col min-w-0 relative bg-white overflow-y-auto scroll-smooth"
-      >
+      {/* Main content + PDF split container */}
+      <div ref={containerRef} className="flex-1 flex min-w-0 relative">
+        {/* Left: AI Response Area */}
+        <div
+          ref={scrollContainerRef}
+          className="flex flex-col min-w-0 relative bg-white overflow-y-auto scroll-smooth"
+          style={{ width: activeSource ? `${splitRatio}%` : '100%', transition: activeSource ? 'none' : 'width 0.3s ease' }}
+        >
         {/* Ambient background effects (Simplified) */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
           <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-500/[0.02] rounded-full blur-[120px]" />
@@ -647,8 +653,8 @@ export default function Home() {
                 <h2 className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.1] mb-3">
                   What can I help with?
                 </h2>
-                <p className="text-sm text-slate-600 max-w-md mx-auto">
-                  Power sector regulations, operational frameworks, and institutional knowledge — instantly.
+                <p className="text-[10px] sm:text-xs text-slate-500 max-w-md mx-auto uppercase tracking-widest font-medium opacity-80">
+                  Power Sector Intelligence — Instantly
                 </p>
               </motion.div>
 
@@ -797,7 +803,7 @@ export default function Home() {
                       exit={{ opacity: 0 }}
                       className="flex flex-col items-center justify-center py-32"
                     >
-                      <ScanningPulse />
+                      <ThinkingIndicator />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -877,85 +883,28 @@ export default function Home() {
                         {/* Answer Content Area with Typing Animation */}
                         <div className="px-8 py-8">
                           <div className="markdown-content text-[15px] text-slate-800 leading-[1.7] font-normal">
-                            <TypingMarkdown text={result.answer} speed={8} />
+                            <TypingMarkdown 
+                              text={result.answer} 
+                              speed={2} 
+                              sources={result.sources} 
+                              onSourceClick={(url, title) => setActiveSource({ url, title })}
+                            />
                           </div>
                         </div>
 
                         {/* Share bar node */}
                         <ShareBar result={result} query={query} />
 
-                        {/* Structured Sources Section */}
-                        {result.sources.length > 0 && (
+                        {/* Structured Sources Section - Removed as per UI unification request */}
+                        {/* {result.sources.length > 0 && (
                           <SourcesSection sources={result.sources} />
-                        )}
+                        )} */}
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
-
-              {/* Bottom Input Bar */}
-              <motion.div
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, type: "spring", damping: 20, stiffness: 200 }}
-                className="sticky bottom-0 left-0 right-0 z-40 px-8 pb-8 bg-gradient-to-t from-white via-white/95 to-transparent pt-10"
-              >
-                <div className="max-w-4xl mx-auto">
-                  <div className="relative group">
-                    <div className="relative flex flex-col gap-0 bg-white border border-slate-300 rounded-xl focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-200 transition-all duration-300">
-                      <textarea
-                        ref={!result && !loading ? undefined : inputRef}
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Ask a follow-up..."
-                        rows={2}
-                        className="flex-1 bg-transparent text-[14px] text-slate-900 placeholder:text-slate-500 outline-none resize-none leading-relaxed p-4"
-                        style={{ minHeight: "56px", maxHeight: "240px" }}
-                        onInput={(e) => {
-                          const target = e.target as HTMLTextAreaElement;
-                          target.style.height = "56px";
-                          target.style.height = target.scrollHeight + "px";
-                        }}
-                      />
-                      <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50 rounded-b-[10px]">
-                        <span className="text-[11px] text-slate-500 font-medium"></span>
-                        <AnimatePresence mode="wait">
-                          <motion.button
-                            key={loading ? "loading" : "idle"}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            onClick={() => handleSubmit()}
-                            disabled={loading || !query.trim()}
-                            className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all active:scale-[0.95] disabled:cursor-not-allowed ${loading
-                              ? "bg-blue-100 text-blue-600"
-                              : "bg-blue-600 hover:bg-blue-700 text-white"
-                              }`}
-                          >
-                            {loading ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <ArrowUp className="w-4 h-4" />
-                            )}
-                          </motion.button>
-                        </AnimatePresence>
-                      </div>
-                    </div>
-
-                    {/* Response Length Slider moved here */}
-                    <div className="mt-3 px-4">
-                      <VerbositySlider
-                        value={verbosity}
-                        onChange={setVerbosity}
-                        userTier={userTier}
-                        onUpgradeClick={() => setIsPricingOpen(true)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
+              {/* Removed Bottom Input Bar for cleaner look */}
             </motion.div>
           )
           }
@@ -964,9 +913,34 @@ export default function Home() {
         <p className="pb-3 text-center text-[10px] text-slate-600 font-medium select-none">
           GridMind AI can make mistakes. Verify strategic information.
         </p>
-      </div >
+        </div>
 
-    </div >
+        {/* Right: Draggable Divider + PDF Panel */}
+        {activeSource && (
+          <>
+            {/* Drag Handle */}
+            <div
+              onMouseDown={handleDragStart}
+              className="w-[6px] bg-slate-200 hover:bg-blue-400 active:bg-blue-500 cursor-col-resize flex-shrink-0 transition-colors relative group z-10"
+              title="Drag to resize"
+            >
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-8 rounded-full bg-slate-400 group-hover:bg-blue-500 transition-colors" />
+            </div>
+
+            {/* PDF Viewer Panel */}
+            <div
+              className="flex flex-col bg-white border-l border-slate-200 min-w-0 overflow-hidden"
+              style={{ width: `${100 - splitRatio}%` }}
+            >
+              <InlinePdfViewer
+                source={activeSource}
+                onClose={() => setActiveSource(null)}
+              />
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -1008,33 +982,290 @@ function LottieCDNWrapper({ src, className }: { src: string; className?: string 
 }
 
 
-function TypingMarkdown({ text, speed = 8 }: { text: string; speed?: number }) {
+/**
+ * Inline PDF Viewer — sits as a flex sibling of the main content
+ */
+function InlinePdfViewer({ 
+  source, 
+  onClose 
+}: { 
+  source: { url: string; title: string }; 
+  onClose: () => void 
+}) {
+  const [iframeLoading, setIframeLoading] = useState(true);
+  const [iframeError, setIframeError] = useState(false);
+  const loadedRef = useRef(false);
+
+  // Reset on URL change; only show error after 30s if still not loaded
+  useEffect(() => {
+    loadedRef.current = false;
+    setIframeLoading(true);
+    setIframeError(false);
+    const timer = setTimeout(() => {
+      if (!loadedRef.current) {
+        setIframeLoading(false);
+        setIframeError(true);
+      }
+    }, 30000);
+    return () => clearTimeout(timer);
+  }, [source.url]);
+
+  // Normalize URL for embedding
+  const normalizedUrl = useMemo(() => {
+    let url = source.url;
+    if (!url) return "";
+    
+    // GitHub Blob → Raw (needed for Google Viewer to fetch the binary)
+    if (url.includes('github.com') && url.includes('/blob/')) {
+      url = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+    }
+    
+    // Wrap in Google Viewer for all PDFs and Bitstreams
+    const isLikelyPdf = url.toLowerCase().endsWith('.pdf') || 
+                        url.includes('.pdf?') || 
+                        url.includes('/bitstream/') ||
+                        url.includes('raw.githubusercontent.com');
+
+    if (isLikelyPdf) {
+      return `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+    }
+    return url;
+  }, [source.url]);
+
+  return (
+    <>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
+        <div className="flex items-center gap-2 overflow-hidden min-w-0">
+          <div className="p-1.5 bg-blue-100 rounded-lg text-blue-600 shrink-0">
+            <FileText className="w-4 h-4" />
+          </div>
+          <h3 className="font-semibold text-slate-800 truncate text-xs">
+            {source.title}
+          </h3>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <a
+            href={source.url}
+            download
+            className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors text-slate-500 hover:text-blue-600"
+            title="Download PDF"
+          >
+            <Download className="w-4 h-4" />
+          </a>
+          <button
+            onClick={onClose}
+            className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors text-slate-500 hover:text-slate-800"
+            title="Close PDF"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* PDF Content */}
+      <div className="flex-1 bg-slate-100 relative overflow-hidden">
+        {iframeLoading && !iframeError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
+            <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-3" />
+            <p className="text-[10px] uppercase font-bold tracking-[0.15em] text-slate-500">Loading Document...</p>
+          </div>
+        )}
+
+        {iframeError ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white h-full">
+            <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-4">
+              <AlertCircle className="w-6 h-6 text-amber-600" />
+            </div>
+            <h4 className="text-sm font-bold text-slate-900 mb-1">Can't embed this document</h4>
+            <p className="text-xs text-slate-600 mb-6 max-w-xs">
+              This provider restricts inline viewing.
+            </p>
+            <a 
+              href={source.url} 
+              download
+              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:scale-95"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Download to View
+            </a>
+          </div>
+        ) : (
+          <div className="relative w-full h-full">
+            <iframe
+              src={normalizedUrl}
+              className="w-full h-full border-none"
+              title="Source Document"
+              onLoad={() => { loadedRef.current = true; setIframeLoading(false); }}
+              onError={() => {
+                setIframeLoading(false);
+                setIframeError(true);
+              }}
+            />
+            {/* Blind overlay to hide the Google Viewer's native pop-out button */}
+            <div className="absolute top-0 right-0 w-16 h-16 bg-transparent z-20 cursor-default" />
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: { 
+  text?: string; 
+  speed?: number; 
+  sources?: Source[];
+  onSourceClick: (url: string, title: string) => void;
+}) {
   const [displayedLength, setDisplayedLength] = useState(0);
-  const [isComplete, setIsComplete] = useState(false);
+
+  // Defensive check: ensure text is always a string
+  const safeText = typeof text === 'string' ? text : "";
 
   useEffect(() => {
     setDisplayedLength(0);
-    setIsComplete(false);
-  }, [text]);
+  }, [safeText]);
 
   useEffect(() => {
-    if (displayedLength >= text.length) {
-      setIsComplete(true);
-      return;
-    }
-    const timer = setTimeout(() => {
-      setDisplayedLength((prev) => Math.min(prev + speed, text.length));
-    }, 16); // ~60fps
-    return () => clearTimeout(timer);
-  }, [displayedLength, text, speed]);
+    if (displayedLength >= safeText.length) return;
 
+    const timer = setTimeout(() => {
+      setDisplayedLength(prev => Math.min(prev + 1, safeText.length));
+    }, speed);
+
+    return () => clearTimeout(timer);
+  }, [displayedLength, safeText, speed]);
+
+  const isComplete = displayedLength >= safeText.length;
+
+  // Transform text to include clickable source links + universal PDF/Repo auto-linkifier
+  const processedText = useMemo(() => {
+    let newText = safeText;
+
+    // 1. Handle explicit source citations [REF] or REF
+    if (sources && sources.length > 0) {
+      const sortedSources = [...sources].sort((a, b) => b.ref.length - a.ref.length);
+      sortedSources.forEach(source => {
+        if (!source.ref || !source.source_url) return;
+        const escapedRef = source.ref.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\[${escapedRef}\\]`, 'g');
+        newText = newText.replace(regex, `[${source.ref}](${source.source_url})`);
+        const bareRegex = new RegExp(`(?<!\\[)${escapedRef}(?!\\]|\\()`, 'g');
+        newText = newText.replace(bareRegex, `[${source.ref}](${source.source_url})`);
+      });
+    }
+
+    // 2. Universal Auto-linkifier for PDFs, Bitstreams, and GridMind Repo
+    // Regex catches bare URLs but avoids those already in [title](url) format
+    // Also ignores trailing punctuation like periods or commas
+    const universalRegex = /(?<!\()https?:\/\/[^\s)\]]+(?<![.,!?;:])/g;
+    newText = newText.replace(universalRegex, (url) => {
+      const isPdf = /\.pdf(\?|#|$)/i.test(url);
+      const isBitstream = url.includes('/bitstream/');
+      const isGitHubGridMind = url.includes('github.com/smartlinemanapp/GridMind') || 
+                              url.includes('raw.githubusercontent.com/smartlinemanapp/GridMind');
+      
+      if (isPdf || isBitstream || isGitHubGridMind) {
+        // Extract a clean title from the URL
+        const parts = url.split('/');
+        let filename = decodeURIComponent(parts[parts.length - 1])
+          .split('?')[0]  // remove search
+          .split('#')[0]  // remove hash
+          .replace('.pdf', '');
+        
+        // Fallback for very short or empty filenames
+        if (!filename || filename.length < 3) filename = "Source Document";
+
+        // Keep original URL for better handling in viewer
+        const finalUrl = url;
+
+        return `[${filename}](${finalUrl})`;
+      }
+      return url;
+    });
+
+    return newText;
+  }, [safeText, sources]);
+
+  const isSourceUrl = (url: string) => {
+    if (!url) return false;
+    const lower = url.toLowerCase();
+    return lower.endsWith('.pdf') || lower.includes('.pdf?') || 
+           url.includes('github.com') || url.includes('raw.githubusercontent.com') || 
+           url.includes('/bitstream/');
+  };
+
+  const MarkdownComponents = {
+    a: ({ href, children, ...props }: any) => {
+      // Source documents → render as <button> to avoid extension interference
+      if (href && isSourceUrl(href)) {
+        const title = typeof children === 'string' ? children : 'Source Document';
+        return (
+          <button
+            type="button"
+            onContextMenu={(e) => e.preventDefault()}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              console.log('GridMind Source Button Pressed:', { href, title });
+              onSourceClick(href, title);
+            }}
+            className="text-blue-600 font-bold underline decoration-slate-200 hover:decoration-blue-600 transition-all cursor-pointer bg-transparent border-none p-0 m-0 font-inherit text-inherit inline"
+          >
+            {children}
+          </button>
+        );
+      }
+      // Regular links → normal <a> tag
+      return (
+        <a
+          {...props}
+          href={href}
+          onContextMenu={(e) => e.preventDefault()}
+          className="text-blue-600 font-bold underline decoration-slate-200 hover:decoration-blue-600 transition-all cursor-pointer"
+        >
+          {children}
+        </a>
+      );
+    },
+  };
   if (isComplete) {
-    return <ReactMarkdown>{text}</ReactMarkdown>;
+    return (
+      <ReactMarkdown components={MarkdownComponents}>
+        {processedText}
+      </ReactMarkdown>
+    );
   }
+
+  // Determine the effective slice length to avoid breaking Markdown links
+  const getEffectiveLength = (len: number, text: string) => {
+    // If we are in the middle of a link [title](url), always slice to the end of the link
+    // so ReactMarkdown renders it as a link instead of raw text.
+    let effective = len;
+    
+    // Check if we just started or are inside a link [...]
+    const lastOpenBracket = text.lastIndexOf('[', len - 1);
+    if (lastOpenBracket !== -1) {
+      // Find if this bracket is closed within the full text
+      const nextCloseParen = text.indexOf(')', lastOpenBracket);
+      if (nextCloseParen !== -1 && nextCloseParen >= len - 1) {
+        // We are inside a link structure. Check if it's a valid link [..](..)
+        const midParenOpen = text.indexOf('](', lastOpenBracket);
+        if (midParenOpen !== -1 && midParenOpen < nextCloseParen) {
+          // It's a link! Extend slice to the end of the paren
+          effective = nextCloseParen + 1;
+        }
+      }
+    }
+    return effective;
+  };
+
+  const effectiveLength = getEffectiveLength(displayedLength, processedText);
 
   return (
     <div>
-      <ReactMarkdown>{text.slice(0, displayedLength)}</ReactMarkdown>
+      <ReactMarkdown components={MarkdownComponents}>
+        {safeText.length > 0 ? processedText.slice(0, effectiveLength) : ""}
+      </ReactMarkdown>
       <span className="inline-block w-0.5 h-5 bg-blue-600 animate-pulse ml-0.5 align-middle" />
     </div>
   );
@@ -1237,6 +1468,7 @@ function SourcesSection({ sources }: { sources: Source[] }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Open document"
+                onContextMenu={(e) => e.preventDefault()}
                 className="shrink-0 w-6 h-6 flex items-center justify-center rounded bg-slate-200 hover:bg-slate-300 border border-slate-400 transition-all"
               >
                 <FileText className="w-3 h-3 text-blue-600" />

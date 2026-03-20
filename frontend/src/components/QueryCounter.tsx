@@ -3,29 +3,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-function OdometerDigit({ digit, index }: { digit: string, index: number }) {
-    return (
-        <div className="relative w-[13px] h-[20px] bg-white border border-slate-300 rounded-sm overflow-hidden flex flex-col items-center shadow-inner">
-            <motion.div
-                key={digit}
-                initial={{ y: "100%" }}
-                animate={{ y: "0%" }}
-                exit={{ y: "-100%" }}
-                transition={{
-                    type: "spring",
-                    damping: 18,
-                    stiffness: 110,
-                    delay: (index * 0.05)
-                }}
-                className="absolute inset-0 flex items-center justify-center text-[12px] font-black text-emerald-600 font-mono tracking-tighter"
-            >
-                {digit}
-            </motion.div>
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-200/30 to-transparent pointer-events-none" />
-        </div>
-    );
-}
-
 export default function QueryCounter() {
     const [count, setCount] = useState<number | null>(null);
 
@@ -49,13 +26,9 @@ export default function QueryCounter() {
 
     if (count === null) return null;
 
-    const countStr = count.toString().padStart(6, "0");
-
     return (
-        <div className="inline-flex gap-[1px]">
-            {countStr.split("").map((d, i) => (
-                <OdometerDigit key={`${i}-${d}`} digit={d} index={i} />
-            ))}
-        </div>
+        <span className="text-[12px] font-bold text-emerald-600 font-mono tracking-tight">
+            {count.toLocaleString()}
+        </span>
     );
 }

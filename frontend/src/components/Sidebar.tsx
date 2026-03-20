@@ -29,6 +29,7 @@ interface SidebarProps {
     onClose: () => void;
     userTier?: string;
     onUpgradeClick?: () => void;
+    onNewInquiry?: () => void;
     collapsed?: boolean;
     onToggleCollapse?: () => void;
     usage?: {
@@ -44,7 +45,7 @@ interface SidebarProps {
     } | null;
 }
 
-export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick, open, onClose, userTier = "free", onUpgradeClick, collapsed = false, onToggleCollapse, usage }: SidebarProps) {
+export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick, open, onClose, userTier = "free", onUpgradeClick, onNewInquiry, collapsed = false, onToggleCollapse, usage }: SidebarProps) {
     return (
         <>
             {/* Desktop: collapsible sidebar */}
@@ -63,6 +64,7 @@ export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick,
                     showClose={false}
                     userTier={userTier}
                     onUpgradeClick={onUpgradeClick}
+                    onNewInquiry={onNewInquiry}
                     onToggleCollapse={onToggleCollapse}
                     usage={usage}
                     collapsed={collapsed}
@@ -90,7 +92,7 @@ export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick,
                             transition={{ type: "spring", damping: 30, stiffness: 300 }}
                             className="fixed top-0 left-0 h-full w-72 z-[100] bg-white border-r border-slate-200 flex flex-col md:hidden shadow-2xl"
                         >
-                            <SidebarContent userEmail={userEmail} onSignOut={onSignOut} history={history} onHistoryClick={onHistoryClick} onClose={onClose} showClose={true} userTier={userTier} onUpgradeClick={onUpgradeClick} usage={usage} />
+                            <SidebarContent userEmail={userEmail} onSignOut={onSignOut} history={history} onHistoryClick={onHistoryClick} onClose={onClose} showClose={true} userTier={userTier} onUpgradeClick={onUpgradeClick} onNewInquiry={onNewInquiry} usage={usage} />
                         </motion.aside>
                     </>
                 )}
@@ -101,7 +103,7 @@ export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick,
 
 
 function SidebarContent({
-    userEmail, onSignOut, history, onHistoryClick, onClose, showClose, userTier, onUpgradeClick, onToggleCollapse, usage, collapsed
+    userEmail, onSignOut, history, onHistoryClick, onClose, showClose, userTier, onUpgradeClick, onNewInquiry, onToggleCollapse, usage, collapsed
 }: SidebarProps & { showClose: boolean }) {
     const [logoHovered, setLogoHovered] = useState(false);
     const progress = usage ? Math.min(100, (usage.dailyCount / usage.dailyLimit) * 100) : 0;
@@ -128,8 +130,8 @@ function SidebarContent({
                             <h1 className="text-sm font-bold tracking-tight text-slate-900 leading-tight">
                                 GridMind <span className="text-blue-600">AI</span>
                             </h1>
-                            <p className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">
-                                v2.0 Enterprise
+                            <p className="text-[9px] text-blue-600/60 font-bold tracking-wide uppercase mt-0.5 whitespace-nowrap">
+                                Decide Fast. Act Fast.
                             </p>
                         </div>
                     )}
@@ -157,7 +159,10 @@ function SidebarContent({
             <div className={`flex-1 overflow-y-auto py-6 ${collapsed ? 'px-2' : 'px-3'} space-y-8`}>
                 <div className="space-y-1">
                     {!collapsed && <label className="px-3 text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-2 block">Intelligence</label>}
-                    <button className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-700`}>
+                    <button 
+                        onClick={() => { onNewInquiry?.(); onClose(); }}
+                        className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-700`}
+                    >
                         <MessageSquare className="w-4 h-4" />
                         {!collapsed && <span>New Inquiry</span>}
                     </button>
