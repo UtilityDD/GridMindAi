@@ -85,7 +85,8 @@ export async function POST(req: NextRequest) {
 
       let dailyLimit = profileData.custom_daily_limit ?? tierInfo.daily_limit ?? 10;
       if (userTier === "free") dailyLimit = Math.min(dailyLimit, 10); // Strict limit for free
-      const monthlyLimit = profileData.custom_monthly_limit ?? tierInfo.monthly_limit ?? 150;
+      // Monthly cap removed for simplicity as per user request (returning high value for UI)
+      const monthlyLimit = 999999;
 
       // 3. Check daily limit
       const today = new Date();
@@ -103,22 +104,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // 4. Check monthly limit
-      const firstOfMonth = new Date();
-      firstOfMonth.setDate(1);
-      firstOfMonth.setHours(0, 0, 0, 0);
-      const { count: monthlyCount } = await getSupabaseAdmin()
-        .from("user_analytics")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .gte("created_at", firstOfMonth.toISOString());
-
-      if (monthlyCount !== null && monthlyCount >= monthlyLimit) {
-        return NextResponse.json(
-          { detail: `Monthly limit of ${monthlyLimit} queries reached. Upgrade your Strategic Intelligence bandwidth for more access.` },
-          { status: 429 }
-        );
-      }
+      // 4. Monthly limit check REMOVED for simplicity as per user request
     }
   }
 

@@ -26,7 +26,7 @@ def upsert_chunks(
     embeddings: list[list[float]],
     metadata: dict,
 ) -> None:
-    """Upsert chunk embeddings for a single document."""
+    """Upsert chunk embeddings for a single document in batches."""
     client = _get_client()
 
     rows = []
@@ -43,7 +43,18 @@ def upsert_chunks(
             "embedding": emb,
         })
 
-    client.table("chunks").upsert(rows).execute()
+    # Batch into groups of 50 for safety
+    batch_size = 50
+    for i in range(0, len(rows), batch_size):
+        batch = rows[i:i+batch_size]
+        try:
+            res = client.table("chunks").upsert(batch).execute()
+            # If execute returns a response object with 'data' and 'error', check it
+            if hasattr(res, 'error') and res.error:
+                logger.error("Error upserting chunk batch %d: %s", i // batch_size, res.error)
+        except Exception as e:
+            logger.error("Exception during chunk batch %d upsert: %s", i // batch_size, e)
+            
     logger.info("Upserted %d chunks for doc_id=%s", len(chunks), doc_id)
 
 

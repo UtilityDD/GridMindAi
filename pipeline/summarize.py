@@ -40,8 +40,8 @@ def summarize_document(text: str, ref: str = "", date: str = "") -> str:
     Uses pool-based key rotation on 429 errors.
     """
     words = text.split()
-    if len(words) > 8000:
-        text = " ".join(words[:8000]) + "\n...[truncated]"
+    if len(words) > 500000:
+        text = " ".join(words[:500000]) + "\n...[truncated]"
 
     prompt = SUMMARY_PROMPT.format(text=text)
     max_retries = len(config.GEMINI_KEY_POOL) * 2

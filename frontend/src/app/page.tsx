@@ -343,14 +343,25 @@ export default function Home() {
       // Step 1: Create Order
       const res = await fetch("/api/razorpay/order", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({ tierId, promoCode }),
       });
 
       const orderData = await res.json();
       if (orderData.error) throw new Error(orderData.error);
 
-      // Step 2: Open Razorpay Checkout
+      // Handle Instant Free Upgrade (100% Promo)
+      if (orderData.free) {
+        setUserTier(tierId);
+        setIsPricingOpen(false);
+        refreshUsage(); // Get new limits immediately
+        return;
+      }
+
+      // Step 2: Open Razorpay Checkout for paid plans
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.amount,

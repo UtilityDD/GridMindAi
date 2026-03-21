@@ -51,22 +51,35 @@ export async function GET(req: NextRequest) {
         const tierName = tierInfo.id || "free";
         const tierId = profile?.tier_id || "free";
 
-        let dailyLimit = profile?.custom_daily_limit ?? tierInfo.daily_limit ?? 10;
-        if (tierId === "free" || tierName === "free") dailyLimit = Math.min(dailyLimit, 10);
-        const monthlyLimit = profile?.custom_monthly_limit ?? tierInfo.monthly_limit ?? 150;
+        const dailyLimit = profile?.custom_daily_limit ?? tierInfo.daily_limit ?? 10;
+        // Monthly cap removed for simplicity as per user request (returning high value for UI)
+        const monthlyLimit = 999999;
 
-        // Expiry Logic
-        const registrationDate = profile?.created_at ? new Date(profile.created_at) : new Date();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
-        // Calculate days remaining
-        const expiryDate = new Date(registrationDate);
-        expiryDate.setDate(expiryDate.getDate() + 30);
-        const diffTime = expiryDate.getTime() - new Date().getTime();
-        const daysUntilExpiry = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+        // Expiry Logic: Only for 'free' tier
+        let daysUntilExpiry: number | null = null;
+        let isTrialExpired = false;
 
-        const isTrialExpired = (tierId === "free" || tierName === "free") && registrationDate < thirtyDaysAgo;
+        if (tierId === "free" || tierName === "free") {
+            const registrationDate = profile?.created_at ? new Date(profile.created_at) : new Date();
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            const expiryDate = new Date(registrationDate);
+            expiryDate.setDate(expiryDate.getDate() + 30);
+            const diffTime = expiryDate.getTime() - new Date().getTime();
+            daysUntilExpiry = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+            isTrialExpired = registrationDate < thirtyDaysAgo;
+        }
+
+        // Tier Display Name Mapping
+        const TIER_NAME_MAP: Record<string, string> = {
+            'free': 'Basic',
+            'basic': 'Basic+',
+            'advance': 'Advance',
+            'pro': 'Pro'
+        };
+        // Use name from DB tierInfo if present, otherwise fallback to local map
+        const displayName = (tierInfo as any).name || TIER_NAME_MAP[tierId] || TIER_NAME_MAP[tierName] || tierName;
 
         // Calculate daily usage
         const today = new Date();
@@ -94,10 +107,10 @@ export async function GET(req: NextRequest) {
             dailyLimit,
             monthlyCount: monthlyCount || 0,
             monthlyLimit,
-            tierName,
+            tierName: displayName,
             tierId,
             hasCustomLimit,
-            registeredAt: registrationDate.toISOString(),
+            registeredAt: profile?.created_at || new Date().toISOString(),
             isTrialExpired,
             daysUntilExpiry
         });

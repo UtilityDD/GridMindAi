@@ -5,7 +5,7 @@ import { BrainCircuit, Zap, Shield, BarChart3, ArrowRight, Menu, Globe, Cpu, Act
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { PLANS, CAPABILITY_ROWS } from "@/lib/plans";
+import { PLANS } from "@/lib/plans";
 
 interface LandingPageProps {
     onGetStarted: () => void;
@@ -579,18 +579,6 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                                 <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">
                                     {plan.limit}
                                 </p>
-                                <ul className="mb-8 flex-1 space-y-3">
-                                    {CAPABILITY_ROWS.map((row) => (
-                                        <li key={row.key} className="flex items-center justify-between gap-2 text-sm text-slate-700">
-                                            <span>{row.label}</span>
-                                            {plan.capabilities[row.key] ? (
-                                                <Check className="h-4 w-4 flex-shrink-0 text-emerald-500" />
-                                            ) : (
-                                                <X className="h-4 w-4 flex-shrink-0 text-slate-400" />
-                                            )}
-                                        </li>
-                                    ))}
-                                </ul>
                                 <button
                                     onClick={onGetStarted}
                                     className={`w-full rounded-2xl py-3 text-xs font-bold uppercase tracking-widest transition-all ${isPro

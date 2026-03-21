@@ -40,8 +40,8 @@ SENTENCE_BOUNDARY = True  # prefer splitting on sentence boundaries
 # --- Embedding ---
 EMBEDDING_MODEL = "models/gemini-embedding-001"
 EMBEDDING_DIMENSIONS = 768
-EMBEDDING_BATCH_SIZE = 1  # Sequential (batch size 1) as requested
-EMBEDDING_RATE_LIMIT_RPM = 120  # 30 RPM per key (1 chunk / 2s) * 4 keys
+EMBEDDING_BATCH_SIZE = 100 # Optimized for paid/pool throughput
+EMBEDDING_RATE_LIMIT_RPM = 1000 # High throughput for paid keys
 
 # --- LLM ---
 GEMINI_LLM_MODEL = "gemini-2.5-flash"

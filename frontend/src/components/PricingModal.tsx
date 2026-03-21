@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Sparkles, Tag, Loader2, AlertCircle, Zap } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
-import { PLANS, CAPABILITY_ROWS } from "@/lib/plans";
+import { PLANS } from "@/lib/plans";
 
 interface PricingModalProps {
     isOpen: boolean;
@@ -109,6 +109,19 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                             </p>
                         </div>
 
+                        {promoData?.discount === 100 && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mb-6 p-3 rounded-2xl bg-emerald-100 border border-emerald-300 flex items-center justify-center gap-3 shadow-sm"
+                            >
+                                <Zap className="w-4 h-4 text-emerald-600 animate-pulse" />
+                                <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-widest leading-none">
+                                    Promotional Full Access Activated — Claim any plan for FREE
+                                </span>
+                            </motion.div>
+                        )}
+
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
                             {PLANS.map((plan, idx) => {
                                 const isCurrent = currentTier === plan.id;
@@ -122,9 +135,11 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.2 + idx * 0.1 }}
-                                        className={`relative flex flex-col p-6 rounded-3xl border transition-all duration-300 ${isCurrent
+                                         className={`relative flex flex-col p-6 rounded-3xl border transition-all duration-300 ${isCurrent
                                             ? "bg-blue-50 border-blue-400 shadow-lg shadow-blue-200/50"
-                                            : "bg-slate-50 border-slate-300 hover:border-slate-400"
+                                            : promoData?.discount === 100
+                                                ? "bg-emerald-50/50 border-emerald-300 shadow-xl shadow-emerald-500/10"
+                                                : "bg-slate-50 border-slate-300 hover:border-slate-400"
                                             }`}
                                     >
                                         {isCurrent && (
@@ -140,15 +155,15 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                         <h3 className="text-lg font-bold text-slate-900 mb-1">{plan.name}</h3>
                                         <div className="flex flex-col mb-4">
                                             <div className="flex items-baseline gap-1">
-                                                <span className={`text-2xl font-bold text-slate-900 ${promoData && plan.price > 0 ? "line-through opacity-30 text-lg" : ""}`}>
-                                                    ₹{plan.price}
-                                                </span>
-                                                {promoData && plan.price > 0 && (
-                                                    <span className="text-2xl font-bold text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.3)]">
-                                                        ₹{finalPrice}
-                                                    </span>
-                                                )}
-                                                <span className="text-xs text-slate-700">/month</span>
+                                                 <span className={`text-2xl font-bold text-slate-900 ${promoData && plan.price > 0 ? "line-through opacity-30 text-lg" : ""}`}>
+                                                     ₹{plan.price}
+                                                 </span>
+                                                 {promoData && plan.price > 0 && (
+                                                     <span className={`text-2xl font-bold ${promoData.discount === 100 ? "text-emerald-500" : "text-emerald-400"} drop-shadow-[0_0_10px_rgba(52,211,153,0.3)]`}>
+                                                         {promoData.discount === 100 ? "FREE" : `₹${finalPrice}`}
+                                                     </span>
+                                                 )}
+                                                 <span className="text-xs text-slate-700">/month</span>
                                             </div>
                                             {promoData && plan.price > 0 && (
                                                 <div className="mt-1 flex flex-col gap-0.5">
@@ -177,26 +192,16 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                                     {plan.duration}
                                                 </div>
                                             )}
-                                            {CAPABILITY_ROWS.map((row, idx) => (
-                                                <div key={idx} className="flex items-center gap-2 text-[11px] text-slate-700">
-                                                    {plan.capabilities[row.key as keyof typeof plan.capabilities] ? (
-                                                        <Check className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                                                    ) : (
-                                                        <div className="w-3.5 h-3.5" />
-                                                    )}
-                                                    <span className={plan.capabilities[row.key as keyof typeof plan.capabilities] ? "" : "opacity-40"}>
-                                                        {row.label}
-                                                    </span>
-                                                </div>
-                                            ))}
                                         </div>
 
                                         <button
                                             onClick={() => handleSelect(plan.id)}
                                             disabled={isCurrent || (!!selectedPlanId)}
-                                            className={`w-full py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${isCurrent
+                                             className={`w-full py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${isCurrent
                                                 ? "bg-slate-200 text-slate-600 cursor-default"
-                                                : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                                                : promoData?.discount === 100 
+                                                  ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 active:scale-[0.98]"
+                                                  : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                                                 }`}
                                         >
                                             {selectedPlanId === plan.id && <Loader2 className="w-3 h-3 animate-spin" />}

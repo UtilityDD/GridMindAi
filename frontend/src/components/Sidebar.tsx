@@ -237,7 +237,7 @@ function SidebarContent({
                         <p className="text-[9px] text-slate-600 font-medium leading-tight">
                             {usage.isTrialExpired 
                                 ? "Your 30-day trial has concluded." 
-                                : <>Daily limit resets in ~{24 - new Date().getHours()}h. {usage.daysUntilExpiry ? <span className="text-red-500 font-bold ml-1">Expires in {usage.daysUntilExpiry} days.</span> : ""}</>}
+                                : <>Daily limit resets in ~{24 - new Date().getHours()}h. {(usage.daysUntilExpiry !== undefined && usage.daysUntilExpiry !== null) ? <span className="text-red-500 font-bold ml-1">Expires in {usage.daysUntilExpiry} days.</span> : ""}</>}
                         </p>
                     )}
                     {usage.isTrialExpired && !collapsed && (
@@ -266,7 +266,7 @@ function SidebarContent({
                                     userTier === 'basic' ? 'bg-slate-200 border-slate-400 text-slate-700' :
                                         'bg-slate-200 border-slate-400 text-slate-700'
                                     }`}>
-                                    {usage?.hasCustomLimit ? 'Promo' : userTier}
+                                    {usage?.hasCustomLimit ? 'Promo' : (usage?.tierName || userTier)}
                                 </span>
                                 {usage?.hasCustomLimit && (
                                     <span className="text-[8px] font-bold text-slate-600 uppercase">
