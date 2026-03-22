@@ -158,8 +158,9 @@ async function callGenericCompletions(
       const errorData = await response.json().catch(() => ({}));
       const msg = errorData?.error?.message || response.statusText;
 
-      if ((response.status === 429 || response.status === 401) && retryCount < pool.size) {
-        console.warn(`${providerName} Key limited (${response.status}). Rotating...`);
+      // If rate limited or unauthorized (expired key), try next key in pool
+      if ((response.status === 429 || response.status === 401 || response.status === 403) && retryCount < pool.size * 2) {
+        console.warn(`${providerName} Key Issue (${response.status}). Rotating...`);
         return callGenericCompletions(pool, baseUrl, model, question, context, sources, verbosity, providerName, retryCount + 1);
       }
       throw new Error(`${providerName} error: ${msg}`);

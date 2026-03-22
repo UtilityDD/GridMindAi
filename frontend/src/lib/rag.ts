@@ -111,8 +111,8 @@ async function callPoolForRAG(prompt: string, retryCount = 0): Promise<string> {
     const data = await response.json();
     return data.choices?.[0]?.message?.content || "";
   } catch (e) {
-    if (retryCount < 3) {
-      console.warn(`RAG provider ${provider.name} failed. Rotating to next provider...`);
+    if (retryCount < providers.length * 2) {
+      console.warn(`RAG provider ${provider.name} failed (Attempt ${retryCount + 1}). Rotating to next provider...`);
       return callPoolForRAG(prompt, retryCount + 1);
     }
     throw e;
@@ -321,6 +321,12 @@ export interface SourceMeta {
   source_url: string;
 }
 
+function stripUrls(text: string): string {
+  if (!text) return "";
+  // Aggressive regex to catch (http...), http://..., raw.github..., etc.
+  return text.replace(/\(?(https?:\/\/[^\s\)]+)\)?/gi, "").trim();
+}
+
 export function buildContext(result: RetrievalResult): {
   context: string;
   sources: SourceMeta[];
@@ -346,22 +352,22 @@ export function buildContext(result: RetrievalResult): {
     const meta = findMeta(did, result);
     if (!meta) continue;
 
-    const header = `--- Document: ${meta.ref} | Date: ${meta.date} | Title: ${meta.title} ---`;
+    const header = `--- Document: ${meta.ref} | Date: ${meta.date} | Title: ${stripUrls(meta.title)} ---`;
     const parts = [header];
 
     const summary = summaryByDoc.get(did);
-    if (summary) parts.push(`[Summary] ${summary}`);
+    if (summary) parts.push(`[Summary] ${stripUrls(summary)}`);
 
     const chunks = chunksByDoc.get(did) ?? [];
     chunks.sort((a, b) => a.chunk_index - b.chunk_index);
-    for (const c of chunks) parts.push(c.text);
+    for (const c of chunks) parts.push(stripUrls(c.text));
 
     contextParts.push(parts.join("\n"));
     sources.push({
       doc_id: did,
       ref: meta.ref,
       date: meta.date,
-      title: meta.title,
+      title: stripUrls(meta.title),
       source_url: meta.source_url,
     });
   }
