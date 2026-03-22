@@ -40,7 +40,7 @@ SENTENCE_BOUNDARY = True  # prefer splitting on sentence boundaries
 # --- Embedding ---
 EMBEDDING_MODEL = "models/gemini-embedding-001"
 EMBEDDING_DIMENSIONS = 768
-EMBEDDING_BATCH_SIZE = 100 # Optimized for paid/pool throughput
+EMBEDDING_BATCH_SIZE = 50 # Reduced from 100 due to 400 Bad Request payload limits
 EMBEDDING_RATE_LIMIT_RPM = 1000 # High throughput for paid keys
 
 # --- LLM ---

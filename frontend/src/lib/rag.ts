@@ -5,10 +5,11 @@ import { REWRITE_QUERY_TEMPLATE, KEYWORD_EXTRACTION_TEMPLATE } from "./prompts";
 const EMBEDDING_MODEL = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 768;
 const LLM_MODEL = "gemini-1.5-flash";
-const TOP_K_CHUNKS = 3;
-const TOP_K_SUMMARIES = 3;
-const TOP_K_TITLES = 3;
-const MAX_CONTEXT_CHUNKS_PER_DOC = 2;
+const TOP_K_CHUNKS = 15; // Increased from 12 for v2
+const TOP_K_SUMMARIES = 8;
+const TOP_K_TITLES = 5;
+const MAX_CONTEXT_CHUNKS_PER_DOC = 3; 
+const RERANK_TOP_N = 7; // Final chunks to pass to LLM after reranking
 
 // --- Pool Manager (Consistent with llm.ts) ---
 class KeyPool {
@@ -180,6 +181,51 @@ export async function extractKeywords(question: string, tier: string = "free"): 
   }
 }
 
+/**
+ * RAG v2: Multi-Query Expansion
+ * Generates 3 variations of the question to cast a wider net.
+ */
+export async function generateMultiQueries(question: string, tier: string = "free"): Promise<string[]> {
+  const prompt = `You are a search expert for WBSEDCL regulatory documents.
+Given the user question: "${question}", generate 2-3 alternative search queries that use different terminology (e.g. expanding SE to Superintending Engineer) to ensure we find all relevant policy documents.
+Output ONLY the queries as a newline-separated list. No preamble.`;
+
+  try {
+    const text = await callPoolForRAG(prompt);
+    const queries = text.split("\n").map(q => q.trim()).filter(q => q.length > 0);
+    return [question, ...queries.slice(0, 2)];
+  } catch (e) {
+    return [question];
+  }
+}
+
+/**
+ * RAG v2: Neural Reranking
+ * Uses a small LLM call to pick the best chunks from a larger pool.
+ */
+export async function rerankChunks(question: string, chunks: ChunkRow[]): Promise<ChunkRow[]> {
+  if (chunks.length <= RERANK_TOP_N) return chunks;
+
+  const candidateList = chunks.map((c, i) => `[ID ${i}]: ${c.title} - ${c.content.substring(0, 200)}...`).join("\n\n");
+  const prompt = `User Question: "${question}"
+
+Candidate Chunks:
+${candidateList}
+
+Instructions:
+Identify the TOP ${RERANK_TOP_N} most relevant chunks that DIRECTLY help answer the user question.
+Return ONLY the IDs as a comma-separated list (e.g., 0, 4, 12). No preamble.`;
+
+  try {
+    const text = await callPoolForRAG(prompt);
+    const ids = text.split(",").map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+    const sorted = ids.map(id => chunks[id]).filter(Boolean);
+    return sorted.length > 0 ? sorted : chunks.slice(0, RERANK_TOP_N);
+  } catch (e) {
+    return chunks.slice(0, RERANK_TOP_N);
+  }
+}
+
 interface ChunkRow {
   id: string;
   doc_id: string;
@@ -226,50 +272,45 @@ export async function retrieve(
   rewrite: boolean = true,
   tier: string = "free"
 ): Promise<RetrievalResult> {
-  let rewrittenQuery: string | null = null;
-  let searchQuery = question;
-
-  if (rewrite) {
-    rewrittenQuery = await rewriteQuery(question, tier);
-    searchQuery = rewrittenQuery;
-  }
-
-  const queryEmbedding = await embedSingle(searchQuery);
+  const rewrites = await generateMultiQueries(question, tier);
+  const rewrittenQuery = rewrites.join(" | ");
 
   const supabaseAdmin = getSupabaseAdmin();
-  const [chunksRes, summariesRes, titlesRes] = await Promise.all([
-    supabaseAdmin.rpc("match_chunks", {
-      query_embedding: queryEmbedding,
-      match_count: TOP_K_CHUNKS,
-    }),
-    supabaseAdmin.rpc("match_summaries", {
-      query_embedding: queryEmbedding,
-      match_count: TOP_K_SUMMARIES,
-    }),
-    supabaseAdmin.rpc("match_titles", {
-      query_embedding: queryEmbedding,
-      match_count: TOP_K_TITLES,
-    }),
-  ]);
+  
+  // High-level strategy: Parallel search for all queries
+  const allChunkResults: ChunkRow[] = [];
+  
+  await Promise.all(rewrites.map(async (query) => {
+    const embed = await embedSingle(query);
+    const [c, s, t] = await Promise.all([
+      supabaseAdmin.rpc("match_chunks", { query_embedding: embed, match_count: 10 }),
+      supabaseAdmin.rpc("match_summaries", { query_embedding: embed, match_count: 5 }),
+      supabaseAdmin.rpc("match_titles", { query_embedding: embed, match_count: 5 })
+    ]);
+    if (c.data) allChunkResults.push(...c.data);
+  }));
 
-  const chunkResults: ChunkRow[] = chunksRes.data ?? [];
-  const summaryResults: SummaryRow[] = summariesRes.data ?? [];
-  const titleResults: TitleRow[] = titlesRes.data ?? [];
+  // Deduplicate and Rerank
+  const uniqueChunks = Array.from(new Map(allChunkResults.map(c => [c.id, c])).values());
+  const rerankedChunks = await rerankChunks(question, uniqueChunks);
 
   const seen = new Set<string>();
   const docIds: string[] = [];
-
-  for (const list of [chunkResults, summaryResults, titleResults]) {
-    for (const row of list) {
-      const did = row.doc_id;
-      if (did && !seen.has(did)) {
-        seen.add(did);
-        docIds.push(did);
-      }
+  for (const row of rerankedChunks) {
+    if (row.doc_id && !seen.has(row.doc_id)) {
+      seen.add(row.doc_id);
+      docIds.push(row.doc_id);
     }
   }
 
-  return { docIds, chunkResults, summaryResults, titleResults, rewrittenQuery };
+  return { 
+    docIds, 
+    chunkResults: rerankedChunks, 
+    summaryResults: [], // Summaries are informative but secondary now
+    titleResults: [], 
+    rewrittenQuery,
+    faqAnswer: undefined 
+  };
 }
 
 export interface SourceMeta {

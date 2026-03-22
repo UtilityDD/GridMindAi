@@ -48,6 +48,12 @@ def _get_client(key=None) -> tuple[genai.Client, str]:
 
 def _embed_batch(batch: list[str], batch_idx: int) -> tuple[int, list[list[float]]]:
     """Embed a single batch with key rotation on 429/403 errors."""
+    if not batch:
+        return batch_idx, []
+
+    # Clean empty strings (prevents 400 INVALID_ARGUMENT 'contains an empty Part')
+    batch = [t if (t and t.strip()) else " " for t in batch]
+    
     max_retries = 100 
     
     for attempt in range(max_retries):
@@ -83,6 +89,9 @@ def _embed_batch(batch: list[str], batch_idx: int) -> tuple[int, list[list[float
             if attempt == max_retries - 1:
                 logger.error("Embedding batch %d failed after %d attempts: %s", batch_idx, max_retries, exc)
                 raise
+            
+            # Detailed logging for 400/429
+            logger.info("Retrying batch %d (Attempt %d)... Error: %s", batch_idx, attempt + 1, msg[:200])
             
             wait = config.LLM_RETRY_DELAY * (2 ** attempt)
             time.sleep(wait)
