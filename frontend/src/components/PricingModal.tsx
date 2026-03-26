@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Sparkles, Tag, Loader2, AlertCircle, Zap } from "lucide-react";
+import { Check, Sparkles, Tag, Loader2, AlertCircle, Zap, ShieldAlert, Scale, Cpu, Activity } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { PLANS } from "@/lib/plans";
 
@@ -92,20 +92,20 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                 className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 border border-blue-300 text-blue-700 text-[10px] font-bold tracking-widest uppercase mb-4"
                             >
                                 <Sparkles className="w-3 h-3" />
-                                PLAN LIMITS
+                                RESOURCE ALLOCATION
                             </motion.div>
                             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
                                 {promoData ? (
                                     <span className="flex items-center justify-center gap-3">
-                                        Promo Applied!
+                                        Support Applied!
                                         <span className="text-emerald-400 animate-pulse text-2xl md:text-3xl">-{promoData.discount}%</span>
                                     </span>
-                                ) : "Choose Your Plan"}
+                                ) : "API Cost Compensation"}
                             </h2>
-                            <p className="text-slate-700 max-w-xl mx-auto text-sm leading-relaxed">
+                            <p className="text-slate-700 max-w-2xl mx-auto text-sm leading-relaxed px-4">
                                 {promoData
-                                    ? `Strategic discount activated! Your exclusive pricing for ${promoData.code} is now live.`
-                                    : "Pick the plan that best fits your search and analysis needs."}
+                                    ? `Strategic support activated! Your contribution for ${promoData.code} is now live.`
+                                    : "GridMind is a research platform. Contributions directly compensate the high computational costs of running LLM queries. No profit is made from these contributions."}
                             </p>
                         </div>
 
@@ -205,10 +205,10 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                                 }`}
                                         >
                                             {selectedPlanId === plan.id && <Loader2 className="w-3 h-3 animate-spin" />}
-                                            {isCurrent ? "Current Plan" :
-                                                plan.id === 'free' ? "Select Free" :
+                                            {isCurrent ? "Active Allocation" :
+                                                plan.id === 'free' ? "Access Free" :
                                                     (selectedPlanId === plan.id ? "Processing..." :
-                                                        (promoData?.discount === 100 ? "Claim Free Access" : "Upgrade Now"))}
+                                                        (promoData?.discount === 100 ? "Claim Support Access" : "Contribute & Support"))}
                                         </button>
                                     </motion.div>
                                 );
@@ -279,6 +279,47 @@ export default function PricingModal({ isOpen, onClose, currentTier, onSelectPla
                                     )}
                                 </div>
                             )}
+                        </div>
+
+                        {/* Structured Legal Disclosure Box - Full Width */}
+                        <div className="mt-12 p-8 rounded-[2.5rem] bg-amber-50/50 border border-amber-200/60 shadow-sm transition-all hover:bg-amber-50/80">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center border border-amber-200 shadow-sm">
+                                    <ShieldAlert className="w-4 h-4 text-amber-600" />
+                                </div>
+                                <h5 className="text-[11px] font-bold text-amber-900 uppercase tracking-[0.2em] leading-none">
+                                    NON-COMMERCIAL DISCLOSURE
+                                </h5>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2.5">
+                                        <Scale className="w-3.5 h-3.5 text-amber-700" />
+                                        <span className="text-[10px] font-extrabold text-amber-900 uppercase tracking-widest">NO SERVICE SALE</span>
+                                    </div>
+                                    <p className="text-[11px] text-amber-800/90 leading-relaxed font-medium">
+                                        GridMind <strong>does not sell</strong> AI services for profit. The platform is a research library.
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2.5">
+                                        <Cpu className="w-3.5 h-3.5 text-amber-700" />
+                                        <span className="text-[10px] font-extrabold text-amber-900 uppercase tracking-widest">COST RECOVERY</span>
+                                    </div>
+                                    <p className="text-[11px] text-amber-800/90 leading-relaxed font-medium">
+                                        Payments are a 1-to-1 compensation for the <strong>high computational token costs</strong> of neural inference.
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2.5">
+                                        <Activity className="w-3.5 h-3.5 text-amber-700" />
+                                        <span className="text-[10px] font-extrabold text-amber-900 uppercase tracking-widest">COMMUNITY IMPACT</span>
+                                    </div>
+                                    <p className="text-[11px] text-amber-800/90 leading-relaxed font-medium">
+                                        Your support enables the <strong>continued indexing</strong> of WBERC/WBSEDCL intelligence.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
                         <button

@@ -44,7 +44,7 @@ const NAV_LINKS = [
     { name: "The Solution", id: "hero" },
     { name: "Regulatory Scope", id: "regulatory-scope" },
     { name: "Institutional", id: "institutional" },
-    { name: "Pricing", id: "pricing" },
+    { name: "Contributions", id: "pricing" },
     { name: "About", id: "about" },
 ] as const;
 
@@ -100,31 +100,28 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
     }, [displayedQ, displayedAPre, displayedAHighlight, qaPhase, qaIndex]);
 
     useEffect(() => {
-        const sectionIds = NAV_LINKS.map((link) => link.id);
+        const observerOptions = {
+            root: null,
+            rootMargin: '-20% 0px -70% 0px',
+            threshold: 0
+        };
 
-        const updateActiveSection = () => {
-            const scrollPosition = window.scrollY + 140;
-            let current = sectionIds[0];
-
-            for (const id of sectionIds) {
-                const el = document.getElementById(id);
-                if (!el) continue;
-                if (scrollPosition >= el.offsetTop) {
-                    current = id;
+        const observerCallback = (entries: IntersectionObserverEntry[]) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    setActiveSection(entry.target.id);
                 }
-            }
-
-            setActiveSection(current);
+            });
         };
 
-        updateActiveSection();
-        window.addEventListener("scroll", updateActiveSection, { passive: true });
-        window.addEventListener("resize", updateActiveSection);
+        const observer = new IntersectionObserver(observerCallback, observerOptions);
+        
+        NAV_LINKS.forEach(link => {
+            const el = document.getElementById(link.id);
+            if (el) observer.observe(el);
+        });
 
-        return () => {
-            window.removeEventListener("scroll", updateActiveSection);
-            window.removeEventListener("resize", updateActiveSection);
-        };
+        return () => observer.disconnect();
     }, []);
 
     const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
@@ -545,7 +542,7 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                 <div className="mx-auto max-w-7xl px-6">
                 <div className="mb-14 flex flex-col items-center text-center">
                     <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-900">
-                        Simple Pricing
+                        API Cost Compensation
                     </h2>
                 </div>
 
@@ -586,7 +583,7 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                                         : "bg-slate-200 text-slate-900 hover:bg-slate-300"
                                         }`}
                                 >
-                                    Choose Plan
+                                    Contribute & Support
                                 </button>
                             </motion.div>
                         );

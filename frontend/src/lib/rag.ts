@@ -294,6 +294,14 @@ export async function retrieve(
   const uniqueChunks = Array.from(new Map(allChunkResults.map(c => [c.id, c])).values());
   const rerankedChunks = await rerankChunks(question, uniqueChunks);
 
+  // --- DEBUG LOGGING: RETRIEVED CHUNKS ---
+  console.log(`\n--- [DEBUG] RETRIEVED CHUNKS (${rerankedChunks.length}) ---`);
+  rerankedChunks.forEach((c, i) => {
+    console.log(`[Chunk ${i+1}] Ref: ${c.ref} | Sim: ${c.similarity?.toFixed(4)}`);
+    console.log(`Content: ${c.content.substring(0, 150)}...`);
+    console.log('---');
+  });
+
   const seen = new Set<string>();
   const docIds: string[] = [];
   for (const row of rerankedChunks) {

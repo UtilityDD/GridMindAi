@@ -22,33 +22,31 @@ export default function LegalPage() {
                 </div>
 
                 <div className="space-y-16">
-
                     {/* Privacy Policy */}
                     <section id="privacy" className="scroll-mt-20">
                         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
                             <span className="w-8 h-px bg-indigo-500/50" />
                             Privacy Policy
                         </h2>
-                        <div className="prose prose-invert max-w-none space-y-4 text-slate-400 leading-relaxed">
-                            <p>At <strong>GridMind AI</strong>, we take your data security and privacy seriously. This policy explains how we handle your information.</p>
+                        <div className="prose prose-invert max-w-none space-y-4 text-slate-400 leading-relaxed text-sm">
+                            <p>At <strong>GridMind AI</strong>, we prioritize the confidentiality of your strategic inquiries. This policy outlines our data handling frameworks.</p>
 
-                            <h3 className="text-white font-semibold mt-6">1. Information We Collect</h3>
-                            <p>We collect only the information necessary to provide our strategic search services:</p>
-                            <ul className="list-disc pl-6 space-y-2">
-                                <li><strong>Account Information:</strong> When you sign in with Google or Email, we store your email address and name to manage your subscription tier.</li>
-                                <li><strong>Usage Data:</strong> We track the number of queries made to manage your daily/monthly limits.</li>
-                                <li><strong>Query Metadata:</strong> We may store search keywords to improve retrieval accuracy (this is not linked to your identity in our analytics).</li>
+                            <h3 className="text-white font-semibold mt-6 uppercase tracking-widest text-[11px]">1. Strategic Intelligence Data</h3>
+                            <p>We collect and manage only the data essential for precision retrieval:</p>
+                            <ul className="list-disc pl-6 space-y-2 mb-4">
+                                <li><strong>Identity Management:</strong> We utilize Google Auth and Supabase to uniquely identify users for subscription tier enforcement and customized experience.</li>
+                                <li><strong>Query Telemetry:</strong> To improve our neural reranking, we log search queries and feedback. No sensitive personal data should be entered into the query field.</li>
+                                <li><strong>Vector Embeddings:</strong> We store mathematical representations (vectors) of regulatory documents. These are non-reversible and used solely for semantic matching via Pinecone/Supabase.</li>
                             </ul>
 
-                            <h3 className="text-white font-semibold mt-6">2. Third-Party Services</h3>
-                            <p>We use trusted infrastructure to power GridMind AI:</p>
-                            <ul className="list-disc pl-6 space-y-2">
-                                <li><strong>Supabase:</strong> Our database and authentication provider.</li>
-                                <li><strong>Google/Gemini:</strong> Used for generating embeddings and AI responses. Your personal identity is never shared with the AI models.</li>
-                            </ul>
+                            <h3 className="text-white font-semibold mt-6 uppercase tracking-widest text-[11px]">2. Computational Partners</h3>
+                            <p>Your queries are processed through high-security APIs (Gemini, Groq, SambaNova). No permanent storage of your queries is maintained by these providers beyond the transient inference window.</p>
 
-                            <h3 className="text-white font-semibold mt-6">3. Data Security</h3>
-                            <p>Your data is encrypted at rest and in transit. We never sell your personal information or search history to third parties.</p>
+                            <h3 className="text-white font-semibold mt-6 uppercase tracking-widest text-[11px]">3. Data Sovereignty</h3>
+                            <p>You may request the deletion of your account and associated telemetry at any time. We maintain a zero-sale policy regarding your strategic search history.</p>
+
+                            <h3 className="text-white font-semibold mt-6 uppercase tracking-widest text-[11px]">4. Community Submissions</h3>
+                            <p>When you contribute a "Reference File" via the Contribution Vault, we store the file content and the uploader's email address for audit and attribution purposes. This information is accessible only to platform administrators.</p>
                         </div>
                     </section>
 
@@ -56,22 +54,35 @@ export default function LegalPage() {
                     <section id="terms" className="scroll-mt-20">
                         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
                             <span className="w-8 h-px bg-indigo-500/50" />
-                            Terms of Service
+                            Terms of Service & Legal Disclaimer
                         </h2>
-                        <div className="prose prose-invert max-w-none space-y-4 text-slate-400 leading-relaxed">
-                            <p>By using GridMind AI, you agree to the following terms and conditions.</p>
+                        <div className="prose prose-invert max-w-none space-y-4 text-slate-400 leading-relaxed text-sm">
+                            <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-8">
+                                <p className="text-amber-400 font-bold mb-2 uppercase tracking-widest text-[10px]">⚖️ Legal Mandate:</p>
+                                <p className="text-slate-300 italic text-xs leading-relaxed">
+                                    "By accessing GridMind AI, you acknowledge that this is a <strong>Strategic Research Index</strong> and NOT an official government portal. AI responses are synthesized and MUST be verified against original departmental gazettes."
+                                </p>
+                            </div>
 
-                            <h3 className="text-white font-semibold mt-6">1. Use of Service</h3>
-                            <p>GridMind AI is a strategic research tool. While we aim for 100% accuracy, AI-generated responses should always be verified against oficial departmental circulars before taking legal or operational action.</p>
+                            <h3 className="text-white font-semibold mt-6 uppercase tracking-widest text-[11px]">1. Limitation of Liability (Neural Hallucinations)</h3>
+                            <p>AI models periodically generate inaccurate or "hallucinated" tactical information. GridMind AI and its developers are not liable for any operational losses, financial errors, or legal disputes arising from actions taken based on synthesized responses.</p>
 
-                            <h3 className="text-white font-semibold mt-6">2. Tier Limits</h3>
-                            <p>Free (Basic) users are subject to daily and monthly query limits. These limits are reset automatically and cannot be transferred.</p>
+                            <h3 className="text-white font-semibold mt-6 uppercase tracking-widest text-[11px]">2. No Official Affiliation</h3>
+                            <p>GridMind AI is an independent platform for regulatory research. We are NOT affiliated with, endorsed by, or authorized by **WBSEDCL**, **WBERC**, **Ministry of Power**, or any other government authority. All trademarks remain the property of their respective owners.</p>
 
-                            <h3 className="text-white font-semibold mt-6">3. Intellectual Property</h3>
-                            <p>The code, brand, and design of GridMind AI are the intellectual property of its developers. Users may not attempt to scrape, reverse engineer, or redistribute our proprietary document indices.</p>
+                            <h3 className="text-white font-semibold mt-6 uppercase tracking-widest text-[11px]">3. Source of Truth Hierarchy</h3>
+                            <p>In all instances of conflict, the **Original Departmental Circular**, **State Gazette**, or **Official Regulatory Order** shall override any information provided by GridMind AI. Our the system is a reference assistant, not an authority.</p>
+
+                            <h3 className="text-white font-semibold mt-6 uppercase tracking-widest text-[11px]">4. Intellectual Property & Redistribution</h3>
+                            <p>While the circulars themselves are public domain records, our <strong>Proprietary Neural Index</strong>, design, and retrieval architecture are protected. Users are prohibited from bulk-downloading, scraping, or mass-redistributing documents hosted in our viewer to third-party platforms without explicit authorization.</p>
+
+                            <h3 className="text-white font-semibold mt-6 uppercase tracking-widest text-[11px]">5. Error Reporting & Verification</h3>
+                            <p>Users bear the responsibility to use the built-in "Report" feature to notify developers of missing 2024-25 circulars or analytical errors. Your proactive reporting maintains the platform's strategic fidelity.</p>
+
+                            <h3 className="text-white font-semibold mt-6 uppercase tracking-widest text-[11px]">6. Community-Sourced Content (User Uploads)</h3>
+                            <p>GridMind includes a "Contribution Vault" for community-sourced reference materials. By uploading, you affirm that the content does not violate third-party copyrights. GridMind acts as a passive service provider (Safe Harbor) and is <strong>not liable</strong> for the legal provenance of user-uploaded files. Any infringing content will be removed upon valid DMCA/Copyright take-down requests.</p>
                         </div>
                     </section>
-
                 </div>
 
                 {/* Footer */}

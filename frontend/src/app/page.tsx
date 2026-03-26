@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, useMemo, MouseEvent as ReactMouseEvent } from "react";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -26,13 +27,17 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/components/AuthProvider";
-import LoginPage from "@/components/LoginPage";
-import Sidebar from "@/components/Sidebar";
 import { getSupabase } from "@/lib/supabase";
-import PricingModal from "@/components/PricingModal";
-import DisclaimerModal from "@/components/DisclaimerModal";
-import LiveStats from "@/components/LiveStats";
-import LandingPage from "@/components/LandingPage";
+import SearchGuidanceModal from "@/components/SearchGuidanceModal";
+
+// Dynamic Imports for Performance Optimization (Lazy Loading)
+const LandingPage = dynamic(() => import("@/components/LandingPage"), { ssr: true });
+const LoginPage = dynamic(() => import("@/components/LoginPage"), { ssr: false });
+const Sidebar = dynamic(() => import("@/components/Sidebar"), { ssr: false });
+const PricingModal = dynamic(() => import("@/components/PricingModal"), { ssr: false });
+const DisclaimerModal = dynamic(() => import("@/components/DisclaimerModal"), { ssr: false });
+const LiveStats = dynamic(() => import("@/components/LiveStats"), { ssr: false });
+const ContributionVault = dynamic(() => import("@/components/ContributionVault"), { ssr: false });
 
 interface Source {
   doc_id: string;
@@ -194,7 +199,8 @@ export default function Home() {
   const [showDashboard, setShowDashboard] = useState(false);
   const [clarificationData, setClarificationData] = useState<{ keyword: string, title: string, options: string[], originalQuery: string } | null>(null);
   const [showLogin, setShowLogin] = useState(false);
-
+  const [showGuidanceModal, setShowGuidanceModal] = useState(false);
+  
 
 
 
@@ -509,6 +515,15 @@ export default function Home() {
     const question = (q || query).trim();
     if (!question || loading) return;
 
+    // Guidance Modal logic: Show only for first-time or explicit manual triggers
+    if (typeof window !== "undefined" && !q) {
+      const seen = localStorage.getItem("gridmind_guidance_seen");
+      if (!seen) {
+        setShowGuidanceModal(true);
+        return;
+      }
+    }
+
     // Intermediate Clarification Step (Non-AI)
     if (!q) { // Only check if user is typing a new query, not clicking a history item
       const lowerQ = question.toLowerCase();
@@ -629,6 +644,19 @@ export default function Home() {
   return (
     <div className="flex h-screen overflow-hidden">
       <DisclaimerModal />
+      <SearchGuidanceModal 
+        isOpen={showGuidanceModal} 
+        onClose={() => {
+          setShowGuidanceModal(false);
+          localStorage.setItem("gridmind_guidance_seen", "true");
+          handleSubmit(); 
+        }}
+        onProceed={() => {
+          setShowGuidanceModal(false);
+          localStorage.setItem("gridmind_guidance_seen", "true");
+          handleSubmit();
+        }}
+      />
       <Sidebar
         userEmail={user?.email || ""}
         onSignOut={signOut}
@@ -1020,7 +1048,7 @@ export default function Home() {
                             <div className="flex items-center gap-1.5 text-slate-700 hover:text-blue-600 transition-colors group cursor-default">
                               <Cpu className="w-3.5 h-3.5" />
                               <span className="text-[9px] font-bold uppercase tracking-[0.1em] max-w-0 group-hover:max-w-[200px] opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap overflow-hidden">
-                                {result.model_used}
+                                {result.model_used?.replace(/\s*\(\s*pool\s*\)/gi, "").replace(/pool/gi, "").replace(/\s*\(\s*\)/g, "").trim()}
                               </span>
                             </div>
                             <div className="w-[1px] h-2.5 bg-slate-300" />
@@ -1196,14 +1224,6 @@ function InlinePdfViewer({
           </h3>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          <a
-            href={source.url}
-            download
-            className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors text-slate-500 hover:text-blue-600"
-            title="Download PDF"
-          >
-            <Download className="w-4 h-4" />
-          </a>
           <button
             onClick={onClose}
             className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors text-slate-500 hover:text-slate-800"
@@ -1212,6 +1232,14 @@ function InlinePdfViewer({
             <X className="w-4 h-4" />
           </button>
         </div>
+      </div>
+
+      {/* Legal Enforcement Banner (Phase 18) */}
+      <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center gap-3 select-none">
+        <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+        <p className="text-[10px] leading-tight text-amber-900 font-medium">
+          <span className="font-bold uppercase tracking-wider">Reference Archive:</span> Not an official copy. For legal purposes, refer only to the Original Gazette or official authority website.
+        </p>
       </div>
 
       {/* PDF Content */}
@@ -1280,12 +1308,13 @@ function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: {
   useEffect(() => {
     if (displayedLength >= safeText.length) return;
 
+    // Burst mode: 5 characters per 1ms for "Very Fast" response simulation
     const timer = setTimeout(() => {
-      setDisplayedLength(prev => Math.min(prev + 1, safeText.length));
-    }, speed);
+      setDisplayedLength(prev => Math.min(prev + 5, safeText.length));
+    }, 1);
 
     return () => clearTimeout(timer);
-  }, [displayedLength, safeText, speed]);
+  }, [displayedLength, safeText]);
 
   const isComplete = displayedLength >= safeText.length;
 
@@ -1335,18 +1364,21 @@ function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: {
       return url;
     });
 
-    // 3. Markdown Table Fixer — Structured Parser (handles LLM squashing entire tables into one line)
+    // 3. Markdown Table Fixer — Advanced Parser (handles missing newlines and LLM squashing)
     const repairSquashedTables = (input: string): string => {
-      const lines = input.split('\n');
+      // First, ensure all tables have a mandatory blank line before them
+      // catch: text| Sl No | OR text\n| Sl No |
+      let fixedInput = input.replace(/([^\n])(\s*\|\s*[^\s|][^|\n]+\|\s*\n?\s*\|\s*[-: ]+\s*\|)/g, '$1\n\n$2');
+
+      const lines = fixedInput.split('\n');
       const result: string[] = [];
 
       for (const line of lines) {
-        // Check if this line has a squashed table (separator + data pipes on same line)
+        // DETECT squashed table: separator + data pipes on same line
         const hasSep = /\|\s*---\s*\|/.test(line);
         const pipeCount = (line.match(/\|/g) || []).length;
 
         if (hasSep && pipeCount > 6) {
-          console.log('[GridMind Table Repair] DETECTED squashed table. Pipes:', pipeCount);
           // Find where the table starts (first |)
           const firstPipeIdx = line.indexOf('|');
           const beforeTable = firstPipeIdx > 0 ? line.substring(0, firstPipeIdx).trimEnd() : '';
@@ -1357,18 +1389,15 @@ function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: {
           const afterTable = tableStr.substring(lastPipeIdx + 1).trim();
           const pureTable = tableStr.substring(0, lastPipeIdx + 1);
 
-          // Count columns from separator row
+          // Reconstruct with proper newlines
           const sepMatch = pureTable.match(/((?:\|\s*-{3,}\s*)+\|)/);
           if (!sepMatch) { result.push(line); continue; }
           const colCount = (sepMatch[0].match(/-{3,}/g) || []).length;
-
-          // Split the pure table by | and remove leading/trailing empties
           const parts = pureTable.split('|');
-          const cells = parts.slice(1, -1); // ["cell1", "cell2", ..., "", "---", ...]
-
-          // Group into rows: colCount cells + 1 empty/whitespace separator between rows
+          const cells = parts.slice(1, -1);
           const rowSize = colCount + 1;
           const rows: string[] = [];
+          
           for (let i = 0; i < cells.length; i += rowSize) {
             const rowCells = cells.slice(i, i + colCount);
             if (rowCells.length > 0) {
@@ -1376,17 +1405,6 @@ function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: {
             }
           }
 
-          // Handle remainder (last row may not have a trailing separator)
-          const remainder = cells.length % rowSize;
-          if (remainder > 0 && remainder === colCount) {
-            // Already handled by loop — the last slice picks up exactly colCount cells
-          } else if (remainder > 0 && remainder < colCount) {
-            // Partial last row (shouldn't happen with well-formed tables, but be safe)
-            const lastCells = cells.slice(cells.length - remainder);
-            rows.push('| ' + lastCells.map(c => c.trim()).join(' | ') + ' |');
-          }
-
-          // Reconstruct with proper newlines
           if (beforeTable) {
             result.push(beforeTable);
             result.push(''); // blank line before table
@@ -1448,24 +1466,24 @@ function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: {
       );
     },
     table: ({ children }: any) => (
-      <div className="my-6 overflow-x-auto border border-slate-200 rounded-xl shadow-sm">
-        <table className="min-w-full divide-y divide-slate-200 text-[13px]">
+      <div className="my-6 overflow-x-auto border border-slate-200 rounded-xl shadow-sm bg-white">
+        <table className="min-w-full border-collapse text-[13px] leading-relaxed">
           {children}
         </table>
       </div>
     ),
-    thead: ({ children }: any) => <thead className="bg-slate-50">{children}</thead>,
+    thead: ({ children }: any) => <thead className="bg-slate-50/80 border-b border-slate-200">{children}</thead>,
     th: ({ children }: any) => (
-      <th className="px-4 py-3 text-left font-black text-slate-700 uppercase tracking-widest border-b border-slate-200">
+      <th className="px-5 py-3.5 text-left font-extrabold text-slate-800 uppercase tracking-widest text-[11px] whitespace-nowrap">
         {children}
       </th>
     ),
     td: ({ children }: any) => (
-      <td className="px-4 py-3 text-slate-600 border-b border-slate-100 last:border-b-0 leading-relaxed font-medium">
+      <td className="px-5 py-3 text-slate-600 border-b border-slate-100 last:border-b-0 font-medium">
         {children}
       </td>
     ),
-    tr: ({ children }: any) => <tr className="hover:bg-slate-50/50 transition-colors last:border-b-0">{children}</tr>,
+    tr: ({ children }: any) => <tr className="hover:bg-blue-50/30 transition-colors even:bg-slate-50/30">{children}</tr>,
   };
   if (isComplete) {
     return (

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { BrainCircuit, ChevronRight, History, LogOut, MessageSquare, X, PanelLeftClose, PanelLeftOpen, Cpu, Menu, AlertCircle, Lock } from "lucide-react";
+import { BrainCircuit, ChevronRight, History, LogOut, MessageSquare, X, PanelLeftClose, PanelLeftOpen, Cpu, Menu, AlertCircle, Lock, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import ContributionVault from "./ContributionVault";
 
 interface Source {
     doc_id: string;
@@ -46,8 +47,15 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick, open, onClose, userTier = "free", onUpgradeClick, onNewInquiry, collapsed = false, onToggleCollapse, usage }: SidebarProps) {
+    const [showVault, setShowVault] = useState(false);
+
     return (
         <>
+            <ContributionVault 
+                isOpen={showVault} 
+                onClose={() => setShowVault(false)} 
+                userEmail={userEmail} 
+            />
             {/* Desktop: collapsible sidebar */}
             <motion.aside
                 initial={false}
@@ -68,6 +76,7 @@ export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick,
                     onToggleCollapse={onToggleCollapse}
                     usage={usage}
                     collapsed={collapsed}
+                    onVaultOpen={() => setShowVault(true)}
                 />
             </motion.aside>
 
@@ -92,7 +101,19 @@ export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick,
                             transition={{ type: "spring", damping: 30, stiffness: 300 }}
                             className="fixed top-0 left-0 h-full w-72 z-[100] bg-white border-r border-slate-200 flex flex-col md:hidden shadow-2xl"
                         >
-                            <SidebarContent userEmail={userEmail} onSignOut={onSignOut} history={history} onHistoryClick={onHistoryClick} onClose={onClose} showClose={true} userTier={userTier} onUpgradeClick={onUpgradeClick} onNewInquiry={onNewInquiry} usage={usage} />
+                            <SidebarContent 
+                                userEmail={userEmail} 
+                                onSignOut={onSignOut} 
+                                history={history} 
+                                onHistoryClick={onHistoryClick} 
+                                onClose={onClose} 
+                                showClose={true} 
+                                userTier={userTier} 
+                                onUpgradeClick={onUpgradeClick} 
+                                onNewInquiry={onNewInquiry} 
+                                usage={usage} 
+                                onVaultOpen={() => setShowVault(true)}
+                            />
                         </motion.aside>
                     </>
                 )}
@@ -101,10 +122,14 @@ export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick,
     );
 }
 
+interface SidebarContentProps extends SidebarProps {
+    showClose: boolean;
+    onVaultOpen: () => void;
+}
 
 function SidebarContent({
-    userEmail, onSignOut, history, onHistoryClick, onClose, showClose, userTier, onUpgradeClick, onNewInquiry, onToggleCollapse, usage, collapsed
-}: SidebarProps & { showClose: boolean }) {
+    userEmail, onSignOut, history, onHistoryClick, onClose, showClose, userTier, onUpgradeClick, onNewInquiry, onToggleCollapse, usage, collapsed, onVaultOpen
+}: SidebarContentProps) {
     const [logoHovered, setLogoHovered] = useState(false);
     const progress = usage ? Math.min(100, (usage.dailyCount / usage.dailyLimit) * 100) : 0;
 
@@ -197,6 +222,17 @@ function SidebarContent({
                         )}
                     </div>
                 </div>
+
+                <div className="space-y-2">
+                    {!collapsed && <label className="px-3 text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1 block">Community</label>}
+                    <button 
+                        onClick={() => { onVaultOpen(); onClose(); }}
+                        className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl border border-blue-200 bg-blue-50 text-blue-600 text-xs font-bold transition-all hover:bg-blue-100 group shadow-sm`}
+                    >
+                        <ShieldCheck className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        {!collapsed && <span>Contribution Vault</span>}
+                    </button>
+                </div>
             </div>
 
             {/* Consumption Meter */}
@@ -237,7 +273,7 @@ function SidebarContent({
                         <p className="text-[9px] text-slate-600 font-medium leading-tight">
                             {usage.isTrialExpired 
                                 ? "Your 30-day trial has concluded." 
-                                : <>Daily limit resets in ~{24 - new Date().getHours()}h. {(usage.daysUntilExpiry !== undefined && usage.daysUntilExpiry !== null) ? <span className="text-red-500 font-bold ml-1">Expires in {usage.daysUntilExpiry} days.</span> : ""}</>}
+                                : <>Daily limit resets in approx. {24 - new Date().getHours()}h. {(usage.daysUntilExpiry !== undefined && usage.daysUntilExpiry !== null) ? <span className="text-red-500 font-bold ml-1">Expires in {usage.daysUntilExpiry} days.</span> : ""}</>}
                         </p>
                     )}
                     {usage.isTrialExpired && !collapsed && (

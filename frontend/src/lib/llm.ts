@@ -208,6 +208,13 @@ export async function generateAnswer(
   model?: string | null,
   tier: string = "free"
 ): Promise<GenerateResult> {
+  // --- DEBUG LOGGING: FINAL PROMPT ---
+  const debugUserPrompt = buildUserPrompt(question, context, sources, verbosity);
+  console.log(`\n--- [DEBUG] FINAL PROMPT SENT TO API ---`);
+  console.log(`[SYSTEM PROMPT]:\n${SYSTEM_PROMPT.substring(0, 300)}... (truncated)`);
+  console.log(`[USER PROMPT]:\n${debugUserPrompt}`);
+  console.log(`--- [END DEBUG PROMPT] ---\n`);
+
   // 1. Explicit Model Selection
   if (model && (GROQ_MODELS.has(model) || model === GEMINI_MODEL)) {
     try {
@@ -243,7 +250,7 @@ export async function generateAnswer(
       if (provider === "gemini") {
         if (Pools.Gemini.size > 0) {
           const answer = await callGemini(question, context, sources, verbosity);
-          return { answer, sources, modelUsed: `Gemini/Flash (Pool)` };
+          return { answer: appendLegalFootnote(answer), sources, modelUsed: `Gemini/Flash (Pool)` };
         }
       }
 
@@ -251,21 +258,21 @@ export async function generateAnswer(
         if (Pools.Groq.size > 0) {
           const groqModel = "llama-3.3-70b-versatile";
           const answer = await callGroq(question, context, sources, groqModel, verbosity);
-          return { answer, sources, modelUsed: `Groq/Llama-70B (Pool)` };
+          return { answer: appendLegalFootnote(answer), sources, modelUsed: `Groq/Llama-70B (Pool)` };
         }
       }
 
       if (provider === "sambanova") {
         if (Pools.SambaNova.size > 0) {
           const answer = await callSambaNova(question, context, sources, verbosity);
-          return { answer, sources, modelUsed: `SambaNova/Llama-70B (Pool)` };
+          return { answer: appendLegalFootnote(answer), sources, modelUsed: `SambaNova/Llama-70B (Pool)` };
         }
       }
 
       if (provider === "github") {
         if (Pools.GitHub.size > 0) {
           const answer = await callGitHubModels(question, context, sources, verbosity);
-          return { answer, sources, modelUsed: `GitHub/GPT-4o (Pool)` };
+          return { answer: appendLegalFootnote(answer), sources, modelUsed: `GitHub/GPT-4o (Pool)` };
         }
       }
 
@@ -273,7 +280,7 @@ export async function generateAnswer(
         // Fallback for real OpenAI keys if they exist in GITHUB or OPENROUTER pools
         // or just use GitHub pools as OpenAI proxy for free-feeling experiences
         const answer = await callOpenAI(question, context, sources, verbosity);
-        return { answer, sources, modelUsed: `OpenAI/Mini (Pool)` };
+        return { answer: appendLegalFootnote(answer), sources, modelUsed: `OpenAI/Mini (Pool)` };
       }
 
       if (provider === "openrouter") {
@@ -281,7 +288,7 @@ export async function generateAnswer(
           const orModel = OPENROUTER_MODELS[Math.floor(Math.random() * OPENROUTER_MODELS.length)];
           const answer = await callOpenRouter(question, context, sources, verbosity, orModel);
           const shortName = orModel.split("/").pop() || orModel;
-          return { answer, sources, modelUsed: `OR/${shortName} (Pool)` };
+          return { answer: appendLegalFootnote(answer), sources, modelUsed: `OR/${shortName} (Pool)` };
         }
       }
     } catch (e: any) {
@@ -291,9 +298,18 @@ export async function generateAnswer(
 
   console.error(`[Tier: ${tier}] MEGA-POOL EXHAUSTED for: "${question.substring(0, 50)}..."`);
 
-  return {
-    answer: "I'm sorry, I'm currently experiencing extreme demand across all neural nodes. Please try again in a few moments.",
-    sources,
-    modelUsed: "none",
+  return { 
+    answer: "I'm sorry, I'm currently experiencing high load across all neural providers. Please try again in a moment.", 
+    sources, 
+    modelUsed: "Error/None" 
   };
+}
+
+/**
+ * Appends a mandatory legal disclaimer/footnote to the AI answer.
+ * Phase 18: Risk Mitigation
+ */
+export function appendLegalFootnote(answer: string): string {
+  const disclaimer = `\n\n---\n*Disclaimer: This response is synthesized by AI using available WBSEDCL/WBERC documents. It does NOT constitute legal advice or an official interpretation. For legal purposes, please refer to the Original Gazette or the official authority website.*`;
+  return `${answer}${disclaimer}`;
 }
