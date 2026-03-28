@@ -238,11 +238,11 @@ export async function generateAnswer(
     sequence = ["gemini", "openai", "github", "groq", "sambanova", "openrouter"];
     console.log(`[Tier: ${tier}] Mega-Pool Paid Strategy Enabled`);
   } else {
-    // Basic/Free: Weights between Groq and SambaNova -> GitHub -> OpenRouter
-    // We shuffle Groq/SambaNova to distribute load
-    const primaries = ["groq", "sambanova"].sort(() => Math.random() - 0.5);
-    sequence = [...primaries, "github", "openrouter"];
-    console.log(`[Tier: ${tier}] Mega-Pool Free Strategy Enabled (Primaries: ${primaries.join(", ")})`);
+    // Basic/Free: Randomly shuffle all available pools to give different models' responses
+    // If one fails, it moves to the next randomly chosen fallback.
+    const allProviders = ["gemini", "groq", "sambanova", "github", "openai", "openrouter"];
+    sequence = allProviders.sort(() => Math.random() - 0.5);
+    console.log(`[Tier: ${tier}] Mega-Pool Free Strategy Random Shuffle: [${sequence.join(" -> ")}]`);
   }
 
   for (const provider of sequence) {

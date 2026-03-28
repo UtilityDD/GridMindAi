@@ -15,28 +15,28 @@ interface LandingPageProps {
 
 const QA_PAIRS = [
     {
+        q: "Documents for a new industrial connection?",
+        aPre: "For industrial load, the primary requirement is a valid trade license and ",
+        aHighlight: "land ownership/tenancy proof.",
+        source: "State Electricity Supply Code (Annexure 1)"
+    },
+    {
+        q: "CEA limit for voltage harmonic distortion?",
+        aPre: "As per CEA (Technical Standards), the Total Harmonic Distortion (THD) limit at the PCC is ",
+        aHighlight: "maximum 5%.",
+        source: "CEA Grid Standards (Manual of 2010)"
+    },
+    {
         q: "Restoration time for a blown fuse?",
         aPre: "In cities and towns, the distribution licensee must restore supply within ",
         aHighlight: "4 hours.",
         source: "WBERC Standard of Performance Regulations"
     },
     {
-        q: "Maximum load for single-phase connection?",
-        aPre: "A new connection can be provided on single-phase 230V if the contract demand is up to ",
-        aHighlight: "5 kW.",
-        source: "State Electricity Supply Code"
-    },
-    {
-        q: "Penalty for delayed electricity bill payment?",
-        aPre: "Delayed Payment Surcharge (DPS) is levied at the rate of ",
-        aHighlight: "1.25% per month.",
-        source: "State Tariff Order 2024-25"
-    },
-    {
-        q: "Timeframe to resolve billing disputes?",
-        aPre: "The licensee must resolve billing complaints and issue a corrected bill within ",
-        aHighlight: "15 days.",
-        source: "Consumer Grievance Redressal Forum Regulations"
+        q: "Higher scale eligibility under ROPA 2020?",
+        aPre: "Technical staff is eligible for the first higher scale after completing ",
+        aHighlight: "8 years of continuous service.",
+        source: "State Finance Department (ROPA Circular)"
     }
 ];
 

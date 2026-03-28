@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo, MouseEvent as ReactMouseEvent } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -68,35 +69,35 @@ interface UsageData {
 }
 
 const ALL_INTERESTING_QUERIES = [
-  "IS 1180 (Part 1): Distribution transformer losses?",
-  "IS 2026: Power transformer testing requirements?",
-  "WBERC Billing Code: KVAh vs kWh billing?",
-  "Late Payment Surcharge calculations (2024)?",
-  "Smart Meter reading frequency protocols?",
-  "Accuracy class for CT/PT in 33kV meters?",
+  "Documents required for a new industrial electric connection?",
+  "Specifications for 33KV VCB Outdoor switchgear (IS 13118)?",
+  "Higher scale eligibility after 16 years of service under ROPA 2020?",
+  "Testing requirements for ACSR Dog/Wolf conductors (IS 398)?",
+  "Minimum safety clearance for 33KV lines over residential buildings?",
+  "CEA limits for Total Harmonic Distortion (THD) at the PCC?",
+  "Procedure for name change in an existing electricity bill?",
+  "Penalty for unauthorized load extension (Section 126 vs 135)?",
+  "Testing protocols for 11/0.4 KV Distribution Transformers (IS 1180)?",
+  "Criteria for 'Very Good' vs 'Outstanding' ACR ratings for promotion?",
+  "Step-by-step procedure for Section 135 theft case assessment?",
+  "Maximum permissible leakage current in LV installations?",
   "WBERC SOP: Timeline for new 3-phase connection?",
-  "ERC regulations on Rooftop Solar (Gross vs Net)?",
-  "Section 135: Evidence required for tapping?",
+  "Technical specs for 33KV 400A Rocking Type Isolators?",
+  "IS 2026: Power transformer testing and loss requirements?",
+  "How to calculate Connected Load for a commercial building?",
   "Provisional assessment procedure for Section 126?",
-  "Network Design: Voltage Drop limits for 11kV?",
-  "11kV Feasibility: Fault level calculation norms?",
-  "IS 732: Wiring and safety earthing standards?",
-  "Security Deposit: 2 months vs 3 months rules?",
-  "Procedure for meter bypass theft detection?",
-  "HT connection: Transformation loss calculations?",
-  "Network basic: Capacitor bank sizing rules?",
-  "IS 3043: Code of practice for earthing?",
-  "ERC norms for 'Standard Performance' penalties?",
-  "Sag-tension limits for Dog conductor (33kV)?",
+  "Accuracy class for CT/PT in 33kV metering equipment?",
+  "Sag-tension limits for 33kV Dog conductor at 45°C?",
+  "WBERC Billing Code: KVAh vs kWh tariff rules?",
 ];
 
 const MOBILE_EXAMPLE_QUERIES = [
-  "IS 1180 Loss Norms?",
-  "Smart Meter Reading?",
-  "Act Section 135?",
-  "11kV Design Limits?",
-  "ERC Solar Rules?",
-  "SOP Connection Time?",
+  "New Connection Docs?",
+  "33KV Safety Clearances?",
+  "ROPA 2020 Higher Scale?",
+  "IS 1180 Transformer?",
+  "Section 135 Theft?",
+  "CEA Harmonic Limits?",
 ];
 
 const CLARIFICATION_MAP: Record<string, { title: string, options: string[] }> = {
@@ -1089,8 +1090,12 @@ export default function Home() {
           }
         </AnimatePresence >
 
-        <p className="pb-3 text-center text-[10px] text-slate-600 font-medium select-none">
-          GridMind AI can make mistakes. Verify strategic information.
+        <p className="pb-3 text-center text-[10px] text-slate-500 font-bold uppercase tracking-widest select-none space-x-2">
+          <span>GridMind AI can make mistakes. Verify strategic information.</span>
+          <span className="text-slate-300">|</span>
+          <Link href="/legal#privacy" className="text-blue-600 hover:underline decoration-blue-600/30 underline-offset-4">Privacy Policy</Link>
+          <span className="text-slate-300 text-[8px]">•</span>
+          <Link href="/legal#terms" className="text-blue-600 hover:underline decoration-blue-600/30 underline-offset-4">Terms of Use</Link>
         </p>
         </div>
 
