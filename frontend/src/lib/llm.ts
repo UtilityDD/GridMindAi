@@ -51,6 +51,7 @@ const Pools = {
   SambaNova: new KeyPool("SAMBANOVA_KEY_POOL", "SAMBANOVA_API_KEY"),
   GitHub: new KeyPool("GITHUB_KEY_POOL", "GITHUB_MODELS_KEY"),
   OpenRouter: new KeyPool("OPENROUTER_KEY_POOL", "OPENROUTER_API_KEY"),
+  OpenAI: new KeyPool("OPENAI_KEY_POOL", "OPENAI_API_KEY"),
 };
 
 // --- API Implementation Functions ---
@@ -136,10 +137,15 @@ async function callGenericCompletions(
   if (!apiKey) throw new Error(`No ${providerName} API keys configured`);
 
   const userPrompt = buildUserPrompt(question, context, sources, verbosity);
+  
+  // Fast-fail timeout to prevent mega-pool cascade latency
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
 
   try {
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
+      signal: controller.signal,
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
@@ -153,13 +159,15 @@ async function callGenericCompletions(
         stream: false,
       }),
     });
+    
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       const msg = errorData?.error?.message || response.statusText;
 
-      // If rate limited or unauthorized (expired key), try next key in pool
-      if ((response.status === 429 || response.status === 401 || response.status === 403) && retryCount < pool.size * 2) {
+      // If rate limited, unauthorized (expired key), or payload too large, try next key in pool
+      if ((response.status === 429 || response.status === 401 || response.status === 403 || response.status === 413) && retryCount < pool.size * 2) {
         console.warn(`${providerName} Key Issue (${response.status}). Rotating...`);
         return callGenericCompletions(pool, baseUrl, model, question, context, sources, verbosity, providerName, retryCount + 1);
       }
@@ -169,7 +177,11 @@ async function callGenericCompletions(
     const data = await response.json();
     return data.choices?.[0]?.message?.content ?? "";
   } catch (e: any) {
-    if (retryCount < pool.size && (e.message.includes("429") || e.message.includes("fetch"))) {
+    clearTimeout(timeoutId);
+    if (e.name === 'AbortError') {
+      throw new Error(`${providerName} Request Timeout (12s).`);
+    }
+    if (retryCount < pool.size && (e.message?.includes("429") || e.message?.includes("fetch"))) {
       return callGenericCompletions(pool, baseUrl, model, question, context, sources, verbosity, providerName, retryCount + 1);
     }
     throw e;
@@ -187,9 +199,7 @@ const callOpenRouter = (q: string, c: string, s: SourceMeta[], v: number, model:
   callGenericCompletions(Pools.OpenRouter, OPENROUTER_BASE_URL, model, q, c, s, v, "OpenRouter");
 
 const callOpenAI = (q: string, c: string, s: SourceMeta[], v: number) => {
-  // OpenAI often shares key with GitHub for users, but if they have a real sk-... key, use it.
-  const pool = Pools.GitHub.size > 0 ? Pools.GitHub : Pools.OpenRouter;
-  return callGenericCompletions(pool, "https://api.openai.com/v1", "gpt-4o-mini", q, c, s, v, "OpenAI");
+  return callGenericCompletions(Pools.OpenAI, "https://api.openai.com/v1", "gpt-4o-mini", q, c, s, v, "OpenAI");
 };
 
 // --- Main Interface ---
@@ -277,10 +287,10 @@ export async function generateAnswer(
       }
 
       if (provider === "openai") {
-        // Fallback for real OpenAI keys if they exist in GITHUB or OPENROUTER pools
-        // or just use GitHub pools as OpenAI proxy for free-feeling experiences
-        const answer = await callOpenAI(question, context, sources, verbosity);
-        return { answer: appendLegalFootnote(answer), sources, modelUsed: `OpenAI/Mini (Pool)` };
+        if (Pools.OpenAI.size > 0) {
+          const answer = await callOpenAI(question, context, sources, verbosity);
+          return { answer: appendLegalFootnote(answer), sources, modelUsed: `OpenAI/Mini (Pool)` };
+        }
       }
 
       if (provider === "openrouter") {

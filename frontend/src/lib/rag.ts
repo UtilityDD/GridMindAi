@@ -380,7 +380,15 @@ export function buildContext(result: RetrievalResult): {
     });
   }
 
-  return { context: contextParts.join("\n\n"), sources };
+  const finalContext = contextParts.join("\n\n");
+  const MAX_CONTEXT_CHARS = 24000;
+  
+  return { 
+    context: finalContext.length > MAX_CONTEXT_CHARS 
+      ? finalContext.substring(0, MAX_CONTEXT_CHARS) + "\n\n...[CONTENT TRUNCATED FOR MEGA-POOL API TOKEN LIMITS]..." 
+      : finalContext, 
+    sources 
+  };
 }
 
 function findMeta(
