@@ -248,10 +248,10 @@ export async function generateAnswer(
     sequence = ["gemini", "openai", "github", "groq", "sambanova", "openrouter"];
     console.log(`[Tier: ${tier}] Mega-Pool Paid Strategy Enabled`);
   } else {
-    // Basic/Free: Randomly shuffle all available pools to give different models' responses
+    // Basic/Free: Only use OpenRouter, Groq, and SambaNova randomly.
     // If one fails, it moves to the next randomly chosen fallback.
-    const allProviders = ["gemini", "groq", "sambanova", "github", "openai", "openrouter"];
-    sequence = allProviders.sort(() => Math.random() - 0.5);
+    const freeProviders = ["openrouter", "groq", "sambanova"];
+    sequence = freeProviders.sort(() => Math.random() - 0.5);
     console.log(`[Tier: ${tier}] Mega-Pool Free Strategy Random Shuffle: [${sequence.join(" -> ")}]`);
   }
 
@@ -320,6 +320,6 @@ export async function generateAnswer(
  * Phase 18: Risk Mitigation
  */
 export function appendLegalFootnote(answer: string): string {
-  const disclaimer = `\n\n---\n*Disclaimer: This response is synthesized by AI using available WBSEDCL/WBERC documents. It does NOT constitute legal advice or an official interpretation. For legal purposes, please refer to the Original Gazette or the official authority website.*`;
+  const disclaimer = `\n\n---\n*Disclaimer: This response is synthesized by AI using available WBSEDCL/WBERC documents. It does NOT constitute legal advice or an official interpretation. For legal purposes, please refer to the Original Gazette or the official authority website. Read our **[Privacy Policy](/legal#privacy)** and **[Terms of Use](/legal#terms)**.*`;
   return `${answer}${disclaimer}`;
 }
