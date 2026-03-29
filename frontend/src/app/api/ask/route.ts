@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { retrieve, buildContext, extractKeywords } from "@/lib/rag";
 import { generateAnswer } from "@/lib/llm";
+import { classifyQueryIntent } from "@/lib/router";
 import { checkBurstFromAnalytics } from "@/lib/rate-limiter";
 import type { SourceMeta } from "@/lib/rag";
 
@@ -139,14 +140,34 @@ export async function POST(req: NextRequest) {
   }
 
   const { context, sources } = buildContext(retrievalResult);
-  const result = await generateAnswer(
-    question,
-    context,
-    sources,
-    verbosity,
-    model,
-    userTier
-  );
+  
+  // SEMANTIC ROUTER: Predict intent to see if we can bypass the heavy Mega-Pool LLM
+  const intent = classifyQueryIntent(question);
+  
+  let result;
+  if (intent === 'DIRECT_SEARCH') {
+    let bypassAnswer = "I have retrieved the top regulatory documents matching your search from the GridMind database. Please find the source files linked below.\n\n";
+    
+    // Inject literal REF tags so the front-end markdown parser renders the document buttons
+    sources.forEach(s => {
+      bypassAnswer += `* **${s.title}**: [${s.ref}]\n`;
+    });
+
+    result = {
+      answer: bypassAnswer,
+      sources: sources,
+      modelUsed: "Fast-Search (Bypass)"
+    };
+  } else {
+    result = await generateAnswer(
+      question,
+      context,
+      sources,
+      verbosity,
+      model,
+      userTier
+    );
+  }
 
   // Filter sources to only those actually cited in the answer
   const answerLower = result.answer.toLowerCase();
