@@ -50,10 +50,11 @@ async function withGeminiRetry<T>(fn: (client: GoogleGenAI) => Promise<T>, retry
     return await fn(client);
   } catch (e: any) {
     const msg = e?.message?.toLowerCase() || "";
-    const isRetryable = msg.includes("429") || msg.includes("quota") || msg.includes("expired") || msg.includes("400");
+    // Allow rotation on 403/Permission Denied so we can bypass the isolated leaked API key
+    const isRetryable = msg.includes("429") || msg.includes("quota") || msg.includes("expired") || msg.includes("400") || msg.includes("403") || msg.includes("permission_denied") || msg.includes("leaked");
 
     if (isRetryable && retryCount < Pools.Gemini.size) {
-      console.warn(`RAG Gemini Key failed. Rotating... (${retryCount + 1}/${Pools.Gemini.size})`);
+      console.warn(`RAG Gemini Key failed (${msg.substring(0, 30)}...). Rotating... (${retryCount + 1}/${Pools.Gemini.size})`);
       return withGeminiRetry(fn, retryCount + 1);
     }
     throw e;

@@ -24,8 +24,10 @@ _blacklisted_keys = set() # Global blacklist for 403/leaked keys
 
 def _get_client(key=None) -> tuple[genai.Client, str]:
     """Gets a client and its key, prioritizing config.GEMINI_API_KEY."""
-    global_keys = [config.GEMINI_API_KEY] if config.GEMINI_API_KEY else []
-    full_pool = (global_keys + config.GEMINI_KEY_POOL)
+    if config.GEMINI_API_KEY:
+        full_pool = [config.GEMINI_API_KEY]
+    else:
+        full_pool = config.GEMINI_KEY_POOL
     
     global _pool_index
     if key is None:
@@ -110,9 +112,10 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
 
     logger.info("Total batches to process: %d (Batch Size: %d)", len(batches), batch_size)
     
-    # Use ThreadPoolExecutor for parallel embedding
-    # We use min(len(batches), num_keys * 2) to avoid over-saturating a single key
-    num_workers = min(10, len(batches)) 
+    # Use ThreadPoolExecutor for strict sequential embedding (RPM preservation)
+    # Gemini Free Tier allows 15 requests per minute maximum. 
+    # Parallel processing guarantees instant 429 lockouts.
+    num_workers = 1 
     
     final_results = [None] * len(batches)
     
@@ -125,7 +128,9 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
         for future in as_completed(future_to_batch):
             idx, batch_embeddings = future.result()
             final_results[idx] = batch_embeddings
-            logger.info("Completed Batch %d/%d", idx + 1, len(batches))
+            logger.info("Completed Batch %d/%d. Pacing API...", idx + 1, len(batches))
+            # Wait 4.5 seconds to guarantee we stay comfortably under 15 RPM
+            time.sleep(4.5)
 
     # Flatten results
     results = [emb for batch in final_results for emb in batch]

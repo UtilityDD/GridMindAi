@@ -15,10 +15,16 @@ logger = logging.getLogger(__name__)
 _pool_index = 0
 
 def _get_client(key=None) -> genai.Client:
-    """Gets a client for a specific key or the next one in the pool."""
+    """Gets a client for a specific key, exclusively using Paid Key if present."""
     global _pool_index
+    
+    if config.GEMINI_API_KEY:
+        full_pool = [config.GEMINI_API_KEY]
+    else:
+        full_pool = config.GEMINI_KEY_POOL
+        
     if key is None:
-        key = config.GEMINI_KEY_POOL[_pool_index % len(config.GEMINI_KEY_POOL)]
+        key = full_pool[_pool_index % len(full_pool)]
         _pool_index += 1
         
     return genai.Client(
