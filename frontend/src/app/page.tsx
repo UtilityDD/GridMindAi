@@ -1093,9 +1093,9 @@ export default function Home() {
         <p className="pb-3 text-center text-[10px] text-slate-500 font-bold uppercase tracking-widest select-none space-x-2">
           <span>GridMind AI can make mistakes. Verify strategic information.</span>
           <span className="text-slate-300">|</span>
-          <Link href="/legal#privacy" className="text-blue-600 hover:underline decoration-blue-600/30 underline-offset-4">Privacy Policy</Link>
+          <Link href="/privacy" className="text-blue-600 hover:underline decoration-blue-600/30 underline-offset-4">Privacy Policy</Link>
           <span className="text-slate-300 text-[8px]">•</span>
-          <Link href="/legal#terms" className="text-blue-600 hover:underline decoration-blue-600/30 underline-offset-4">Terms of Use</Link>
+          <Link href="/terms" className="text-blue-600 hover:underline decoration-blue-600/30 underline-offset-4">Terms of Use</Link>
         </p>
         </div>
 
@@ -1288,6 +1288,19 @@ function InlinePdfViewer({
             />
             {/* Blind overlay to hide the Google Viewer's native pop-out button */}
             <div className="absolute top-0 right-0 w-16 h-16 bg-transparent z-20 cursor-default" />
+            
+            {/* Takedown Notice Overlay */}
+            <div className="absolute bottom-0 inset-x-0 bg-slate-900/85 backdrop-blur-md border-t border-white/10 px-4 py-2 flex items-center justify-between z-20 shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.3)]">
+              <div className="flex items-center gap-2 overflow-hidden">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span className="text-[10px] text-slate-300 truncate tracking-wide">
+                   Document subject to community upload Safe Harbor conditions.
+                </span>
+              </div>
+              <Link href="/terms" className="text-[10px] text-amber-500 hover:text-amber-400 uppercase tracking-[0.1em] font-bold shrink-0 ml-4 transition-colors">
+                Know More
+              </Link>
+            </div>
           </div>
         )}
       </div>

@@ -666,8 +666,8 @@ export default function LandingPage({ onGetStarted, buttonLabel = "Get Started N
                     <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
                         <p className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.22em]">Decide Fast. Act Fast.</p>
                         <div className="flex items-center gap-6 text-[10px] text-slate-600 uppercase tracking-widest">
-                            <Link href="/legal#privacy" className="hover:text-blue-600 transition-colors">Privacy</Link>
-                            <Link href="/legal#terms" className="hover:text-blue-600 transition-colors">Terms</Link>
+                            <Link href="/privacy" className="hover:text-blue-600 transition-colors">Privacy</Link>
+                            <Link href="/terms" className="hover:text-blue-600 transition-colors">Terms</Link>
                             <span>© 2026 GridMind AI</span>
                         </div>
                     </div>
