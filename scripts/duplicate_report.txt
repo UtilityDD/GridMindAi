@@ -1,0 +1,12 @@
+[AMENDMENT] has 2 versions:
+   1. doc_id: 348595164737ea71 | raw_title: Amendment
+   2. doc_id: 6db5589bea99e852 | raw_title: Amendment
+   -> [DRY RUN] Would delete doc_id: 6db5589bea99e852
+[BULK POST PAID CUG MOBILE CONNECTION SERVICES FOR OFFICIALS OF WBSEDCL] has 2 versions:
+   1. doc_id: f10523c75ff3cb15 | raw_title: Bulk Post Paid CUG Mobile Connection & Services for Officials of WBSEDCL
+   2. doc_id: e1cf9f732d572664 | raw_title: Bulk Post Paid CUG Mobile Connection & Services for Officials of WBSEDCL
+   -> [DRY RUN] Would delete doc_id: e1cf9f732d572664
+[INCENTIVE SCHEME] has 2 versions:
+   1. doc_id: 2019b0a6d0979cf6 | raw_title: Incentive Scheme
+   2. doc_id: 9050246bc4b030cd | raw_title: Incentive Scheme
+   -> [DRY RUN] Would delete doc_id: 9050246bc4b030cd

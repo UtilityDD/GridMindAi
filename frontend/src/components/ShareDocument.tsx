@@ -2,13 +2,13 @@ import { useState, useRef, useEffect } from "react";
 import { X, CheckCircle2, AlertCircle, ShieldCheck, Upload, FileText, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface ContributionVaultProps {
+interface ShareDocumentProps {
     isOpen: boolean;
     onClose: () => void;
     userEmail: string;
 }
 
-export default function ContributionVault({ isOpen, onClose, userEmail }: ContributionVaultProps) {
+export default function ShareDocument({ isOpen, onClose, userEmail }: ShareDocumentProps) {
     const [status, setStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
     const [files, setFiles] = useState<File[]>([]);
     const [progress, setProgress] = useState(0);
@@ -74,7 +74,7 @@ export default function ContributionVault({ isOpen, onClose, userEmail }: Contri
             }, 500);
 
         } catch (err) {
-            console.error("Vault Error:", err);
+            console.error("Upload Error:", err);
             setStatus('error');
         }
     };
@@ -104,7 +104,7 @@ export default function ContributionVault({ isOpen, onClose, userEmail }: Contri
                                     <ShieldCheck className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-slate-800 text-sm">Contribution Vault</h3>
+                                    <h3 className="font-bold text-slate-800 text-sm">Share Document</h3>
                                     <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Community Files</p>
                                 </div>
                             </div>
@@ -135,12 +135,12 @@ export default function ContributionVault({ isOpen, onClose, userEmail }: Contri
                                         <CheckCircle2 className="w-8 h-8" />
                                     </div>
                                     <h4 className="font-bold text-slate-800 mb-1">Transmission Complete</h4>
-                                    <p className="text-xs text-slate-600">Documents have been vaulted successfully!</p>
+                                    <p className="text-xs text-slate-600">Documents have been shared successfully!</p>
                                     <button 
                                         onClick={onClose}
                                         className="mt-6 px-6 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold uppercase tracking-widest hover:bg-slate-800 transition-all"
                                     >
-                                        Close Vault
+                                        Close
                                     </button>
                                 </motion.div>
                             ) : status === 'uploading' ? (

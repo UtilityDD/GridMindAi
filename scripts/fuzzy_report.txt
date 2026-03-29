@@ -1,0 +1,14 @@
+⚠️ Found 3 pairs of fuzzy duplicates (names are very similar but not identical):
+
+[SIMILARITY: 95.9%]
+   A. doc_id: 495b0489704e1a05 | title: 'Modification of the Schedule of Delegation of power.'
+   B. doc_id: b709970103b1ba33 | title: 'Modification of Schedule of Delegation of Power'
+------------------------------------------------------------
+[SIMILARITY: 94.3%]
+   A. doc_id: 2507c486262f22a9 | title: 'Revised Rate of Contract for L.T. Mobile Van Service w.e.f. 01.07.2020'
+   B. doc_id: 3b8142d6a6e2d208 | title: 'Revised Rate Contract for L.T Mobile Van Service w.e.f. 01.01.2024'
+------------------------------------------------------------
+[SIMILARITY: 90.5%]
+   A. doc_id: 1d9e87b4f9035f0b | title: 'WBERC (Terms and Conditions of Tariff) (4th Amd) Regs, 2023 [SOR] - (i...'
+   B. doc_id: 5fced16ca6e3a074 | title: 'WBERC (Terms and Conditions of Tariff) (4th Amd) Regs, 2023 [Principal] - 3...'
+------------------------------------------------------------

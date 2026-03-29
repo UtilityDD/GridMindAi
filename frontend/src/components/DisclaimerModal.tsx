@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ShieldAlert, AlertTriangle, Scale, EyeOff, BookOpen, Upload } from "lucide-react";
+import { Check, ShieldAlert, AlertTriangle, Scale, EyeOff, BookOpen, Upload, ChevronDown } from "lucide-react";
 
 export default function DisclaimerModal() {
     const [isOpen, setIsOpen] = useState(false);
     const [dontShowAgain, setDontShowAgain] = useState(false);
+    const [hasReadToBottom, setHasReadToBottom] = useState(false);
+    const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const hasSeenDisclaimer = localStorage.getItem("gridmind_disclaimer_accepted");
@@ -16,10 +18,21 @@ export default function DisclaimerModal() {
     }, []);
 
     const handleAccept = () => {
+        if (!hasReadToBottom) return;
         if (dontShowAgain) {
             localStorage.setItem("gridmind_disclaimer_accepted", "true");
         }
         setIsOpen(false);
+    };
+
+    const handleScroll = () => {
+        if (scrollRef.current) {
+            const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+            // Add a 10px buffer for precision in high-DPI screens
+            if (scrollTop + clientHeight >= scrollHeight - 20) {
+                setHasReadToBottom(true);
+            }
+        }
     };
 
     return (
@@ -51,7 +64,11 @@ export default function DisclaimerModal() {
                         </div>
 
                         {/* Scrollable Content */}
-                        <div className="flex-1 overflow-y-auto px-8 py-8 space-y-6">
+                        <div 
+                            ref={scrollRef}
+                            onScroll={handleScroll}
+                            className="flex-1 overflow-y-auto px-8 py-8 space-y-6 scroll-smooth"
+                        >
                             {/* Alert 1: AI Nature */}
                             <div className="flex gap-4 p-4 rounded-2xl bg-amber-50 border border-amber-100">
                                 <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
@@ -109,30 +126,52 @@ export default function DisclaimerModal() {
                         </div>
 
                         {/* Footer Actions */}
-                        <div className="px-8 py-6 bg-slate-50 border-t border-slate-100 space-y-4">
-                            <label className="flex items-center gap-3 cursor-pointer group justify-center">
-                                <div className="relative">
-                                    <input
-                                        type="checkbox"
-                                        className="sr-only peer"
-                                        checked={dontShowAgain}
-                                        onChange={(e) => setDontShowAgain(e.target.checked)}
-                                    />
-                                    <div className="w-5 h-5 border-2 border-slate-300 rounded-lg group-hover:border-blue-500 transition-all peer-checked:bg-blue-600 peer-checked:border-blue-600 flex items-center justify-center shadow-sm">
-                                        {dontShowAgain && <Check className="w-3.5 h-3.5 text-white" />}
-                                    </div>
-                                </div>
-                                <span className="text-[10px] font-bold text-slate-500 group-hover:text-slate-700 transition-colors uppercase tracking-[0.2em]">
-                                    I have read the legal guards
-                                </span>
-                            </label>
+                        <div className="px-8 py-6 bg-slate-50 border-t border-slate-100 flex flex-col items-center gap-4">
+                            <AnimatePresence mode="wait">
+                                {!hasReadToBottom ? (
+                                    <motion.div
+                                        key="scroll-hint"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-full border border-amber-100"
+                                    >
+                                        <ChevronDown className="w-4 h-4 animate-bounce" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Scroll to read the full notice</span>
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        key="bottom-actions"
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className="w-full space-y-4"
+                                    >
+                                        <label className="flex items-center gap-3 cursor-pointer group justify-center">
+                                            <div className="relative">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only peer"
+                                                    checked={dontShowAgain}
+                                                    onChange={(e) => setDontShowAgain(e.target.checked)}
+                                                />
+                                                <div className="w-5 h-5 border-2 border-slate-300 rounded-lg group-hover:border-blue-500 transition-all peer-checked:bg-blue-600 peer-checked:border-blue-600 flex items-center justify-center shadow-sm">
+                                                    {dontShowAgain && <Check className="w-3.5 h-3.5 text-white" />}
+                                                </div>
+                                            </div>
+                                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-slate-700 transition-colors uppercase tracking-[0.2em]">
+                                                I have read the legal guards
+                                            </span>
+                                        </label>
 
-                            <button
-                                onClick={handleAccept}
-                                className="w-full py-4 rounded-2xl bg-slate-950 hover:bg-slate-800 text-white text-sm font-bold transition-all shadow-xl shadow-slate-900/10 active:scale-[0.98] border border-white/10 uppercase tracking-widest"
-                            >
-                                Agree & Enter System
-                            </button>
+                                        <button
+                                            onClick={handleAccept}
+                                            className="w-full py-4 rounded-2xl bg-slate-950 hover:bg-slate-800 text-white text-sm font-bold transition-all shadow-xl shadow-slate-900/10 active:scale-[0.98] border border-white/10 uppercase tracking-widest"
+                                        >
+                                            Agree & Enter System
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </motion.div>
                 </div>

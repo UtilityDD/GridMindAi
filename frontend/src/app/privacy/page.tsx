@@ -59,9 +59,9 @@ export default function PrivacyPage() {
                                 <li><strong>Transient State:</strong> Prompts sent to these external nodes exist solely for the milliseconds required to compute the inference (Token Generation) and are immediately volatile on their endpoint.</li>
                             </ul>
 
-                            <h3 className="text-white font-semibold mt-10 uppercase tracking-widest text-[11px] border-b border-white/10 pb-2">4. User Contributions & Reference Vault</h3>
+                            <h3 className="text-white font-semibold mt-10 uppercase tracking-widest text-[11px] border-b border-white/10 pb-2">4. User Contributions & Reference Sharing</h3>
                             <p>
-                                GridMind features a collaborative <strong>Contribution Vault</strong>. When you upload a reference file (such as localized office orders):
+                                GridMind features a collaborative <strong>Share Document</strong> tool. When you upload a reference file (such as localized office orders):
                             </p>
                             <ul className="list-disc pl-6 space-y-3 mb-4">
                                 <li>The file securely routed to Google Drive or Supabase Storage.</li>

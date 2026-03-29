@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { BrainCircuit, ChevronRight, History, LogOut, MessageSquare, X, PanelLeftClose, PanelLeftOpen, Cpu, Menu, AlertCircle, Lock, ShieldCheck } from "lucide-react";
+import { BrainCircuit, ChevronRight, History, LogOut, MessageSquare, X, PanelLeftClose, PanelLeftOpen, Cpu, Menu, AlertCircle, Lock, ShieldCheck, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import ContributionVault from "./ContributionVault";
+import Link from "next/link";
+import ShareDocument from "./ShareDocument";
 
 interface Source {
     doc_id: string;
@@ -47,13 +48,13 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick, open, onClose, userTier = "free", onUpgradeClick, onNewInquiry, collapsed = false, onToggleCollapse, usage }: SidebarProps) {
-    const [showVault, setShowVault] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
 
     return (
         <>
-            <ContributionVault 
-                isOpen={showVault} 
-                onClose={() => setShowVault(false)} 
+            <ShareDocument 
+                isOpen={showShareModal} 
+                onClose={() => setShowShareModal(false)} 
                 userEmail={userEmail} 
             />
             {/* Desktop: collapsible sidebar */}
@@ -76,7 +77,7 @@ export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick,
                     onToggleCollapse={onToggleCollapse}
                     usage={usage}
                     collapsed={collapsed}
-                    onVaultOpen={() => setShowVault(true)}
+                    onVaultOpen={() => setShowShareModal(true)}
                 />
             </motion.aside>
 
@@ -112,7 +113,7 @@ export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick,
                                 onUpgradeClick={onUpgradeClick} 
                                 onNewInquiry={onNewInquiry} 
                                 usage={usage} 
-                                onVaultOpen={() => setShowVault(true)}
+                                onVaultOpen={() => setShowShareModal(true)}
                             />
                         </motion.aside>
                     </>
@@ -184,13 +185,22 @@ function SidebarContent({
             <div className={`flex-1 overflow-y-auto py-6 ${collapsed ? 'px-2' : 'px-3'} space-y-8`}>
                 <div className="space-y-1">
                     {!collapsed && <label className="px-3 text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-2 block">Intelligence</label>}
-                    <button 
-                        onClick={() => { onNewInquiry?.(); onClose(); }}
-                        className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-700`}
-                    >
-                        <MessageSquare className="w-4 h-4" />
-                        {!collapsed && <span>New Inquiry</span>}
-                    </button>
+                    <div className="space-y-1">
+                        <button 
+                            onClick={() => { onNewInquiry?.(); onClose(); }}
+                            className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-700`}
+                        >
+                            <MessageSquare className="w-4 h-4" />
+                            {!collapsed && <span>New Inquiry</span>}
+                        </button>
+                        <Link 
+                            href="/explorer"
+                            className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm font-bold transition-all hover:bg-slate-50 hover:border-slate-300 group`}
+                        >
+                            <Search className={`w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform`} />
+                            {!collapsed && <span>GridMind Explorer</span>}
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="space-y-1">
@@ -230,7 +240,7 @@ function SidebarContent({
                         className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl border border-blue-200 bg-blue-50 text-blue-600 text-xs font-bold transition-all hover:bg-blue-100 group shadow-sm`}
                     >
                         <ShieldCheck className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        {!collapsed && <span>Contribution Vault</span>}
+                        {!collapsed && <span>Share Document</span>}
                     </button>
                 </div>
             </div>

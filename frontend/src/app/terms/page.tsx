@@ -66,9 +66,9 @@ export default function TermsPage() {
                                 <li>The raw files provided directly to consumers via WBSEDCL/WBERC portals are not ours stringently; however, abusing the bandwidth of GridMind AI’s indexing services is theft of service.</li>
                             </ul>
 
-                            <h3 className="text-white font-semibold mt-10 uppercase tracking-widest text-[11px] border-b border-white/10 pb-2">4. User Contribution Vault (Safe Harbor & Liability)</h3>
+                            <h3 className="text-white font-semibold mt-10 uppercase tracking-widest text-[11px] border-b border-white/10 pb-2">4. Share Document Service (Safe Harbor & Liability)</h3>
                             <p>
-                                GridMind features a <strong>"Contribution Vault"</strong> allowing utility personnel to asynchronously upload hard-to-find internal circulars for the collective intelligence of the grid community.
+                                GridMind features a <strong>"Share Document"</strong> service allowing utility personnel to asynchronously upload hard-to-find internal circulars for the collective intelligence of the grid community.
                             </p>
                             <ul className="list-disc pl-6 space-y-3 mb-4">
                                 <li><strong>User Indemnification:</strong> By uploading a file, you certify that the file does NOT violate third-party copyrighted patents, is not classified/confidential, and does not contain PII (Personally Identifiable Information) or sensitive national security grid schematics. You are wholly legally liable for the materials you inject into the vault.</li>

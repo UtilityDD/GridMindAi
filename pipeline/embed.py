@@ -112,9 +112,9 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
 
     logger.info("Total batches to process: %d (Batch Size: %d)", len(batches), batch_size)
     
-    # Use ThreadPoolExecutor for strict sequential embedding (RPM preservation)
-    # Gemini Free Tier allows 15 requests per minute maximum. 
-    # Parallel processing guarantees instant 429 lockouts.
+    # Use ThreadPoolExecutor for concurrent batches (Paid Tier Optimization)
+    # Gemini Paid Tier allows 2000+ RPM. Free tier with key pools can also scale.
+    # Sequential processing for maximum stability with rate limits
     num_workers = 1 
     
     final_results = [None] * len(batches)
@@ -128,9 +128,9 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
         for future in as_completed(future_to_batch):
             idx, batch_embeddings = future.result()
             final_results[idx] = batch_embeddings
-            logger.info("Completed Batch %d/%d. Pacing API...", idx + 1, len(batches))
-            # Wait 4.5 seconds to guarantee we stay comfortably under 15 RPM
-            time.sleep(4.5)
+            logger.info("Completed Batch %d/%d. Pacing for stability...", idx + 1, len(batches))
+            # 4s sleep ensures we stay below 15 RPM (Free Tier limit) if the key isn't Paid
+            time.sleep(4.0)
 
     # Flatten results
     results = [emb for batch in final_results for emb in batch]

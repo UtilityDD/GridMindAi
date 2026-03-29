@@ -38,7 +38,7 @@ const Sidebar = dynamic(() => import("@/components/Sidebar"), { ssr: false });
 const PricingModal = dynamic(() => import("@/components/PricingModal"), { ssr: false });
 const DisclaimerModal = dynamic(() => import("@/components/DisclaimerModal"), { ssr: false });
 const LiveStats = dynamic(() => import("@/components/LiveStats"), { ssr: false });
-const ContributionVault = dynamic(() => import("@/components/ContributionVault"), { ssr: false });
+// ShareDocument is managed inside Sidebar.tsx
 
 interface Source {
   doc_id: string;
@@ -1536,9 +1536,11 @@ function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: {
   };
   if (isComplete) {
     return (
-      <ReactMarkdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>
-        {processedText}
-      </ReactMarkdown>
+      <div className="markdown-content">
+        <ReactMarkdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>
+          {processedText}
+        </ReactMarkdown>
+      </div>
     );
   }
 
@@ -1568,7 +1570,7 @@ function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: {
   const effectiveLength = getEffectiveLength(displayedLength, processedText);
 
   return (
-    <div className="w-full overflow-hidden">
+    <div className="w-full overflow-hidden markdown-content">
       <ReactMarkdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>
         {safeText.length > 0 ? processedText.slice(0, effectiveLength) : ""}
       </ReactMarkdown>
