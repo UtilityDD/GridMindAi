@@ -127,6 +127,61 @@ const CLARIFICATION_MAP: Record<string, { title: string, options: string[] }> = 
   }
 };
 
+// 50 curated dynamic topics for the search page header animation
+const DYNAMIC_SEARCH_TOPICS = [
+  "Tariff Policy",
+  "WBERC Regulations",
+  "Electricity Act 2003",
+  "Net Metering",
+  "Net Billing",
+  "Rooftop Solar",
+  "Solar PV Connections",
+  "EV Charging Standards",
+  "Consumer Rights",
+  "New Connection Process",
+  "Load Enhancement",
+  "Change of Name",
+  "Domestic Billing Rules",
+  "Industrial Tariffs",
+  "Agricultural Connections",
+  "Street Lighting Regulations",
+  "HT Connection Procedures",
+  "Meter Testing Standards",
+  "Defective Meter Complaints",
+  "Billing Disputes",
+  "Theft of Energy (Sec 135)",
+  "Unauthorized Use (Sec 126)",
+  "Safety Standards",
+  "PPE Requirements",
+  "Shutdown Procedures",
+  "Substation Maintenance",
+  "Transformer Specifications",
+  "IS Codes",
+  "Technical Specifications",
+  "CVC Guidelines",
+  "Grid Code",
+  "Power Purchase Agreements",
+  "Renewable Energy Rules",
+  "Energy Audit Procedures",
+  "SOP for Fault Repair",
+  "SOP for Complaints",
+  "Financial Decisions",
+  "Administrative Circulars",
+  "Office Orders",
+  "Promotion Policies",
+  "Transfer & Posting Rules",
+  "Leave Rules",
+  "Conduct & Discipline",
+  "Employee Benefits",
+  "Delegation of Powers",
+  "Procurement Rules",
+  "Tender Procedures",
+  "GST Compliance",
+  "Audit Observations",
+  "Regulatory Filing",
+  "Day-to-Day Operational Queries",
+];
+
 // Anti-scraping patterns — detect broad listing/browsing/bulk-requesting queries
 const ANTI_SCRAPING_PATTERNS = [
   // "list/show/give/provide" + "all" + document type
@@ -420,36 +475,19 @@ export default function Home() {
   };
 
 
-  // Dynamic Placeholder Effect
-  const [placeholder, setPlaceholder] = useState("");
-  const [queryIndex, setQueryIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Header topic smooth-scroll index (interval-based, no typing)
+  const [topicIndex, setTopicIndex] = useState(0);
 
   useEffect(() => {
-    const queries = isMobile ? MOBILE_EXAMPLE_QUERIES : ALL_INTERESTING_QUERIES;
-    const currentQuery = queries[queryIndex] || queries[0];
-    const typingSpeed = isDeleting ? 40 : 80;
-    const pauseDuration = 3500; // Increased to give users time to read and click "Ask this"
+    const interval = setInterval(() => {
+      setTopicIndex((prev) => (prev + 1) % DYNAMIC_SEARCH_TOPICS.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
 
-    const handleTyping = () => {
-      if (!isDeleting && charIndex < currentQuery.length) {
-        setPlaceholder(currentQuery.substring(0, charIndex + 1));
-        setCharIndex((prev) => prev + 1);
-      } else if (isDeleting && charIndex > 0) {
-        setPlaceholder(currentQuery.substring(0, charIndex - 1));
-        setCharIndex((prev) => prev - 1);
-      } else if (!isDeleting && charIndex === currentQuery.length) {
-        setTimeout(() => setIsDeleting(true), pauseDuration);
-      } else if (isDeleting && charIndex === 0) {
-        setIsDeleting(false);
-        setQueryIndex((prev) => (prev + 1) % queries.length);
-      }
-    };
-
-    const timer = setTimeout(handleTyping, typingSpeed);
-    return () => clearTimeout(timer);
-  }, [charIndex, isDeleting, queryIndex, isMobile]);
+  // Track last used random index to avoid consecutive repeats
+  const lastRandomRef = useRef<number>(-1);
 
   // Load history from localStorage on mount
   useEffect(() => {
@@ -750,10 +788,27 @@ export default function Home() {
                 transition={{ delay: 0.15 }}
                 className="text-center mb-10"
               >
-                <h2 className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.1] mb-3">
-                  What can I help with?
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight mb-4">
+                  <span className="block text-slate-600 font-semibold text-xl sm:text-2xl mb-2 tracking-widest uppercase">Ask me anything on</span>
+                  <span
+                    className="relative block w-full"
+                    style={{ minHeight: "1.4em", overflow: "hidden" }}
+                  >
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={topicIndex}
+                        initial={{ y: "100%", opacity: 0 }}
+                        animate={{ y: "0%", opacity: 1 }}
+                        exit={{ y: "-100%", opacity: 0 }}
+                        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                        className="block w-full text-blue-600 text-center"
+                      >
+                        {DYNAMIC_SEARCH_TOPICS[topicIndex]}
+                      </motion.span>
+                    </AnimatePresence>
+                  </span>
                 </h2>
-                <p className="text-[10px] sm:text-xs text-slate-500 max-w-md mx-auto uppercase tracking-widest font-medium opacity-80">
+                <p className="text-[10px] sm:text-xs text-slate-500 max-w-md mx-auto uppercase tracking-widest font-medium opacity-80 mt-3">
                   Power Sector Intelligence — Instantly
                 </p>
               </motion.div>
@@ -820,7 +875,8 @@ export default function Home() {
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={handleKeyDown}
                         rows={3}
-                        className="w-full bg-transparent text-[14px] text-slate-900 outline-none resize-none leading-relaxed p-4 z-10 relative"
+                        placeholder="Ask GridMind anything..."
+                        className="w-full bg-transparent text-[14px] text-slate-900 placeholder:text-slate-400 outline-none resize-none leading-relaxed p-4 z-10 relative"
                         style={{ minHeight: "80px", maxHeight: "240px" }}
                         onInput={(e) => {
                           const target = e.target as HTMLTextAreaElement;
@@ -828,40 +884,10 @@ export default function Home() {
                           target.style.height = target.scrollHeight + "px";
                         }}
                       />
-                      {/* Simulated Placeholder overlay */}
-                      {!query && (
-                        <div className="absolute inset-0 p-4 pointer-events-none flex flex-wrap items-start gap-2 z-20">
-                          <span className="text-[14px] text-slate-500 leading-relaxed font-normal">
-                            {placeholder || "Ask GridMind Tactical..."}
-                          </span>
-                          <AnimatePresence>
-                            {!isDeleting && charIndex > 0 && charIndex === (isMobile ? MOBILE_EXAMPLE_QUERIES : ALL_INTERESTING_QUERIES)[queryIndex]?.length && (
-                              <motion.button
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                className="pointer-events-auto inline-flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 hover:text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all shadow-sm translate-y-[2px]"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  const q = (isMobile ? MOBILE_EXAMPLE_QUERIES : ALL_INTERESTING_QUERIES)[queryIndex];
-                                  if (q) {
-                                    setQuery(q);
-                                    inputRef.current?.focus();
-                                    setTimeout(() => handleSubmit(q), 50);
-                                  }
-                                }}
-                              >
-                                Ask this <Sparkles className="w-3 h-3" />
-                              </motion.button>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      )}
                       
-                      {/* Top Right "Try Demo" Action */}
+                      {/* "Suggest Question" button */}
                       {!query && (
-                        <motion.div 
+                        <motion.div
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.5 }}
@@ -870,15 +896,20 @@ export default function Home() {
                           <button
                             onClick={(e) => {
                               e.preventDefault();
-                              const q = ALL_INTERESTING_QUERIES[Math.floor(Math.random() * ALL_INTERESTING_QUERIES.length)];
-                              setQuery(q);
+                              const pool = ALL_INTERESTING_QUERIES;
+                              let idx: number;
+                              do {
+                                idx = Math.floor(Math.random() * pool.length);
+                              } while (idx === lastRandomRef.current && pool.length > 1);
+                              lastRandomRef.current = idx;
+                              setQuery(pool[idx]);
                               inputRef.current?.focus();
-                              setTimeout(() => handleSubmit(q), 50);
+                              // No auto-submit — user presses Enter or the send button
                             }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-50/80 to-blue-50/80 backdrop-blur-sm border border-indigo-100/50 text-indigo-700/80 rounded-full text-[10px] font-bold uppercase tracking-widest hover:text-indigo-700 hover:shadow-sm hover:border-indigo-200 hover:from-indigo-50 hover:to-blue-50 transition-all active:scale-95 group overflow-hidden relative"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-50/80 to-blue-50/80 backdrop-blur-sm border border-indigo-100/50 text-indigo-700/80 rounded-full text-[10px] font-bold uppercase tracking-widest hover:text-indigo-700 hover:shadow-sm hover:border-indigo-200 hover:from-indigo-50 hover:to-blue-50 transition-all active:scale-95 group"
                           >
-                            <Wand2 className="w-3 h-3 text-indigo-500/80 group-hover:animate-pulse" />
-                            <span>Try Demo</span>
+                            <Sparkles className="w-3 h-3 text-indigo-500/80 group-hover:text-indigo-600" />
+                            <span>Suggest Question</span>
                           </button>
                         </motion.div>
                       )}
