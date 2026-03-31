@@ -29,11 +29,34 @@ export default function DisclaimerModal() {
         if (scrollRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
             // Add a 10px buffer for precision in high-DPI screens
-            if (scrollTop + clientHeight >= scrollHeight - 20) {
+            if (scrollTop + clientHeight >= scrollHeight - 25) {
                 setHasReadToBottom(true);
             }
         }
     };
+
+    // Check if content is already at bottom or doesn't need scrolling
+    useEffect(() => {
+        const checkScroll = () => {
+            if (scrollRef.current) {
+                const { scrollHeight, clientHeight } = scrollRef.current;
+                if (scrollHeight <= clientHeight + 5) {
+                    setHasReadToBottom(true);
+                }
+            }
+        };
+
+        if (isOpen) {
+            // Check immediately and after a small delay to allow for rendering
+            checkScroll();
+            const timer = setTimeout(checkScroll, 300);
+            window.addEventListener('resize', checkScroll);
+            return () => {
+                clearTimeout(timer);
+                window.removeEventListener('resize', checkScroll);
+            };
+        }
+    }, [isOpen]);
 
     return (
         <AnimatePresence>
@@ -67,7 +90,7 @@ export default function DisclaimerModal() {
                         <div 
                             ref={scrollRef}
                             onScroll={handleScroll}
-                            className="flex-1 overflow-y-auto px-8 py-8 space-y-6 scroll-smooth"
+                            className="flex-1 min-h-0 overflow-y-auto px-8 py-8 space-y-6 scroll-smooth"
                         >
                             {/* Alert 1: AI Nature */}
                             <div className="flex gap-4 p-4 rounded-2xl bg-amber-50 border border-amber-100">
