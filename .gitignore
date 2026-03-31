@@ -1,35 +1,63 @@
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
 .venv/
 venv/
+ENV/
+env/
 *.egg
 
-# Environment files (contain secrets)
+# Environment files
 .env
 .env.local
-frontend/.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+frontend/.env*
 
-# Data (local ChromaDB, processed PDFs)
-data/
-adding_new_files/*.pdf
-
-# Node
+# Dependencies
 node_modules/
 frontend/node_modules/
+
+# Next.js Build & Deployments
 frontend/.next/
 frontend/out/
+frontend/build/
+.next/
+out/
+build/
+.vercel
+.pnpm-debug.log*
 
-# OS
+# OS / IDE
 .DS_Store
 Thumbs.db
-
-# IDE
+desktop.ini
 .vscode/
 .idea/
 *.swp
 *.swo
 
+# Diagnostic Images & Scraper Dumps (Local Only)
+*.png
+*.jpg
+*.jpeg
+*.gif
+wberc_data.json
+wberc_discovered_links.json
+diag_page_*.png
+
 # Logs
 *.log
+batch_ingest.log
+ingestion_result.log
+temp_log_tail.txt
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local Data
+data/
+adding_new_files/*.pdf

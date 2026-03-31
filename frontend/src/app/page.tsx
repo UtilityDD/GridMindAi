@@ -25,6 +25,7 @@ import {
   AlertCircle,
   MessageSquare,
   Download,
+  RefreshCcw,
 } from "lucide-react";
 
 import { useAuth } from "@/components/AuthProvider";
@@ -240,6 +241,9 @@ function ThinkingIndicator() {
   );
 }
 
+
+// Global cache for preloaded PDF blobs to enable "Instant View"
+const PDF_BLOB_CACHE: Record<string, string> = {};
 
 export default function Home() {
   const { user, session, loading: authLoading, signOut } = useAuth();
@@ -629,7 +633,51 @@ export default function Home() {
 
       const data: QueryResult = await res.json();
       setResult(data);
-      refreshUsage(); // Update usage counts after success
+      refreshUsage();
+
+      // Strategic Pre-warming: Preload top document sources and viewer resources
+      if (data.sources && data.sources.length > 0) {
+        // Pre-connect to viewer domain fallback
+        if (!document.getElementById('google-viewer-preconnect')) {
+          const preconnect = document.createElement('link');
+          preconnect.id = 'google-viewer-preconnect';
+          preconnect.rel = 'preconnect';
+          preconnect.href = 'https://docs.google.com';
+          document.head.appendChild(preconnect);
+        }
+
+        data.sources.slice(0, 3).forEach(async (s) => {
+          if (!s.source_url) return;
+
+          // 1. Prefetch via standard link tag for browser cache
+          const docLink = document.createElement('link');
+          docLink.rel = 'prefetch';
+          docLink.as = 'fetch';
+          docLink.href = s.source_url;
+          document.head.appendChild(docLink);
+
+          // 2. "Instant View" Background Fetch: Capture as Blob for native iframe bypass
+          // We only do this for PDF-like URLs and route through our proxy to bypass CORS/Blocked-by-Client
+          const isPdf = s.source_url.toLowerCase().endsWith('.pdf') || s.source_url.includes('.pdf?') || s.source_url.includes('/bitstream/');
+          if (isPdf && !PDF_BLOB_CACHE[s.source_url]) {
+            try {
+              // Route through GridMind Proxy to bypass CORS/Blocked-by-Client
+              const proxyUrl = `/api/pdf-proxy?url=${encodeURIComponent(s.source_url)}`;
+              const blobRes = await fetch(proxyUrl);
+              
+              if (blobRes.ok) {
+                const blob = await blobRes.blob();
+                const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+                PDF_BLOB_CACHE[s.source_url] = blobUrl;
+                console.log(`GridMind Instant View: Proxy Preloaded ${s.ref}`);
+              }
+            } catch (e) {
+              console.warn(`GridMind: Could not pre-fetch blob via proxy for ${s.ref}`, e);
+            }
+          }
+        });
+      }
+
       setHistory((prev) => {
         const filtered = prev.filter((item) => item.question !== question);
         return [{ question, result: data }, ...filtered].slice(0, 50); // Keep max 50 items
@@ -1143,13 +1191,10 @@ export default function Home() {
             </div>
 
             {/* PDF Viewer Panel */}
-            <div
-              className="flex flex-col bg-white border-l border-slate-200 min-w-0 overflow-hidden"
-              style={{ width: `${100 - splitRatio}%` }}
-            >
-              <InlinePdfViewer
-                source={activeSource}
-                onClose={() => setActiveSource(null)}
+            <div className="flex-1 flex flex-col h-full bg-slate-50 border-l border-slate-200 overflow-hidden" style={{ width: `${100 - splitRatio}%` }}>
+              <SecureIntelligenceViewer 
+                source={activeSource} 
+                onClose={() => setActiveSource(null)} 
               />
             </div>
           </>
@@ -1198,146 +1243,21 @@ function LottieCDNWrapper({ src, className }: { src: string; className?: string 
 
 
 /**
- * Inline PDF Viewer — sits as a flex sibling of the main content
+ * Secure Intelligence Viewer (Dynamic Import)
+ * standardizes the canvas-based, zero-download preview experience.
  */
-function InlinePdfViewer({ 
-  source, 
-  onClose 
-}: { 
-  source: { url: string; title: string }; 
-  onClose: () => void 
-}) {
-  const [iframeLoading, setIframeLoading] = useState(true);
-  const [iframeError, setIframeError] = useState(false);
-  const loadedRef = useRef(false);
-
-  // Reset on URL change; only show error after 30s if still not loaded
-  useEffect(() => {
-    loadedRef.current = false;
-    setIframeLoading(true);
-    setIframeError(false);
-    const timer = setTimeout(() => {
-      if (!loadedRef.current) {
-        setIframeLoading(false);
-        setIframeError(true);
-      }
-    }, 30000);
-    return () => clearTimeout(timer);
-  }, [source.url]);
-
-  // Normalize URL for embedding
-  const normalizedUrl = useMemo(() => {
-    let url = source.url;
-    if (!url) return "";
-    
-    // GitHub Blob → Raw (needed for Google Viewer to fetch the binary)
-    if (url.includes('github.com') && url.includes('/blob/')) {
-      url = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
-    }
-    
-    // Wrap in Google Viewer for all PDFs and Bitstreams
-    const isLikelyPdf = url.toLowerCase().endsWith('.pdf') || 
-                        url.includes('.pdf?') || 
-                        url.includes('/bitstream/') ||
-                        url.includes('raw.githubusercontent.com');
-
-    if (isLikelyPdf) {
-      return `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
-    }
-    return url;
-  }, [source.url]);
-
-  return (
-    <>
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
-        <div className="flex items-center gap-2 overflow-hidden min-w-0">
-          <div className="p-1.5 bg-blue-100 rounded-lg text-blue-600 shrink-0">
-            <FileText className="w-4 h-4" />
-          </div>
-          <h3 className="font-semibold text-slate-800 truncate text-xs">
-            {source.title}
-          </h3>
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <button
-            onClick={onClose}
-            className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors text-slate-500 hover:text-slate-800"
-            title="Close PDF"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Legal Enforcement Banner (Phase 18) */}
-      <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center gap-3 select-none">
-        <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-        <p className="text-[10px] leading-tight text-amber-900 font-medium">
-          <span className="font-bold uppercase tracking-wider">Reference Archive:</span> Not an official copy. For legal purposes, refer only to the Original Gazette or official authority website.
-        </p>
-      </div>
-
-      {/* PDF Content */}
-      <div className="flex-1 bg-slate-100 relative overflow-hidden">
-        {iframeLoading && !iframeError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
-            <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-3" />
-            <p className="text-[10px] uppercase font-bold tracking-[0.15em] text-slate-500">Loading Document...</p>
-          </div>
-        )}
-
-        {iframeError ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white h-full">
-            <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-4">
-              <AlertCircle className="w-6 h-6 text-amber-600" />
-            </div>
-            <h4 className="text-sm font-bold text-slate-900 mb-1">Can't embed this document</h4>
-            <p className="text-xs text-slate-600 mb-6 max-w-xs">
-              This provider restricts inline viewing.
-            </p>
-            <a 
-              href={source.url} 
-              download
-              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:scale-95"
-            >
-              <Download className="w-3.5 h-3.5" />
-              Download to View
-            </a>
-          </div>
-        ) : (
-          <div className="relative w-full h-full">
-            <iframe
-              src={normalizedUrl}
-              className="w-full h-full border-none"
-              title="Source Document"
-              onLoad={() => { loadedRef.current = true; setIframeLoading(false); }}
-              onError={() => {
-                setIframeLoading(false);
-                setIframeError(true);
-              }}
-            />
-            {/* Blind overlay to hide the Google Viewer's native pop-out button */}
-            <div className="absolute top-0 right-0 w-16 h-16 bg-transparent z-20 cursor-default" />
-            
-            {/* Takedown Notice Overlay */}
-            <div className="absolute bottom-0 inset-x-0 bg-slate-900/85 backdrop-blur-md border-t border-white/10 px-4 py-2 flex items-center justify-between z-20 shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.3)]">
-              <div className="flex items-center gap-2 overflow-hidden">
-                <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                <span className="text-[10px] text-slate-300 truncate tracking-wide">
-                   Document subject to community upload Safe Harbor conditions.
-                </span>
-              </div>
-              <Link href="/terms" className="text-[10px] text-amber-500 hover:text-amber-400 uppercase tracking-[0.1em] font-bold shrink-0 ml-4 transition-colors">
-                Know More
-              </Link>
-            </div>
-          </div>
-        )}
-      </div>
-    </>
-  );
-}
+const SecureIntelligenceViewer = dynamic(() => import("@/components/SecureIntelligenceViewer"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 relative pointer-events-none select-none">
+       <div className="absolute inset-0 bg-slate-900/5 backdrop-blur-sm z-0" />
+       <div className="relative z-10 flex flex-col items-center gap-4">
+         <div className="w-10 h-10 border-2 border-slate-200 border-t-blue-600 rounded-full animate-spin shadow-lg" />
+         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 animate-pulse">Initializing Secure Sandbox...</p>
+       </div>
+    </div>
+  )
+});
 
 function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: { 
   text?: string; 
