@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import Link from "next/link";
 
 interface Source {
   url: string;
@@ -345,7 +346,7 @@ export default function SecureIntelligenceViewer({
           <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
           <p className="text-[9px] leading-relaxed text-slate-400">
             <span className="font-bold text-amber-500 uppercase tracking-wider mr-1">Legal Disclaimer:</span>
-            This response is synthesized by AI using available WBSEDCL/WBERC documents. It does <span className="text-white font-bold underline decoration-amber-500/50 underline-offset-2">NOT</span> constitute legal advice or an official interpretation. For legal purposes, please refer only to the Original Gazette or the official authority website.
+            This response is synthesized by AI using available WBSEDCL/WBERC documents. It does <span className="text-white font-bold underline decoration-amber-500/50 underline-offset-2">NOT</span> constitute legal advice or an official interpretation. For legal purposes, please refer only to the Original Gazette or the official authority website. Read our <Link href="/privacy" className="text-blue-400 hover:text-blue-300 underline decoration-blue-500/30">Privacy Policy</Link> and <Link href="/terms" className="text-blue-400 hover:text-blue-300 underline decoration-blue-500/30">Terms of Use</Link>.
           </p>
         </div>
       </div>

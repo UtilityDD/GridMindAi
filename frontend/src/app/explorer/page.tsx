@@ -535,7 +535,7 @@ export default function ExplorerPage() {
               <div className="flex-1 overflow-hidden relative flex flex-col">
                 {explorerView === "analysis" ? (
                   <div className="flex-1 overflow-y-auto p-10 markdown-content bg-white h-full selection:bg-blue-100">
-                    <div className="max-w-2xl mx-auto animate-in slide-in-from-bottom-4 duration-500">
+                    <div className="max-w-2xl mx-auto animate-in slide-in-from-bottom-4 duration-500 pb-20">
                       <div className="mb-8 pb-6 border-b border-slate-100">
                         <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] block mb-2">Selected Part</span>
                         <h2 className="text-xl font-black text-slate-900 tracking-tight leading-tight uppercase">
@@ -550,6 +550,15 @@ export default function ExplorerPage() {
                       >
                         {selectedResult.content}
                       </ReactMarkdown>
+
+                      {/* Analysis Disclaimer */}
+                      <div className="mt-16 pt-8 border-t border-slate-100 flex items-start gap-3 opacity-60 hover:opacity-100 transition-opacity">
+                        <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                        <p className="text-[9px] leading-relaxed text-slate-500 font-medium">
+                          <span className="font-bold text-amber-600 uppercase tracking-widest mr-1">Legal Disclaimer:</span>
+                          This response is synthesized by AI using available WBSEDCL/WBERC documents. It does <span className="font-bold text-slate-900 underline decoration-amber-500/50 underline-offset-2">NOT</span> constitute legal advice or an official interpretation. Read our <Link href="/privacy" className="text-blue-600 hover:text-blue-800 underline decoration-blue-200">Privacy Policy</Link> and <Link href="/terms" className="text-blue-600 hover:text-blue-800 underline decoration-blue-200">Terms of Use</Link>.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 ) : (

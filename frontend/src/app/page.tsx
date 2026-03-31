@@ -1169,13 +1169,13 @@ export default function Home() {
           }
         </AnimatePresence >
 
-        <p className="pb-3 text-center text-[10px] text-slate-500 font-bold uppercase tracking-widest select-none space-x-2">
-          <span>GridMind AI can make mistakes. Verify strategic information.</span>
-          <span className="text-slate-300">|</span>
-          <Link href="/privacy" className="text-blue-600 hover:underline decoration-blue-600/30 underline-offset-4">Privacy Policy</Link>
-          <span className="text-slate-300 text-[8px]">•</span>
-          <Link href="/terms" className="text-blue-600 hover:underline decoration-blue-600/30 underline-offset-4">Terms of Use</Link>
-        </p>
+        <div className="pb-4 px-8 max-w-4xl mx-auto flex items-start gap-4">
+          <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+          <p className="text-[9px] leading-relaxed text-slate-500 font-medium">
+            <span className="font-bold text-amber-600 uppercase tracking-widest mr-1">Legal Disclaimer:</span>
+            This response is synthesized by AI using available WBSEDCL/WBERC documents. It does <span className="font-bold text-slate-900 underline decoration-amber-500/50 underline-offset-2">NOT</span> constitute legal advice or an official interpretation. For legal purposes, please refer only to the Original Gazette or the official authority website. Read our <Link href="/privacy" className="text-blue-600 hover:text-blue-800 underline decoration-blue-200">Privacy Policy</Link> and <Link href="/terms" className="text-blue-600 hover:text-blue-800 underline decoration-blue-200">Terms of Use</Link>.
+          </p>
+        </div>
         </div>
 
         {/* Right: Draggable Divider + PDF Panel */}
