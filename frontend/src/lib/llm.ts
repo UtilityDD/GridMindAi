@@ -320,6 +320,6 @@ export async function generateAnswer(
  * Phase 18: Risk Mitigation
  */
 export function appendLegalFootnote(answer: string): string {
-  const disclaimer = `\n\n---\n*Disclaimer: This response is synthesized by AI using available WBSEDCL/WBERC documents. It does NOT constitute legal advice or an official interpretation. For legal purposes, please refer to the Original Gazette or the official authority website. Read our **[Privacy Policy](/legal#privacy)** and **[Terms of Use](/legal#terms)**.*`;
+  const disclaimer = `\n\n---\n*Disclaimer: This response is synthesized by AI using available WBSEDCL/WBERC documents. It does NOT constitute legal advice or an official interpretation. For legal purposes, please refer to the Original Gazette or the official authority website. Read our **[Privacy Policy](/privacy)** and **[Terms of Use](/terms)**.*`;
   return `${answer}${disclaimer}`;
 }
