@@ -381,17 +381,25 @@ export interface SourceMeta {
 
 function stripUrls(text: string): string {
   if (!text) return "";
-  // 1. Remove standard URLs and GitHub blobs
+  
+  // 1. Aggressively remove anything that looks like a URL starting with http, https, or www
+  // Matches URLs inside parentheses, brackets, or directly attached to text.
+  // Handles encoded parentheses %28 ( and %29 ) commonly found in GitHub blobs.
   let cleaned = text
     .replace(/\(?(https?:\/\/[^\s\)]+)\)?/gi, "")
-    .replace(/\(?(www\.[^\s\)]+)\)?/gi, "");
+    .replace(/\(?(www\.[^\s\)]+)\)?/gi, "")
+    .replace(/https?:\/\/[^\s]+|www\.[^\s]+/gi, "");
 
-  // 2. ONLY strip .pdf or .md extensions, not the entire filename
-  // This ensures "Electricity_Rules.pdf" becomes "Electricity_Rules"
-  cleaned = cleaned.replace(/\.(pdf|md|docx?|txt)(\b|$)/gi, "");
+  // 2. Remove specific encoded URL noise (%28 and %29 usually surround URLs in markdown)
+  cleaned = cleaned.replace(/%28/g, "").replace(/%29/g, "");
 
-  // 3. Final whitespace normalization
-  return cleaned.replace(/\s+/g, " ").trim();
+  // 3. Strip common file extensions that might be left over in the filename/id
+  cleaned = cleaned.replace(/\.(pdf|md|docx?|txt|csv|xlsx?)(\b|$)/gi, "");
+
+  // 4. Final cleanup: Remove dangling parentheses or brackets that were surrounding the URL
+  cleaned = cleaned.replace(/[\(\)\[\]]/g, " ").replace(/\s+/g, " ").trim();
+
+  return cleaned;
 }
 
 export function buildContext(result: RetrievalResult): {
