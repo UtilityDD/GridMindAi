@@ -6,13 +6,16 @@ import type { SourceMeta } from "./rag";
 // --- Models ---
 const GEMINI_MODEL = "gemini-1.5-flash";
 const SAMBANOVA_MODEL = "Meta-Llama-3.3-70B-Instruct";
-const GITHUB_MODEL = "gpt-4o-mini"; // Default for GitHub models free tier
+const CEREBRAS_MODEL = "qwen-3-235b-a22b-instruct-2507"; // 235B Parameter Powerhouse
+const TOGETHER_MODEL = "meta-llama/Llama-3.3-70B-Instruct-Turbo";
+const DEEPSEEK_R1_MODEL = "deepseek/deepseek-r1"; // OpenRouter Reasoning model
 const SAMBANOVA_BASE_URL = "https://api.sambanova.ai/v1";
+const CEREBRAS_BASE_URL = "https://api.cerebras.ai/v1";
+const TOGETHER_BASE_URL = "https://api.together.xyz/v1";
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 const GITHUB_BASE_URL = "https://models.inference.ai.azure.com"; // GitHub Models endpoint
 
 const GROQ_MODELS = new Set([
-  "llama-3.1-8b-instant",
   "llama-3.3-70b-versatile",
   "mixtral-8x7b-32768",
 ]);
@@ -49,6 +52,8 @@ const Pools = {
   Gemini: new KeyPool("GEMINI_KEY_POOL", "GEMINI_API_KEY"),
   Groq: new KeyPool("GROQ_KEY_POOL", "GROQ_API_KEY"),
   SambaNova: new KeyPool("SAMBANOVA_KEY_POOL", "SAMBANOVA_API_KEY"),
+  Cerebras: new KeyPool("CEREBRAS_KEY_POOL", "CEREBRAS_API_KEY"),
+  Together: new KeyPool("TOGETHER_KEY_POOL", "TOGETHER_API_KEY"),
   GitHub: new KeyPool("GITHUB_KEY_POOL", "GITHUB_MODELS_KEY"),
   OpenRouter: new KeyPool("OPENROUTER_KEY_POOL", "OPENROUTER_API_KEY"),
   OpenAI: new KeyPool("OPENAI_KEY_POOL", "OPENAI_API_KEY"),
@@ -193,7 +198,16 @@ const callSambaNova = (q: string, c: string, s: SourceMeta[], v: number) =>
   callGenericCompletions(Pools.SambaNova, SAMBANOVA_BASE_URL, SAMBANOVA_MODEL, q, c, s, v, "SambaNova");
 
 const callGitHubModels = (q: string, c: string, s: SourceMeta[], v: number) =>
-  callGenericCompletions(Pools.GitHub, GITHUB_BASE_URL, GITHUB_MODEL, q, c, s, v, "GitHub");
+  callGenericCompletions(Pools.GitHub, GITHUB_BASE_URL, "gpt-4o-mini", q, c, s, v, "GitHub");
+
+const callCerebras = (q: string, c: string, s: SourceMeta[], v: number) =>
+  callGenericCompletions(Pools.Cerebras, CEREBRAS_BASE_URL, CEREBRAS_MODEL, q, c, s, v, "Cerebras");
+
+const callTogether = (q: string, c: string, s: SourceMeta[], v: number) =>
+  callGenericCompletions(Pools.Together, TOGETHER_BASE_URL, TOGETHER_MODEL, q, c, s, v, "Together");
+
+const callDeepSeekR1 = (q: string, c: string, s: SourceMeta[], v: number) =>
+  callGenericCompletions(Pools.OpenRouter, OPENROUTER_BASE_URL, DEEPSEEK_R1_MODEL, q, c, s, v, "OpenRouter");
 
 const callOpenRouter = (q: string, c: string, s: SourceMeta[], v: number, model: string) =>
   callGenericCompletions(Pools.OpenRouter, OPENROUTER_BASE_URL, model, q, c, s, v, "OpenRouter");
@@ -241,18 +255,18 @@ export async function generateAnswer(
 
   const isPremium = tier !== "free" && tier !== "basic";
 
-  // 2. Optimized Provider Hierarchy (Mega-Pool)
+  // 2. Optimized Provider Hierarchy (Smart DeepSeek Path + Fast Cerebras Path)
+  // Gemini is now the ABSOLUTE LAST fallback to preserve paid quota for embeddings.
   let sequence: string[] = [];
   if (isPremium) {
-    // Paid tiers: Gemini (Pool) -> OpenAI -> GitHub -> Groq
-    sequence = ["gemini", "openai", "github", "groq", "sambanova", "openrouter"];
-    console.log(`[Tier: ${tier}] Mega-Pool Paid Strategy Enabled`);
+    // Paid tiers: Smart Priority (DeepSeek R1) -> Fast-Path (Cerebras/Groq) -> Stability -> Legacy
+    sequence = ["deepseek", "cerebras", "groq", "sambanova", "together", "github", "openai", "openrouter", "gemini"];
+    console.log(`[Tier: ${tier}] Mega-Pool Paid Strategy (Smart DeepSeek Priority)`);
   } else {
-    // Basic/Free: Only use OpenRouter, Groq, and SambaNova randomly.
-    // If one fails, it moves to the next randomly chosen fallback.
-    const freeProviders = ["openrouter", "groq", "sambanova"];
-    sequence = freeProviders.sort(() => Math.random() - 0.5);
-    console.log(`[Tier: ${tier}] Mega-Pool Free Strategy Random Shuffle: [${sequence.join(" -> ")}]`);
+    // Basic/Free: Balanced shuffle of all standard free providers
+    const freeProviders = ["deepseek", "cerebras", "groq", "sambanova", "together", "github", "openrouter"];
+    sequence = [...freeProviders.sort(() => Math.random() - 0.5), "gemini"];
+    console.log(`[Tier: ${tier}] Mega-Pool Free Strategy (Random DeepSeek Flow)`);
   }
 
   for (const provider of sequence) {
@@ -264,11 +278,32 @@ export async function generateAnswer(
         }
       }
 
+      if (provider === "deepseek") {
+        if (Pools.OpenRouter.size > 0) {
+          const answer = await callDeepSeekR1(question, context, sources, verbosity);
+          return { answer: appendLegalFootnote(answer), sources, modelUsed: `OpenRouter/DeepSeek-R1 (Reasoning)` };
+        }
+      }
+
       if (provider === "groq") {
         if (Pools.Groq.size > 0) {
           const groqModel = "llama-3.3-70b-versatile";
           const answer = await callGroq(question, context, sources, groqModel, verbosity);
           return { answer: appendLegalFootnote(answer), sources, modelUsed: `Groq/Llama-70B (Pool)` };
+        }
+      }
+
+      if (provider === "cerebras") {
+        if (Pools.Cerebras.size > 0) {
+          const answer = await callCerebras(question, context, sources, verbosity);
+          return { answer: appendLegalFootnote(answer), sources, modelUsed: `Cerebras/Qwen-235B (Pool)` };
+        }
+      }
+
+      if (provider === "together") {
+        if (Pools.Together.size > 0) {
+          const answer = await callTogether(question, context, sources, verbosity);
+          return { answer: appendLegalFootnote(answer), sources, modelUsed: `Together/Llama-70B (Pool)` };
         }
       }
 

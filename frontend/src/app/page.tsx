@@ -1311,16 +1311,31 @@ function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: {
   const processedText = useMemo(() => {
     let newText = safeText;
 
-    // 1. Handle explicit source citations [REF] or REF
+    // 1. Handle explicit source citations [REF] or [TITLE] or bare variants
     if (sources && sources.length > 0) {
-      const sortedSources = [...sources].sort((a, b) => b.ref.length - a.ref.length);
-      sortedSources.forEach(source => {
-        if (!source.ref || !source.source_url) return;
-        const escapedRef = source.ref.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`\\[${escapedRef}\\]`, 'g');
-        newText = newText.replace(regex, `[${source.ref}](${source.source_url})`);
-        const bareRegex = new RegExp(`(?<!\\[)${escapedRef}(?!\\]|\\()`, 'g');
-        newText = newText.replace(bareRegex, `[${source.ref}](${source.source_url})`);
+      // Create a flat list of matchable strings associated with their URLs
+      // Using both ref and title to increase matching reliability
+      const matchers: { text: string; url: string }[] = [];
+      sources.forEach(s => {
+        if (s.ref) matchers.push({ text: s.ref, url: s.source_url });
+        if (s.title && s.title.length > 8) matchers.push({ text: s.title, url: s.source_url });
+      });
+
+      // Sort by length (descending) to match "Electricity Rules 2022" before "Rules"
+      const sortedMatchers = matchers.sort((a, b) => b.text.length - a.text.length);
+
+      sortedMatchers.forEach(m => {
+        if (!m.text || !m.url) return;
+        const escaped = m.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        
+        // Match [Text]
+        const bracketRegex = new RegExp(`\\[${escaped}\\]`, 'gi');
+        newText = newText.replace(bracketRegex, `[${m.text}](${m.url})`);
+        
+        // Match bare Text (if not already part of a link)
+        // Use a negative lookahead/lookbehind to avoid double-processing
+        const bareRegex = new RegExp(`(?<!\\[)${escaped}(?!\\]|\\()`, 'gi');
+        newText = newText.replace(bareRegex, `[${m.text}](${m.url})`);
       });
     }
 

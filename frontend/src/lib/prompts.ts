@@ -44,10 +44,11 @@ Anti-Scraping Policy:
 Format Mandates:
 - DIRECT ANSWER: Always begin your response with a clear, bolded direct answer (1-2 sentences) immediately. Do NOT use any "Executive Summary" or "Analysis" prefix.
 - FOCUS: Avoid repeating "I don't have enough information" if a partial or categorized answer exists. Lead with the most specific metadata possible.
-- VERBATIM QUOTES: You MUST extract and display exact verbatim sentences from the context using blockquotes (\`>\`) to prove your claims. If you cannot quote it, do not claim it.
-- TABULAR DATA: Automatically format any overlapping data, timelines, capacities, SLAs, or penalties into Markdown Tables for readability. IMPORTANT: Ensure there is a blank line before the table starts, and every row is on a NEW LINE. Use proper Markdown Table syntax: \`| Header | Header |\n| --- | --- |\n| Cell | Cell |\`. Do NOT squash tables into single lines.`;
+- VERBATIM QUOTES: You MUST extract and display exact verbatim sentences from the context using blockquotes (>) to prove your claims. IMPORTANT: If the context is in Hindi, Bengali, or another script, you MUST immediately follow the quote with a high-fidelity English translation. Do NOT provide only non-English scripts.
+- CITATION PRIVACY: ABSOLUTELY NEVER include raw URLs, GitHub links, web addresses, or file paths (e.g., "https://github.com/...", "D:\Files\...", "blob/main/...") in your response or sources section. Citations must ONLY include the Document Title, Number, and Date. If you see a URL in the context, IGNORE it and do not reproduce it.
+- TABULAR DATA: Automatically format any overlapping data, timelines, capacities, SLAs, or penalties into Markdown Tables for readability. IMPORTANT: Ensure there is a blank line before the table starts, and every row is on a NEW LINE. Use proper Markdown Table syntax: | Header | Header |\n| --- | --- |\n| Cell | Cell |. Do NOT squash tables into single lines.`;
 
-export const USER_QUERY_TEMPLATE = `Context from Indian electricity sector documents:
+export const USER_QUERY_TEMPLATE = `Context from Indian electricity sector documents (Neural Reranked for Accuracy):
 ================================================================
 {context}
 ================================================================
@@ -59,13 +60,12 @@ User Question:
 {question}
 
 Instructions:
-- FIRST, silently evaluate each document above. DISCARD any document that does not DIRECTLY address the user's question (single-keyword matches are NOT sufficient).
-- Answer strictly using ONLY the documents that pass your relevance filter.
-- Cite document number, date, and issuing authority.
-- Provide a clear, bolded direct answer at the top (do NOT use the prefix "Executive Summary").
-- Use \`>\` blockquotes for verbatim extracts to prove your claims.
-- Use Markdown tables for complex or comparative data.
-- Do NOT cite or reference documents you discarded during evaluation.
+- Evaluate each piece of evidence using the provided "[Relevance Insight]" bridges.
+- Ensure every claimed fact is backed by the specifically cited document.
+- Cite ONLY document title, number, and date. NEVER include URLs or file paths.
+- Translate all non-English source content into professional English.
+- Use > blockquotes for verbatim extracts (followed by English translation if needed).
+- Use Markdown tables for all structured data, rates, and values.
 - If NO document provides even a related or inferable answer after filtering, state exactly: "The retrieved documents do not provide sufficient regulatory context to provide a focused answer for this specifically."
 
 {verbosity_instruction}

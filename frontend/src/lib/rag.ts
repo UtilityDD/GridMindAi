@@ -5,11 +5,12 @@ import { REWRITE_QUERY_TEMPLATE, KEYWORD_EXTRACTION_TEMPLATE } from "./prompts";
 const EMBEDDING_MODEL = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 768;
 const LLM_MODEL = "gemini-1.5-flash";
-const TOP_K_CHUNKS = 15; // Increased from 12 for v2
+const TOP_K_CHUNKS = 30; // Increased from 15 to 30 for high-breath reranking
 const TOP_K_SUMMARIES = 8;
 const TOP_K_TITLES = 5;
 const MAX_CONTEXT_CHUNKS_PER_DOC = 3; 
-const RERANK_TOP_N = 7; // Final chunks to pass to LLM after reranking
+const RERANK_TOP_N = 10; // Increased from 7 to 10 for Gold-standard selection
+const MIN_RELEVANCE_SCORE = 7; // Chunks scoring below this are filtered out
 
 // --- Pool Manager (Consistent with llm.ts) ---
 class KeyPool {
@@ -36,8 +37,10 @@ class KeyPool {
 const Pools = {
   Gemini: new KeyPool("GEMINI_KEY_POOL", "GEMINI_API_KEY"),
   Groq: new KeyPool("GROQ_KEY_POOL", "GROQ_API_KEY"),
-  GitHub: new KeyPool("GITHUB_KEY_POOL", "GITHUB_MODELS_KEY"),
   SambaNova: new KeyPool("SAMBANOVA_KEY_POOL", "SAMBANOVA_API_KEY"),
+  Cerebras: new KeyPool("CEREBRAS_KEY_POOL", "CEREBRAS_API_KEY"),
+  Together: new KeyPool("TOGETHER_KEY_POOL", "TOGETHER_API_KEY"),
+  GitHub: new KeyPool("GITHUB_KEY_POOL", "GITHUB_MODELS_KEY"),
   OpenRouter: new KeyPool("OPENROUTER_KEY_POOL", "OPENROUTER_API_KEY"),
 };
 
@@ -80,9 +83,11 @@ async function callPoolForRAG(prompt: string, retryCount = 0): Promise<string> {
   // Determine which pool to use based on retry count
   // Strategy: Try Groq -> GitHub -> SambaNova if they exist
   const providers = [];
-  if (Pools.Groq.size > 0) providers.push({ name: "Groq", pool: Pools.Groq, url: "https://api.groq.com/openai/v1", model: "llama-3.1-8b-instant" });
+  if (Pools.Cerebras.size > 0) providers.push({ name: "Cerebras", pool: Pools.Cerebras, url: "https://api.cerebras.ai/v1", model: "qwen-3-235b-a22b-instruct-2507" });
+  if (Pools.Groq.size > 0) providers.push({ name: "Groq", pool: Pools.Groq, url: "https://api.groq.com/openai/v1", model: "llama-3.3-70b-versatile" });
+  if (Pools.Together.size > 0) providers.push({ name: "Together", pool: Pools.Together, url: "https://api.together.xyz/v1", model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" });
   if (Pools.GitHub.size > 0) providers.push({ name: "GitHub", pool: Pools.GitHub, url: "https://models.inference.ai.azure.com", model: "gpt-4o-mini" });
-  if (Pools.SambaNova.size > 0) providers.push({ name: "SambaNova", pool: Pools.SambaNova, url: "https://api.sambanova.ai/v1", model: "Meta-Llama-3.1-8B-Instruct" });
+  if (Pools.SambaNova.size > 0) providers.push({ name: "SambaNova", pool: Pools.SambaNova, url: "https://api.sambanova.ai/v1", model: "Meta-Llama-3.3-70B-Instruct" });
 
   if (providers.length === 0) {
     // Last ditch: check legacy OPENAI_API_KEY
@@ -201,29 +206,66 @@ Output ONLY the queries as a newline-separated list. No preamble.`;
 }
 
 /**
- * RAG v2: Neural Reranking
- * Uses a small LLM call to pick the best chunks from a larger pool.
+ * RAG v2: Neural Reranking & Evidence Grading
+ * Uses a small LLM call (Llama-3.1 8B) to grade each chunk from 0-10 based on relevance.
  */
-export async function rerankChunks(question: string, chunks: ChunkRow[]): Promise<ChunkRow[]> {
-  if (chunks.length <= RERANK_TOP_N) return chunks;
+export async function rerankChunks(question: string, chunks: ChunkRow[]): Promise<GradedChunk[]> {
+  if (chunks.length === 0) return [];
+  
+  // Initial coarse filter: keep top 20 by similarity before neural rerank for cost/latency
+  const candidates = chunks.slice(0, 20);
+  
+  const candidateList = candidates.map((c, i) => 
+    `[[ID ${i}]]: TITLE: ${c.title} | CONTENT: ${c.content.substring(0, 300)}...`
+  ).join("\n\n");
 
-  const candidateList = chunks.map((c, i) => `[ID ${i}]: ${c.title} - ${c.content.substring(0, 200)}...`).join("\n\n");
   const prompt = `User Question: "${question}"
 
-Candidate Chunks:
+Candidate Regulatory Chunks:
 ${candidateList}
 
 Instructions:
-Identify the TOP ${RERANK_TOP_N} most relevant chunks that DIRECTLY help answer the user question.
-Return ONLY the IDs as a comma-separated list (e.g., 0, 4, 12). No preamble.`;
+Evaluate and GRADE each chunk on a scale of 0-10 based on how directly it answers the question.
+0 = Irrelevant noise.
+10 = Perfect regulatory answer.
+
+Output format:
+ID | SCORE | REASONING
+Example:
+0 | 9 | Highlights the specific DOP for Superintending Engineers.
+4 | 2 | Mentions 'meter' but is about billing software, not safety.
+
+OUTPUT ONLY THE LIST. NO PREAMBLE.`;
 
   try {
     const text = await callPoolForRAG(prompt);
-    const ids = text.split(",").map(id => parseInt(id.trim())).filter(id => !isNaN(id));
-    const sorted = ids.map(id => chunks[id]).filter(Boolean);
-    return sorted.length > 0 ? sorted : chunks.slice(0, RERANK_TOP_N);
+    const lines = text.split("\n").filter(l => l.includes("|"));
+    
+    const graded: GradedChunk[] = [];
+    lines.forEach(line => {
+      const [idStr, scoreStr, bridge] = line.split("|").map(s => s.trim());
+      const idx = parseInt(idStr.replace(/[^0-9]/g, ""));
+      const score = parseInt(scoreStr);
+      
+      if (!isNaN(idx) && !isNaN(score) && candidates[idx]) {
+        graded.push({
+          ...candidates[idx],
+          score,
+          bridge: bridge || "Relevant context extracted."
+        });
+      }
+    });
+
+    // Sort by score (desc)
+    return graded.sort((a,b) => b.score - a.score);
   } catch (e) {
-    return chunks.slice(0, RERANK_TOP_N);
+    console.error("Neural Reranking failed:", e);
+    // Fallback: assign medium score to initial matches
+    return candidates.slice(0, RERANK_TOP_N).map(c => ({
+      ...c,
+      score: 5,
+      bridge: "Fallback: Standard vector match."
+    }));
   }
 }
 
@@ -237,6 +279,11 @@ interface ChunkRow {
   chunk_index: number;
   content: string;
   similarity: number;
+}
+
+interface GradedChunk extends ChunkRow {
+  score: number;
+  bridge: string;
 }
 
 interface SummaryRow {
@@ -262,7 +309,7 @@ interface TitleRow {
 
 export interface RetrievalResult {
   docIds: string[];
-  chunkResults: ChunkRow[];
+  chunkResults: GradedChunk[];
   summaryResults: SummaryRow[];
   titleResults: TitleRow[];
   rewrittenQuery: string | null;
@@ -293,19 +340,22 @@ export async function retrieve(
 
   // Deduplicate and Rerank
   const uniqueChunks = Array.from(new Map(allChunkResults.map(c => [c.id, c])).values());
-  const rerankedChunks = await rerankChunks(question, uniqueChunks);
+  const gradedChunks = await rerankChunks(question, uniqueChunks);
+
+  // Hard Filter: Keep only high-relevance chunks (Score >= 7)
+  const filteredChunks = gradedChunks.filter(c => c.score >= MIN_RELEVANCE_SCORE);
 
   // --- DEBUG LOGGING: RETRIEVED CHUNKS ---
-  console.log(`\n--- [DEBUG] RETRIEVED CHUNKS (${rerankedChunks.length}) ---`);
-  rerankedChunks.forEach((c, i) => {
-    console.log(`[Chunk ${i+1}] Ref: ${c.ref} | Sim: ${c.similarity?.toFixed(4)}`);
-    console.log(`Content: ${c.content.substring(0, 150)}...`);
+  console.log(`\n--- [DEBUG] NEURAL GRADED CHUNKS (${filteredChunks.length}) ---`);
+  filteredChunks.forEach((c, i) => {
+    console.log(`[Chunk ${i+1}] Score: ${c.score}/10 | Ref: ${c.ref} | Sim: ${c.similarity?.toFixed(4)}`);
+    console.log(`Bridge: ${c.bridge}`);
     console.log('---');
   });
 
   const seen = new Set<string>();
   const docIds: string[] = [];
-  for (const row of rerankedChunks) {
+  for (const row of filteredChunks) {
     if (row.doc_id && !seen.has(row.doc_id)) {
       seen.add(row.doc_id);
       docIds.push(row.doc_id);
@@ -314,11 +364,10 @@ export async function retrieve(
 
   return { 
     docIds, 
-    chunkResults: rerankedChunks, 
+    chunkResults: filteredChunks, 
     summaryResults: [], // Summaries are informative but secondary now
     titleResults: [], 
     rewrittenQuery,
-    faqAnswer: undefined 
   };
 }
 
@@ -332,8 +381,17 @@ export interface SourceMeta {
 
 function stripUrls(text: string): string {
   if (!text) return "";
-  // Aggressive regex to catch (http...), http://..., raw.github..., etc.
-  return text.replace(/\(?(https?:\/\/[^\s\)]+)\)?/gi, "").trim();
+  // 1. Remove standard URLs and GitHub blobs
+  let cleaned = text
+    .replace(/\(?(https?:\/\/[^\s\)]+)\)?/gi, "")
+    .replace(/\(?(www\.[^\s\)]+)\)?/gi, "");
+
+  // 2. ONLY strip .pdf or .md extensions, not the entire filename
+  // This ensures "Electricity_Rules.pdf" becomes "Electricity_Rules"
+  cleaned = cleaned.replace(/\.(pdf|md|docx?|txt)(\b|$)/gi, "");
+
+  // 3. Final whitespace normalization
+  return cleaned.replace(/\s+/g, " ").trim();
 }
 
 export function buildContext(result: RetrievalResult): {
@@ -345,12 +403,12 @@ export function buildContext(result: RetrievalResult): {
     summaryByDoc.set(row.doc_id, row.summary_text);
   }
 
-  const chunksByDoc = new Map<string, { text: string; chunk_index: number }[]>();
+  const chunksByDoc = new Map<string, { text: string; chunk_index: number; bridge: string }[]>();
   for (const row of result.chunkResults) {
     if (!chunksByDoc.has(row.doc_id)) chunksByDoc.set(row.doc_id, []);
     const arr = chunksByDoc.get(row.doc_id)!;
     if (arr.length < MAX_CONTEXT_CHUNKS_PER_DOC) {
-      arr.push({ text: row.content, chunk_index: row.chunk_index });
+      arr.push({ text: row.content, chunk_index: row.chunk_index, bridge: row.bridge });
     }
   }
 
@@ -361,7 +419,7 @@ export function buildContext(result: RetrievalResult): {
     const meta = findMeta(did, result);
     if (!meta) continue;
 
-    const header = `--- Document: ${meta.ref} | Date: ${meta.date} | Title: ${stripUrls(meta.title)} ---`;
+    const header = `--- Document: ${stripUrls(meta.ref)} | Date: ${meta.date} | Title: ${stripUrls(meta.title)} ---`;
     const parts = [header];
 
     const summary = summaryByDoc.get(did);
@@ -369,15 +427,18 @@ export function buildContext(result: RetrievalResult): {
 
     const chunks = chunksByDoc.get(did) ?? [];
     chunks.sort((a, b) => a.chunk_index - b.chunk_index);
-    for (const c of chunks) parts.push(stripUrls(c.text));
+    for (const c of chunks) {
+      parts.push(`[Relevance Insight]: ${c.bridge}`);
+      parts.push(stripUrls(c.text));
+    }
 
     contextParts.push(parts.join("\n"));
     sources.push({
       doc_id: did,
-      ref: meta.ref,
+      ref: stripUrls(meta.ref),
       date: meta.date,
       title: stripUrls(meta.title),
-      source_url: meta.source_url,
+      source_url: meta.source_url, // For frontend VIEW button ONLY. LLM prompt excludes the full prompt.sources array.
     });
   }
 
