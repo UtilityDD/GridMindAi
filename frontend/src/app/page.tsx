@@ -1370,19 +1370,24 @@ function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: {
 
     // 3. Markdown Table Fixer — Advanced Parser (handles missing newlines and LLM squashing)
     const repairSquashedTables = (input: string): string => {
-      // First, ensure all tables have a mandatory blank line before them
-      // catch: text| Sl No | OR text\n| Sl No |
-      let fixedInput = input.replace(/([^\n])(\s*\|\s*[^\s|][^|\n]+\|\s*\n?\s*\|\s*[-: ]+\s*\|)/g, '$1\n\n$2');
+      // 1. Mandatory blank line before tables (if text immediately precedes a table start)
+      let fixedInput = input.replace(/([^\n])(\s*\|\s*[^\s|].*?\|\s*\n\s*\|\s*[-: ]+\s*\|)/g, '$1\n\n$2');
+
+      // 2. Remove extra blank lines between potential headers and valid separator rows
+      // This specifically fixes the LLM mistake where it puts a newline between header and |---|
+      fixedInput = fixedInput.replace(/(\|\s*[^\s|].*?\s*\|)\s*\n\s*\n+(\s*\|\s*[-: ]+\s*\|)/g, '$1\n$2');
 
       const lines = fixedInput.split('\n');
       const result: string[] = [];
 
-      for (const line of lines) {
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        
         // DETECT squashed table: separator + data pipes on same line
-        const hasSep = /\|\s*---\s*\|/.test(line);
+        const hasSep = /\|\s*[-: ]{3,}\s*\|/.test(line);
         const pipeCount = (line.match(/\|/g) || []).length;
 
-        if (hasSep && pipeCount > 6) {
+        if (hasSep && pipeCount > 5) {
           // Find where the table starts (first |)
           const firstPipeIdx = line.indexOf('|');
           const beforeTable = firstPipeIdx > 0 ? line.substring(0, firstPipeIdx).trimEnd() : '';
@@ -1394,18 +1399,20 @@ function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: {
           const pureTable = tableStr.substring(0, lastPipeIdx + 1);
 
           // Reconstruct with proper newlines
-          const sepMatch = pureTable.match(/((?:\|\s*-{3,}\s*)+\|)/);
+          const sepMatch = pureTable.match(/((?:\|\s*[-: ]{3,}\s*)+\|)/);
           if (!sepMatch) { result.push(line); continue; }
-          const colCount = (sepMatch[0].match(/-{3,}/g) || []).length;
+          const colCount = (sepMatch[0].match(/[-:]{3,}/g) || []).length;
+          
           const parts = pureTable.split('|');
           const cells = parts.slice(1, -1);
-          const rowSize = colCount + 1;
           const rows: string[] = [];
           
-          for (let i = 0; i < cells.length; i += rowSize) {
-            const rowCells = cells.slice(i, i + colCount);
+          for (let k = 0; k < cells.length; k += colCount) {
+            const rowCells = cells.slice(k, k + colCount).map(c => c.trim());
             if (rowCells.length > 0) {
-              rows.push('| ' + rowCells.map(c => c.trim()).join(' | ') + ' |');
+              // Ensure row matches column count (pad with empty cells if needed)
+              while (rowCells.length < colCount) rowCells.push('');
+              rows.push('| ' + rowCells.join(' | ') + ' |');
             }
           }
 

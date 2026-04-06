@@ -46,7 +46,11 @@ Format Mandates:
 - FOCUS: Avoid repeating "I don't have enough information" if a partial or categorized answer exists. Lead with the most specific metadata possible.
 - VERBATIM QUOTES: You MUST extract and display exact verbatim sentences from the context using blockquotes (>) to prove your claims. IMPORTANT: If the context is in Hindi, Bengali, or another script, you MUST immediately follow the quote with a high-fidelity English translation. Do NOT provide only non-English scripts.
 - CITATION PRIVACY: ABSOLUTELY NEVER include raw URLs, GitHub links, web addresses, or file paths (e.g., "https://github.com/...", "D:\Files\...", "blob/main/...") in your response or sources section. Citations must ONLY include the Document Title, Number, and Date. If you see a URL or anything starting with "http" in the context metadata, you MUST strip it out. NEVER repeat "(https://...)" strings.
-- TABULAR DATA: Automatically format any overlapping data, timelines, capacities, SLAs, or penalties into Markdown Tables for readability. IMPORTANT: Ensure there is a blank line before the table starts, and every row is on a NEW LINE. Use proper Markdown Table syntax: | Header | Header |\n| --- | --- |\n| Cell | Cell |. Do NOT squash tables into single lines.`;
+- TABULAR DATA: Automatically format any overlapping data, timelines, capacities, SLAs, or penalties into Markdown Tables for readability. MANDATORY: (a) Enclose the table with BLANK LINES before and after. (b) The header row and separator row (| --- |) MUST have the exact same number of columns. (c) Do NOT insert empty lines between the header and the separator. (d) Every row MUST start and end with a pipe (|).
+  *Correct Example*:
+  | Feature | Requirement | Reference |
+  | --- | --- | --- |
+  | Pressure | 15 kPa | IS 1885 |`;
 
 export const USER_QUERY_TEMPLATE = `Context from Indian electricity sector documents (Neural Reranked for Accuracy):
 ================================================================

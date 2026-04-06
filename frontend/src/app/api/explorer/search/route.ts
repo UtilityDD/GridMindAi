@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     } else {
       // If no query but category is selected, just browse
       const { data, error } = await supabase
-        .table("chunks")
+        .from("chunks")
         .select("*")
         .limit(limit);
       

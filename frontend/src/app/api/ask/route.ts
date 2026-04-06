@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
-import { retrieve, buildContext, extractKeywords } from "@/lib/rag";
+import { retrieve, buildContext, extractKeywords, embedSingle } from "@/lib/rag";
 import { generateAnswer } from "@/lib/llm";
 import { classifyQueryIntent } from "@/lib/router";
 import { checkBurstFromAnalytics } from "@/lib/rate-limiter";
@@ -122,8 +122,63 @@ export async function POST(req: NextRequest) {
   }
 
   const t0 = Date.now();
+  const supabase = getSupabaseAdmin();
+  let queryEmbedding: number[] | null = null;
 
-  // Run retrieval and keyword extraction in parallel
+  // --- 1. SMART SEMANTIC CACHE LAYER ---
+  try {
+    queryEmbedding = await embedSingle(question);
+
+  const { data: cacheMatches } = await supabase.rpc("match_query_cache", {
+    query_embedding: queryEmbedding,
+    match_threshold: 0.92, // High similarity required for cache hit
+    match_count: 1
+  });
+
+  if (cacheMatches && cacheMatches.length > 0) {
+    const cache = cacheMatches[0];
+    const { data: currentToken } = await supabase.rpc("get_current_state_token");
+
+    // A. Direct Hit (State is still the same)
+    if (new Date(cache.state_token).getTime() >= new Date(currentToken).getTime()) {
+      return NextResponse.json({
+        answer: cache.answer,
+        sources: cache.sources || [],
+        model_used: `${cache.model_used} (Semantic Cache)`,
+        elapsed_ms: Date.now() - t0,
+        rewritten_query: "CACHED",
+      });
+    }
+
+    // B. Stale Hit (New chunks exist) -> Check if new chunks are relevant
+    const { data: newRelevant } = await supabase.rpc("match_new_chunks", {
+      query_embedding: queryEmbedding,
+      since_timestamp: cache.state_token,
+      match_threshold: 0.75, // Relevance threshold for re-triggering LLM
+      match_count: 1
+    });
+
+    if (!newRelevant || newRelevant.length === 0) {
+      // New info exists in DB but is IRRELEVANT to this query.
+      // Update cache token to latest to avoid re-verifying until next upload.
+      await supabase.from("query_cache").update({ state_token: currentToken }).eq("id", cache.id);
+
+      return NextResponse.json({
+        answer: cache.answer,
+        sources: cache.sources || [],
+        model_used: `${cache.model_used} (Smart Cache Sync)`,
+        elapsed_ms: Date.now() - t0,
+        rewritten_query: "SMART_SYNC",
+      });
+    }
+    // Else: New relevant info found -> Fallback to Full RAG below
+  }
+} catch (error) {
+    console.error("Semantic Cache Layer Error (Falling back to RAG):", error);
+    // Fall back silently to normal RAG if the cache layer has issues
+  }
+
+  // --- 2. FULL RAG RETRIEVAL & GENERATION ---
   const [retrievalResult, keywords] = await Promise.all([
     retrieve(question, true, userTier),
     extractKeywords(question, userTier)
@@ -201,6 +256,21 @@ export async function POST(req: NextRequest) {
     } catch (e) {
       console.error("Failed to log analytics:", e);
     }
+  }
+
+  // --- 3. CACHE BACKFILL (Async) ---
+  if (result.answer && !result.answer.includes("No relevant documents found") && queryEmbedding) {
+    const { data: freshToken } = await supabase.rpc("get_current_state_token");
+    supabase.from("query_cache").insert({
+      query: question,
+      embedding: queryEmbedding,
+      answer: result.answer,
+      sources: finalSources,
+      model_used: result.modelUsed,
+      state_token: freshToken
+    }).then(({ error }: { error: any }) => {
+      if (error) console.error("Cache backfill failed:", error);
+    });
   }
 
   return NextResponse.json({
