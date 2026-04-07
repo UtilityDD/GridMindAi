@@ -258,6 +258,7 @@ export default function Home() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const requestAbortRef = useRef<AbortController | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
 
@@ -339,6 +340,13 @@ export default function Home() {
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      requestAbortRef.current?.abort();
+      requestAbortRef.current = null;
+    };
   }, []);
 
   const loadRazorpayScript = () => {
@@ -604,10 +612,13 @@ export default function Home() {
     setError("");
     setResult(null);
     setActiveQuestion(question);
+    const controller = new AbortController();
+    requestAbortRef.current = controller;
 
     try {
       const res = await fetch("/api/ask", {
         method: "POST",
+        signal: controller.signal,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
@@ -686,6 +697,11 @@ export default function Home() {
         resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
     } catch (e: unknown) {
+      if (e instanceof Error && e.name === "AbortError") {
+        setError("Search canceled.");
+        return;
+      }
+
       const msg = e instanceof Error ? e.message : "Operational failure encountered.";
       setError(msg);
 
@@ -704,8 +720,16 @@ export default function Home() {
         // We keep result as null, which keeps us in empty state
       }
     } finally {
+      if (requestAbortRef.current === controller) {
+        requestAbortRef.current = null;
+      }
       setLoading(false);
     }
+  };
+
+  const handleStopSearch = () => {
+    requestAbortRef.current?.abort();
+    requestAbortRef.current = null;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -716,6 +740,8 @@ export default function Home() {
   };
 
   const handleNewInquiry = () => {
+    requestAbortRef.current?.abort();
+    requestAbortRef.current = null;
     setResult(null);
     setQuery("");
     setError("");
@@ -1062,6 +1088,16 @@ export default function Home() {
                       className="flex flex-col items-center justify-center py-32"
                     >
                       <ThinkingIndicator />
+                      <motion.button
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={handleStopSearch}
+                        className="mt-6 inline-flex items-center gap-2 rounded-xl border border-rose-300 bg-rose-50 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-rose-700 transition-all hover:bg-rose-100"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        Stop Search
+                      </motion.button>
                     </motion.div>
                   )}
                 </AnimatePresence>
