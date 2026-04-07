@@ -32,6 +32,7 @@ import {
 import { useAuth } from "@/components/AuthProvider";
 import { getSupabase } from "@/lib/supabase";
 import SearchGuidanceModal from "@/components/SearchGuidanceModal";
+import AIProgressIndicator from "@/components/AIProgressIndicator";
 
 // Dynamic Imports for Performance Optimization (Lazy Loading)
 const LandingPage = dynamic(() => import("@/components/LandingPage"), { ssr: true });
@@ -205,61 +206,7 @@ const ANTI_SCRAPING_PATTERNS = [
 
 
 function ThinkingIndicator() {
-  const [seconds, setSeconds] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => setSeconds(s => s + 1), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center py-20 gap-8"
-    >
-      <div className="flex flex-col items-center gap-4">
-        <div className="relative">
-          <div className="w-14 h-14 bg-blue-50 rounded-[1.5rem] border border-blue-100 flex items-center justify-center shadow-sm">
-            <BrainCircuit className="w-7 h-7 text-blue-600" />
-          </div>
-          <motion.div
-            animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.5, 0.2] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -inset-2 bg-blue-400/20 rounded-3xl blur-md -z-10"
-          />
-        </div>
-        <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-slate-100 border border-slate-200">
-           <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] animate-pulse">
-             Synthesis in Progress
-           </span>
-           <div className="w-[1px] h-3 bg-slate-300" />
-           <span className="text-[10px] font-mono font-bold text-blue-600/70">
-             {seconds}s
-           </span>
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {seconds >= 7 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 100 }}
-            className="max-w-md p-6 bg-white border border-blue-200 rounded-[2rem] shadow-2xl shadow-blue-100/30 flex flex-col items-center gap-3 text-center"
-          >
-             <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-500" />
-                <span className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">Need it faster?</span>
-             </div>
-             <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-               Get instant document results by searching keywords in the **GridMind Explorer** in the sidebar.
-             </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
+  return <AIProgressIndicator />;
 }
 
 
