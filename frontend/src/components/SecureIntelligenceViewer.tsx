@@ -7,7 +7,9 @@ import {
   Lock, 
   Loader2, 
   AlertCircle, 
-  RefreshCcw 
+  RefreshCcw,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -21,7 +23,9 @@ interface Source {
 interface SecureIntelligenceViewerProps {
   source: Source;
   onClose: () => void;
+  onMaximize?: () => void;
   hideHeader?: boolean;
+  isFullscreen?: boolean;
 }
 
 declare global {
@@ -38,10 +42,13 @@ declare global {
 export default function SecureIntelligenceViewer({ 
   source, 
   onClose,
-  hideHeader = false
+  onMaximize,
+  hideHeader = false,
+  isFullscreen = false
 }: SecureIntelligenceViewerProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [errorDetail, setErrorDetail] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
   const [mdContent, setMdContent] = useState<string | null>(null);
   
@@ -99,6 +106,7 @@ export default function SecureIntelligenceViewer({
       if (isCancelled) return;
       setLoading(true);
       setError(false);
+      setErrorDetail("");
       setMdContent(null);
       try {
         const proxyUrl = `/api/pdf-proxy?url=${encodeURIComponent(url)}`;
@@ -111,9 +119,11 @@ export default function SecureIntelligenceViewer({
         }
       } catch (e) {
         if (!isCancelled) {
+          const errorMsg = e instanceof Error ? e.message : "Failed to fetch markdown";
           console.error("MD Load Error:", e);
           setLoading(false);
           setError(true);
+          setErrorDetail(errorMsg);
         }
       }
     }
@@ -122,6 +132,7 @@ export default function SecureIntelligenceViewer({
       if (isCancelled) return;
       setLoading(true);
       setError(false);
+      setErrorDetail("");
       setMdContent(null);
       try {
         const pdfjsLib = window.pdfjsLib;
@@ -238,9 +249,11 @@ export default function SecureIntelligenceViewer({
         setLoading(false);
       } catch (e: any) {
         if (!isCancelled) {
+          const errorMsg = e?.message || String(e) || "Unknown error occurred";
           console.error("Custom Previewer Error:", e);
           setLoading(false);
           setError(true);
+          setErrorDetail(errorMsg);
         }
       }
     }
@@ -281,10 +294,19 @@ export default function SecureIntelligenceViewer({
             >
               <RefreshCcw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
             </button>
+            {!isFullscreen && onMaximize && (
+              <button
+                onClick={onMaximize}
+                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                title="Fullscreen View (F)"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
+            )}
             <button
               onClick={onClose}
               className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors text-slate-500 hover:text-slate-800"
-              title="Close Viewer"
+              title={isFullscreen ? "Exit Fullscreen (ESC)" : "Close Viewer"}
             >
               <X className="w-4 h-4" />
             </button>
@@ -313,21 +335,29 @@ export default function SecureIntelligenceViewer({
         )}
 
         {error && !pdfRef.current && !mdContent ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white h-full rounded-2xl shadow-inner border border-slate-200">
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white h-full rounded-2xl shadow-inner border border-slate-200 mx-6 my-6">
             <div className="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mb-4">
               <AlertCircle className="w-6 h-6 text-rose-600" />
             </div>
             <h4 className="text-sm font-bold text-slate-900 mb-1">Preview Unavailable</h4>
-            <p className="text-[10px] text-slate-500 mb-4 max-w-xs leading-relaxed uppercase tracking-wider font-bold">
+            <p className="text-[10px] text-slate-500 mb-3 max-w-xs leading-relaxed uppercase tracking-wider font-bold">
               Could not load document preview.
             </p>
-            <button 
-              onClick={handleReload}
-              className="p-3 bg-slate-900 text-white rounded-full hover:bg-slate-800 transition-all shadow-xl active:scale-90"
-              title="Reload preview"
-            >
-              <RefreshCcw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
-            </button>
+            {errorDetail && (
+              <p className="text-[9px] text-slate-600 mb-4 px-4 py-2 bg-slate-50 rounded-lg border border-slate-200 font-mono max-w-sm">
+                {errorDetail}
+              </p>
+            )}
+            <div className="flex gap-3 flex-wrap justify-center">
+              <button 
+                onClick={handleReload}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-all active:scale-95 font-semibold text-sm"
+                title="Retry loading preview"
+              >
+                <RefreshCcw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                Retry
+              </button>
+            </div>
           </div>
         ) : mdContent ? (
           <div className="markdown-content max-w-4xl mx-auto bg-white p-12 rounded-2xl shadow-2xl min-h-full">

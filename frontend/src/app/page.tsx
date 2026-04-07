@@ -26,6 +26,7 @@ import {
   MessageSquare,
   Download,
   RefreshCcw,
+  Minimize2,
 } from "lucide-react";
 
 import { useAuth } from "@/components/AuthProvider";
@@ -265,6 +266,19 @@ function ThinkingIndicator() {
 // Global cache for preloaded PDF blobs to enable "Instant View"
 const PDF_BLOB_CACHE: Record<string, string> = {};
 
+function normalizeGitHubPdfUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname === "github.com" && parsed.pathname.includes("/blob/")) {
+      const normalizedPath = parsed.pathname.replace("/blob/", "/");
+      return `https://raw.githubusercontent.com${normalizedPath}${parsed.search}`;
+    }
+  } catch {
+    // fallback to original URL if parsing fails
+  }
+  return url;
+}
+
 export default function Home() {
   const { user, session, loading: authLoading, signOut } = useAuth();
 
@@ -276,6 +290,7 @@ export default function Home() {
   const [userTier, setUserTier] = useState<string>("free");
   const [activeQuestion, setActiveQuestion] = useState("");
   const [activeSource, setActiveSource] = useState<{ url: string; title: string } | null>(null);
+  const [isFullscreenViewer, setIsFullscreenViewer] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
   const [clarificationData, setClarificationData] = useState<{ keyword: string, title: string, options: string[], originalQuery: string } | null>(null);
   const [showLogin, setShowLogin] = useState(false);
@@ -543,6 +558,23 @@ export default function Home() {
     }
   }, [result, loading, showDashboard]);
 
+  // Keyboard shortcuts for fullscreen viewer
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // ESC to close fullscreen viewer
+      if (e.key === "Escape" && isFullscreenViewer) {
+        setIsFullscreenViewer(false);
+      }
+      // F to open fullscreen viewer (when source is active)
+      if (e.key === "f" && activeSource && !isFullscreenViewer && e.ctrlKey === false && e.metaKey === false) {
+        setIsFullscreenViewer(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFullscreenViewer, activeSource]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -681,8 +713,8 @@ export default function Home() {
           const isPdf = s.source_url.toLowerCase().endsWith('.pdf') || s.source_url.includes('.pdf?') || s.source_url.includes('/bitstream/');
           if (isPdf && !PDF_BLOB_CACHE[s.source_url]) {
             try {
-              // Route through GridMind Proxy to bypass CORS/Blocked-by-Client
-              const proxyUrl = `/api/pdf-proxy?url=${encodeURIComponent(s.source_url)}`;
+              const proxySourceUrl = normalizeGitHubPdfUrl(s.source_url);
+              const proxyUrl = `/api/pdf-proxy?url=${encodeURIComponent(proxySourceUrl)}`;
               const blobRes = await fetch(proxyUrl);
               
               if (blobRes.ok) {
@@ -1214,12 +1246,60 @@ export default function Home() {
             <div className="flex-1 flex flex-col h-full bg-slate-50 border-l border-slate-200 overflow-hidden" style={{ width: `${100 - splitRatio}%` }}>
               <SecureIntelligenceViewer 
                 source={activeSource} 
-                onClose={() => setActiveSource(null)} 
+                onClose={() => setActiveSource(null)}
+                onMaximize={() => setIsFullscreenViewer(true)}
+                isFullscreen={false}
               />
             </div>
           </>
         )}
       </div>
+
+      {/* Fullscreen PDF Viewer Modal */}
+      {isFullscreenViewer && activeSource && (
+        <div className="fixed inset-0 z-50 bg-slate-900 flex flex-col animate-in fade-in duration-300">
+          {/* Fullscreen Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700 bg-slate-800 shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="font-bold text-white text-base truncate">
+                  {activeSource.title}
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">Fullscreen Document Viewer</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setIsFullscreenViewer(false)}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold rounded-lg transition-all active:scale-95"
+                title="Exit Fullscreen (ESC)"
+              >
+                <Minimize2 className="w-4 h-4" />
+                Exit Fullscreen
+              </button>
+            </div>
+          </div>
+
+          {/* Fullscreen Viewer Content */}
+          <div className="flex-1 overflow-auto bg-slate-900">
+            <SecureIntelligenceViewer
+              source={activeSource}
+              onClose={() => setIsFullscreenViewer(false)}
+              hideHeader={true}
+              isFullscreen={true}
+            />
+          </div>
+
+          {/* Fullscreen Footer */}
+          <div className="px-6 py-3 bg-slate-800 border-t border-slate-700 text-xs text-slate-300 flex items-center justify-between">
+            <p>Press <span className="px-2 py-1 bg-slate-700/70 rounded font-mono text-slate-200 ml-1 inline-block">ESC</span> to exit fullscreen</p>
+            <p className="text-slate-400">GridMind Secure Document Viewer</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1311,33 +1391,20 @@ function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: {
   const processedText = useMemo(() => {
     let newText = safeText;
 
-    // 1. Handle explicit source citations [REF] or [TITLE] or bare variants
-    if (sources && sources.length > 0) {
-      // Create a flat list of matchable strings associated with their URLs
-      // Using both ref and title to increase matching reliability
-      const matchers: { text: string; url: string }[] = [];
-      sources.forEach(s => {
-        if (s.ref) matchers.push({ text: s.ref, url: s.source_url });
-        if (s.title && s.title.length > 8) matchers.push({ text: s.title, url: s.source_url });
-      });
-
-      // Sort by length (descending) to match "Electricity Rules 2022" before "Rules"
-      const sortedMatchers = matchers.sort((a, b) => b.text.length - a.text.length);
-
-      sortedMatchers.forEach(m => {
-        if (!m.text || !m.url) return;
-        const escaped = m.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        
-        // Match [Text]
-        const bracketRegex = new RegExp(`\\[${escaped}\\]`, 'gi');
-        newText = newText.replace(bracketRegex, `[${m.text}](${m.url})`);
-        
-        // Match bare Text (if not already part of a link)
-        // Use a negative lookahead/lookbehind to avoid double-processing
-        const bareRegex = new RegExp(`(?<!\\[)${escaped}(?!\\]|\\()`, 'gi');
-        newText = newText.replace(bareRegex, `[${m.text}](${m.url})`);
-      });
-    }
+    // 0. SANITIZATION: Strip all bare URLs that aren't already in markdown [text](url) format
+    // This removes visible URLs like: Citation(https://...) or bare https://...
+    // but preserves markdown links like [text](https://...)
+    
+    // Remove URLs inside parentheses: something(https://...) → something()
+    newText = newText.replace(/\(https?:\/\/[^\s)]+\)/g, '()');
+    // Clean up empty parentheses: () → (remove)
+    newText = newText.replace(/\(\s*\)/g, '');
+    // Remove any remaining bare URLs that aren't in markdown format
+    // This regex avoids URLs already in [text](url) by checking they're not preceded by ]
+    newText = newText.replace(/(?<!\])\s*https?:\/\/[^\s)\]]+(?![)\]])/g, '');
+    
+    // 1. Skip explicit source citation auto-linking so source URLs never appear in response text.
+    //    Only raw URLs are sanitized here; source references remain plain text.
 
     // 2. Universal Auto-linkifier for PDFs, Bitstreams, and GridMind Repo
     // Regex catches bare URLs but avoids those already in [title](url) format
@@ -1531,10 +1598,24 @@ function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: {
 
   const effectiveLength = getEffectiveLength(displayedLength, processedText);
 
+  // Helper: Sanitize URLs from displayed text during typing animation
+  const sanitizeDisplayedText = (text: string): string => {
+    let sanitized = text;
+    // Remove URLs inside parentheses
+    sanitized = sanitized.replace(/\(https?:\/\/[^\s)]+\)/g, '()');
+    // Clean up empty parentheses
+    sanitized = sanitized.replace(/\(\s*\)/g, '');
+    // Remove any remaining bare URLs
+    sanitized = sanitized.replace(/(?<!\])\s*https?:\/\/[^\s)\]]+(?![)\]])/g, '');
+    return sanitized;
+  };
+
+  const displayedText = sanitizeDisplayedText(processedText.slice(0, effectiveLength));
+
   return (
     <div className="w-full overflow-hidden markdown-content">
       <ReactMarkdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>
-        {safeText.length > 0 ? processedText.slice(0, effectiveLength) : ""}
+        {safeText.length > 0 ? displayedText : ""}
       </ReactMarkdown>
       <span className="inline-block w-0.5 h-5 bg-blue-600 animate-pulse ml-0.5 align-middle" />
     </div>
@@ -1712,7 +1793,13 @@ function VerbositySlider({
 
 const VERBOSITY_LABELS = ["Short", "Brief", "Standard", "Detailed", "In-depth"];
 
-function SourcesSection({ sources }: { sources: Source[] }) {
+function SourcesSection({
+  sources,
+  onOpenSource,
+}: {
+  sources: Source[];
+  onOpenSource?: (source: Source) => void;
+}) {
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? sources : sources.slice(0, 5);
 
@@ -1731,23 +1818,15 @@ function SourcesSection({ sources }: { sources: Source[] }) {
             key={source.doc_id}
             className="flex items-center gap-3 group"
           >
-            {/* PDF icon – clickable link */}
-            {source.source_url ? (
-              <a
-                href={source.source_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Open document"
-                onContextMenu={(e) => e.preventDefault()}
-                className="shrink-0 w-6 h-6 flex items-center justify-center rounded bg-slate-200 hover:bg-slate-300 border border-slate-400 transition-all"
-              >
-                <FileText className="w-3 h-3 text-blue-600" />
-              </a>
-            ) : (
-              <span className="shrink-0 w-6 h-6 flex items-center justify-center rounded bg-slate-200 border border-slate-400">
-                <FileText className="w-3 h-3 text-slate-600" />
-              </span>
-            )}
+            {/* PDF icon – internal viewer button */}
+            <button
+              type="button"
+              onClick={() => onOpenSource?.(source)}
+              className="shrink-0 w-6 h-6 flex items-center justify-center rounded bg-slate-200 hover:bg-slate-300 border border-slate-400 transition-all"
+              title="View document"
+            >
+              <FileText className="w-3 h-3 text-blue-600" />
+            </button>
 
             {/* Label */}
             <span className="text-[10px] font-black text-blue-700 uppercase tracking-tight shrink-0">
