@@ -1206,10 +1206,13 @@ export default function Home() {
                         {/* Share bar node */}
                         <ShareBar result={result} query={query} />
 
-                        {/* Structured Sources Section - Removed as per UI unification request */}
-                        {/* {result.sources.length > 0 && (
-                          <SourcesSection sources={result.sources} />
-                        )} */}
+                        {/* Structured Sources Section */}
+                        {result.sources.length > 0 && (
+                          <SourcesSection 
+                            sources={result.sources}
+                            onOpenSource={(source) => setActiveSource({ url: source.source_url, title: source.title })}
+                          />
+                        )}
                       </div>
                     </motion.div>
                   )}
