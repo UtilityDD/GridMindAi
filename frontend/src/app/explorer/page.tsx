@@ -335,7 +335,7 @@ export default function ExplorerPage() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search regulations (e.g. WBSEDCL acts, metering specs...)"
+              placeholder="Search regulations..."
               className="w-full h-12 pl-12 pr-28 bg-slate-100 border-none rounded-2xl text-[14px] text-slate-900 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all shadow-inner"
             />
             <div className="absolute inset-y-1.5 right-1.5 flex items-center gap-1">
