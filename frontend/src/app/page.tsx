@@ -41,6 +41,7 @@ const Sidebar = dynamic(() => import("@/components/Sidebar"), { ssr: false });
 const PricingModal = dynamic(() => import("@/components/PricingModal"), { ssr: false });
 const DisclaimerModal = dynamic(() => import("@/components/DisclaimerModal"), { ssr: false });
 const LiveStats = dynamic(() => import("@/components/LiveStats"), { ssr: false });
+const AnimatedLogo = dynamic(() => import("@/components/AnimatedLogo"), { ssr: false });
 // ShareDocument is managed inside Sidebar.tsx
 
 interface Source {
@@ -533,9 +534,9 @@ export default function Home() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-          <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-600">Initializing Core...</p>
+        <div className="flex flex-col items-center gap-6">
+          <AnimatedLogo />
+          <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-600">Loading GridMind...</p>
         </div>
       </div>
     );
