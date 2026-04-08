@@ -77,10 +77,9 @@ export default function SecureIntelligenceViewer({
       rawUrl = rawUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
     }
 
-    const isMd = rawUrl.toLowerCase().endsWith('.md') || 
-                 rawUrl.includes('.md?') || 
-                 rawUrl.includes('/raw/') ||
-                 (rawUrl.includes('github') && !rawUrl.toLowerCase().endsWith('.pdf'));
+    // Keep markdown detection strict to avoid misclassifying GitHub-hosted PDFs.
+    const lowerRawUrl = rawUrl.toLowerCase();
+    const isMd = lowerRawUrl.endsWith('.md') || lowerRawUrl.includes('.md?');
 
     if (isMd) {
       loadMd(rawUrl);
@@ -177,14 +176,19 @@ export default function SecureIntelligenceViewer({
           
           observerRef.current = observer;
 
-          async function renderPage(pageNum: number, container: HTMLDivElement) {
+          async function renderPage(
+            pageNum: number,
+            container: HTMLDivElement,
+            options?: { scale?: number; upgradeToScale?: number }
+          ) {
             if (!pdfRef.current || isCancelled) return;
             container.setAttribute("data-hit", "true");
             try {
               const page = await pdfRef.current.getPage(pageNum);
               if (isCancelled || !pdfRef.current) return;
 
-              const viewport = page.getViewport({ scale: 1.5 });
+              const renderScale = options?.scale ?? 1.5;
+              const viewport = page.getViewport({ scale: renderScale });
               
               const canvas = document.createElement("canvas");
               canvas.className = "shadow-2xl bg-white max-w-full rounded-sm ring-1 ring-slate-200/50 transition-opacity duration-300 opacity-0";
@@ -198,6 +202,15 @@ export default function SecureIntelligenceViewer({
               container.innerHTML = "";
               container.appendChild(canvas);
               setTimeout(() => canvas.classList.remove("opacity-0"), 50);
+
+              // Render first page quickly at lower scale, then silently upgrade quality.
+              if (options?.upgradeToScale && options.upgradeToScale > renderScale) {
+                setTimeout(() => {
+                  if (!isCancelled && pdfRef.current) {
+                    renderPage(pageNum, container, { scale: options.upgradeToScale });
+                  }
+                }, 120);
+              }
             } catch (e) {
               console.error(`Page ${pageNum} render fail:`, e);
               container.setAttribute("data-hit", "false"); 
@@ -241,8 +254,10 @@ export default function SecureIntelligenceViewer({
             containerRef.current.appendChild(pageDiv);
             observer.observe(pageDiv);
             
-            if (i <= 2) {
-              renderPage(i, pageDiv);
+            if (i === 1) {
+              renderPage(i, pageDiv, { scale: 0.9, upgradeToScale: 1.5 });
+            } else if (i === 2) {
+              renderPage(i, pageDiv, { scale: 1.2 });
             }
           }
         }

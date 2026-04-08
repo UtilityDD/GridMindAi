@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Search, Filter, BookOpen, FileText, Settings, X, ChevronRight, Sparkles, Loader2, ArrowLeft, AlertCircle, ShieldCheck, Book, Calendar, Hash, ExternalLink } from "lucide-react";
+import { Search, Filter, BookOpen, FileText, Settings, X, ChevronRight, Sparkles, Loader2, ArrowLeft, AlertCircle, ShieldCheck, Book, Calendar, Hash, ExternalLink, Minimize2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -162,14 +162,12 @@ export default function ExplorerPage() {
   const [loading, setLoading] = useState(false);
   const [category, setCategory] = useState("all");
   const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null);
-  const [viewingSource, setViewingSource] = useState<{ url: string; title: string } | null>(null);
-  const [iframeLoading, setIframeLoading] = useState(false);
-  const [iframeError, setIframeError] = useState(false);
   const [visibleDocsCount, setVisibleDocsCount] = useState(3);
   const [searchTime, setSearchTime] = useState(0);
   const [totalMatches, setTotalMatches] = useState(0);
   const [splitRatio, setSplitRatio] = useState(100); // 100 means no split
   const [explorerView, setExplorerView] = useState<"analysis" | "source">("analysis");
+  const [isFullscreenViewer, setIsFullscreenViewer] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
   // --- Grouping Logic ---
@@ -192,18 +190,6 @@ export default function ExplorerPage() {
     // Sort groups by the highest rank of their first chunk
     return Object.values(groups).sort((a, b) => b.chunks[0].rank - a.chunks[0].rank);
   }, [results]);
-
-  // --- PDF Logic ---
-  const normalizedUrl = React.useMemo(() => {
-    if (!viewingSource?.url) return "";
-    let url = viewingSource.url;
-    // GitHub Blob → Raw
-    if (url.includes('github.com') && url.includes('/blob/')) {
-      url = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
-    }
-    // Wrap in Google Viewer
-    return `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
-  }, [viewingSource]);
 
   // --- History Management ---
   useEffect(() => {
@@ -242,15 +228,14 @@ export default function ExplorerPage() {
   };
 
   useEffect(() => {
-    if (viewingSource) {
-      setIframeLoading(true);
-      setIframeError(false);
-      const timer = setTimeout(() => {
-        setIframeLoading(false); // Fallback if it takes too long
-      }, 20000);
-      return () => clearTimeout(timer);
-    }
-  }, [viewingSource]);
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isFullscreenViewer) {
+        setIsFullscreenViewer(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isFullscreenViewer]);
 
   // --- Search Logic with Debounce ---
   const performSearch = useCallback(async (q: string, cat: string) => {
@@ -525,6 +510,7 @@ export default function ExplorerPage() {
                   onClick={() => {
                     setSplitRatio(100);
                     setSelectedResult(null);
+                    setIsFullscreenViewer(false);
                   }}
                   className="p-2 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-slate-900 transition-all"
                 >
@@ -565,13 +551,55 @@ export default function ExplorerPage() {
                   <SecureIntelligenceViewer 
                     source={{ url: selectedResult.source_url, title: selectedResult.title }}
                     onClose={() => setExplorerView("analysis")}
-                    hideHeader={true}
+                    onMaximize={() => setIsFullscreenViewer(true)}
+                    hideHeader={false}
+                    isFullscreen={false}
                   />
                 )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {isFullscreenViewer && selectedResult && (
+          <div className="fixed inset-0 z-50 bg-slate-900 flex flex-col animate-in fade-in duration-300">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700 bg-slate-800 shadow-lg">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="font-bold text-white text-base truncate">
+                    {selectedResult.title}
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-0.5">Fullscreen Document Viewer</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsFullscreenViewer(false)}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold rounded-lg transition-all active:scale-95"
+                title="Exit Fullscreen (ESC)"
+              >
+                <Minimize2 className="w-4 h-4" />
+                Exit Fullscreen
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-auto bg-slate-900">
+              <SecureIntelligenceViewer
+                source={{ url: selectedResult.source_url, title: selectedResult.title }}
+                onClose={() => setIsFullscreenViewer(false)}
+                hideHeader={true}
+                isFullscreen={true}
+              />
+            </div>
+
+            <div className="px-6 py-3 bg-slate-800 border-t border-slate-700 text-xs text-slate-300 flex items-center justify-between">
+              <p>Press <span className="px-2 py-1 bg-slate-700/70 rounded font-mono text-slate-200 ml-1 inline-block">ESC</span> to exit fullscreen</p>
+              <p className="text-slate-400">GridMind Explorer Secure Viewer</p>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
