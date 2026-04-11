@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Zap } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 
 interface Phase {
   id: string;
@@ -12,11 +12,11 @@ interface Phase {
 }
 
 const PHASES: Phase[] = [
-  { id: "embedding", label: "Embedding query", icon: "🔍", durationMs: 2000 },
-  { id: "retrieval", label: "Searching documents", icon: "📚", durationMs: 3500 },
-  { id: "analysis", label: "Analyzing context", icon: "🧠", durationMs: 4000 },
-  { id: "generation", label: "Synthesizing response", icon: "✨", durationMs: 8000 },
-  { id: "formatting", label: "Formatting answer", icon: "📝", durationMs: 2000 },
+  { id: "understanding", label: "Understanding request", icon: "1", durationMs: 1800 },
+  { id: "finding", label: "Finding sources", icon: "2", durationMs: 3200 },
+  { id: "reading", label: "Reading context", icon: "3", durationMs: 3800 },
+  { id: "drafting", label: "Drafting response", icon: "4", durationMs: 6200 },
+  { id: "finishing", label: "Finishing up", icon: "5", durationMs: 1800 },
 ];
 
 const TOTAL_DURATION = PHASES.reduce((sum, p) => sum + p.durationMs, 0);
@@ -45,22 +45,8 @@ export default function AIProgressIndicator() {
     return () => clearInterval(interval);
   }, []);
 
-  // Calculate progress percentage
   const progressPercent = Math.min((elapsed / TOTAL_DURATION) * 100, 100);
 
-  // Calculate phase-specific progress
-  let cumulativeBefore = 0;
-  let phaseProgress = 0;
-  for (let i = 0; i <= currentPhaseIdx; i++) {
-    if (i < currentPhaseIdx) {
-      cumulativeBefore += PHASES[i].durationMs;
-    } else {
-      const phaseElapsed = Math.max(0, elapsed - cumulativeBefore);
-      phaseProgress = (phaseElapsed / PHASES[i].durationMs) * 100;
-    }
-  }
-
-  // Format time
   const formatTime = (ms: number) => {
     const seconds = (ms / 1000).toFixed(1);
     return `${seconds}s`;
@@ -71,188 +57,123 @@ export default function AIProgressIndicator() {
   const remainingSeconds = (remainingMs / 1000).toFixed(1);
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 gap-8">
-      {/* Icon + Main Status */}
-      <div className="flex flex-col items-center gap-4">
-        <div className="relative">
-          <motion.div
-            animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -inset-3 bg-gradient-to-r from-blue-400/30 to-indigo-400/20 rounded-3xl blur-xl"
-          />
-          <div className="relative w-16 h-16 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 flex items-center justify-center shadow-lg shadow-blue-200/30">
-            <motion.span
-              key={currentPhaseIdx}
-              initial={{ scale: 0, rotateZ: -180 }}
-              animate={{ scale: 1, rotateZ: 0 }}
-              transition={{ type: "spring", stiffness: 200, damping: 15 }}
-              className="text-3xl"
-            >
-              {PHASES[currentPhaseIdx].icon}
-            </motion.span>
+    <div className="flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)] px-6 py-6 sm:px-8 sm:py-7">
+        <div className="flex items-start gap-4">
+          <div className="relative flex-shrink-0">
+            <motion.div
+              animate={{ scale: [1, 1.06, 1], opacity: [0.85, 1, 0.85] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -inset-2 rounded-2xl bg-blue-500/10 blur-md"
+            />
+            <div className="relative w-12 h-12 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+              <motion.div
+                key={currentPhaseIdx}
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.25 }}
+                className="flex items-center justify-center"
+              >
+                <Sparkles className="w-5 h-5 text-blue-600" />
+              </motion.div>
+            </div>
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="text-sm sm:text-[15px] font-semibold text-slate-900">
+                  Generating response
+                </h3>
+                <motion.p
+                  key={currentPhaseIdx}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-xs sm:text-sm text-slate-500 mt-0.5"
+                >
+                  {PHASES[currentPhaseIdx].label}
+                </motion.p>
+              </div>
+
+              <div className="text-right flex-shrink-0">
+                <div className="text-[11px] font-medium text-slate-500">Elapsed</div>
+                <div className="text-sm font-semibold text-slate-900">{elapsedSeconds}s</div>
+              </div>
+            </div>
+
+            <div className="mt-4 h-2 rounded-full bg-slate-100 overflow-hidden">
+              <motion.div
+                animate={{ width: `${progressPercent}%` }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500"
+              />
+            </div>
+
+            <div className="mt-4 grid grid-cols-5 gap-2">
+              {PHASES.map((phase, idx) => {
+                const isCompleted = idx < currentPhaseIdx;
+                const isCurrent = idx === currentPhaseIdx;
+
+                return (
+                  <div key={phase.id} className="flex flex-col items-center gap-2 min-w-0">
+                    <div
+                      className={`w-full h-1.5 rounded-full transition-colors ${
+                        isCompleted
+                          ? "bg-emerald-500"
+                          : isCurrent
+                            ? "bg-blue-500"
+                            : "bg-slate-200"
+                      }`}
+                    />
+                    <div
+                      className={`w-7 h-7 rounded-full border flex items-center justify-center text-[10px] font-semibold transition-all ${
+                        isCompleted
+                          ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                          : isCurrent
+                            ? "bg-blue-50 border-blue-200 text-blue-700"
+                            : "bg-slate-50 border-slate-200 text-slate-400"
+                      }`}
+                    >
+                      {isCompleted ? <Check className="w-3.5 h-3.5" /> : phase.icon}
+                    </div>
+                    <span
+                      className={`text-[10px] leading-tight text-center truncate w-full ${
+                        isCompleted
+                          ? "text-emerald-700"
+                          : isCurrent
+                            ? "text-blue-700"
+                            : "text-slate-500"
+                      }`}
+                    >
+                      {phase.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 flex items-center justify-between text-[11px] text-slate-500">
+              <span>Working through the response</span>
+              <span className="font-medium text-slate-700">~{remainingSeconds}s left</span>
+              <span className="font-semibold text-blue-600">{Math.round(progressPercent)}%</span>
+            </div>
           </div>
         </div>
 
-        <motion.div
-          key={currentPhaseIdx}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="text-center"
-        >
-          <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">
-            {PHASES[currentPhaseIdx].label}
-          </h3>
-          <p className="text-[11px] text-slate-500 font-medium mt-1">
-            Strategic Node Calibration
-          </p>
-        </motion.div>
-      </div>
-
-      {/* Phase Pipeline */}
-      <div className="w-full max-w-md space-y-2.5">
-        {PHASES.map((phase, idx) => {
-          const isCompleted = idx < currentPhaseIdx;
-          const isCurrent = idx === currentPhaseIdx;
-          const isPending = idx > currentPhaseIdx;
-
-          const phaseStart = PHASES.slice(0, idx).reduce((sum, p) => sum + p.durationMs, 0);
-          const phaseEnd = phaseStart + phase.durationMs;
-          const phaseCurrent =
-            isCurrent
-              ? Math.min(
-                  ((elapsed - phaseStart) / phase.durationMs) * 100,
-                  100
-                )
-              : isCompleted
-                ? 100
-                : 0;
-
-          return (
-            <motion.div
-              key={phase.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className={`relative p-3 rounded-xl border transition-all ${
-                isCompleted
-                  ? "bg-emerald-50 border-emerald-200"
-                  : isCurrent
-                    ? "bg-blue-50 border-blue-300 shadow-lg shadow-blue-200/20"
-                    : "bg-slate-50 border-slate-200 opacity-60"
-              }`}
+        <AnimatePresence>
+          {elapsed > 7000 && (
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              className="mt-5 text-[11px] text-slate-500 leading-relaxed"
             >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                  {/* Status Icon */}
-                  {isCompleted && (
-                    <motion.div
-                      initial={{ scale: 0, rotate: -180 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ type: "spring", stiffness: 200, damping: 12 }}
-                      className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0"
-                    >
-                      <Check className="w-3 h-3 text-white" />
-                    </motion.div>
-                  )}
-                  {isCurrent && (
-                    <motion.div
-                      animate={{ rotate: 360, scale: [1, 1.1, 1] }}
-                      transition={{ rotate: { duration: 1.5, repeat: Infinity, ease: "linear" }, scale: { duration: 1.2, repeat: Infinity } }}
-                      className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0"
-                    >
-                      <Zap className="w-3 h-3 text-white" />
-                    </motion.div>
-                  )}
-                  {isPending && (
-                    <div className="w-5 h-5 rounded-full bg-slate-300 flex-shrink-0" />
-                  )}
-
-                  {/* Label */}
-                  <span
-                    className={`text-[11px] font-bold uppercase tracking-wider truncate ${
-                      isCompleted
-                        ? "text-emerald-700"
-                        : isCurrent
-                          ? "text-blue-700"
-                          : "text-slate-500"
-                    }`}
-                  >
-                    {phase.label}
-                  </span>
-                </div>
-
-                {/* Time */}
-                <span className="text-[10px] font-mono font-bold text-slate-600 flex-shrink-0">
-                  {isCompleted
-                    ? formatTime(phase.durationMs)
-                    : isCurrent
-                      ? formatTime(Math.max(0, remainingMs))
-                      : "—"}
-                </span>
-              </div>
-
-              {/* Progress Bar for Current Phase */}
-              {isCurrent && (
-                <div className="mt-2 h-1.5 bg-blue-200/50 rounded-full overflow-hidden">
-                  <motion.div
-                    animate={{ width: `${phaseCurrent}%` }}
-                    transition={{ duration: 0.1 }}
-                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 shadow-lg shadow-blue-500/50"
-                  />
-                </div>
-              )}
-            </motion.div>
-          );
-        })}
+              This is taking a little longer because the response is being assembled from multiple document sources.
+            </motion.p>
+          )}
+        </AnimatePresence>
       </div>
-
-      {/* Overall Progress + Timer */}
-      <div className="w-full max-w-md space-y-2">
-        {/* Progress Bar */}
-        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-          <motion.div
-            animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: 0.15 }}
-            className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"
-          />
-        </div>
-
-        {/* Time Info */}
-        <div className="flex items-center justify-between text-[10px] font-mono">
-          <span className="text-slate-600 font-bold">
-            {elapsedSeconds}s elapsed
-          </span>
-          <span className="text-slate-500 font-medium">
-            ~{remainingSeconds}s left
-          </span>
-          <span className="text-blue-600 font-bold">
-            {Math.round(progressPercent)}%
-          </span>
-        </div>
-      </div>
-
-      {/* Help Text - Show after 5 seconds */}
-      <AnimatePresence>
-        {elapsed > 5000 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="max-w-sm p-4 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl shadow-lg shadow-amber-100/30 flex flex-col items-center gap-2 text-center"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-lg">⚡</span>
-              <span className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">
-                Need Faster Results?
-              </span>
-            </div>
-            <p className="text-[10px] text-slate-600 leading-relaxed font-medium">
-              Search keywords in <span className="font-bold">GridMind Explorer</span> for instant document retrieval.
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

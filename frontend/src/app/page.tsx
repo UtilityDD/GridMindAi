@@ -237,6 +237,7 @@ export default function Home() {
   const [verbosity, setVerbosity] = useState(3);
   const [userTier, setUserTier] = useState<string>("free");
   const [activeQuestion, setActiveQuestion] = useState("");
+  const [questionCopied, setQuestionCopied] = useState(false);
   const [activeSource, setActiveSource] = useState<{ url: string; title: string } | null>(null);
   const [isFullscreenViewer, setIsFullscreenViewer] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
@@ -959,34 +960,32 @@ export default function Home() {
                         }}
                       />
                       
-                      {/* "Suggest Question" button */}
-                      {!query && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.5 }}
-                          className="absolute top-3 right-3 z-30"
+                      {/* "Suggest Question" button: stays visible so user can reshuffle */}
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className="absolute top-3 right-3 z-30"
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const pool = ALL_INTERESTING_QUERIES;
+                            let idx: number;
+                            do {
+                              idx = Math.floor(Math.random() * pool.length);
+                            } while (idx === lastRandomRef.current && pool.length > 1);
+                            lastRandomRef.current = idx;
+                            setQuery(pool[idx]);
+                            inputRef.current?.focus();
+                            // No auto-submit — user presses Enter or the send button
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-50/85 to-blue-50/85 backdrop-blur-sm border border-indigo-100/60 text-indigo-700/85 rounded-full text-[10px] font-bold uppercase tracking-widest hover:text-indigo-700 hover:shadow-sm hover:border-indigo-200 hover:from-indigo-50 hover:to-blue-50 transition-all active:scale-95 group"
                         >
-                          <button
-                            onClick={(e) => {
-                              e.preventDefault();
-                              const pool = ALL_INTERESTING_QUERIES;
-                              let idx: number;
-                              do {
-                                idx = Math.floor(Math.random() * pool.length);
-                              } while (idx === lastRandomRef.current && pool.length > 1);
-                              lastRandomRef.current = idx;
-                              setQuery(pool[idx]);
-                              inputRef.current?.focus();
-                              // No auto-submit — user presses Enter or the send button
-                            }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-50/80 to-blue-50/80 backdrop-blur-sm border border-indigo-100/50 text-indigo-700/80 rounded-full text-[10px] font-bold uppercase tracking-widest hover:text-indigo-700 hover:shadow-sm hover:border-indigo-200 hover:from-indigo-50 hover:to-blue-50 transition-all active:scale-95 group"
-                          >
-                            <Sparkles className="w-3 h-3 text-indigo-500/80 group-hover:text-indigo-600" />
-                            <span>Suggest Question</span>
-                          </button>
-                        </motion.div>
-                      )}
+                          <Sparkles className="w-3 h-3 text-indigo-500/80 group-hover:text-indigo-600" />
+                          <span>{query.trim() ? "Try Another" : "Suggest Question"}</span>
+                        </button>
+                      </motion.div>
 
                       {/* Local Clarification Overlay */}
                       <AnimatePresence>
@@ -1142,8 +1141,28 @@ export default function Home() {
                     >
                       {/* User Query Bubble */}
                       <div className="flex justify-end">
-                        <div className="max-w-[80%] px-5 py-3 rounded-2xl rounded-br-md bg-blue-100 border border-blue-300 text-sm text-blue-900">
-                          {activeQuestion}
+                        <div className="max-w-[80%] px-5 py-3 rounded-2xl rounded-br-md bg-blue-100 border border-blue-300 text-sm text-blue-900 select-none">
+                          <div className="flex items-start gap-3">
+                            <p className="min-w-0 flex-1 leading-relaxed">{activeQuestion}</p>
+                            {activeQuestion && (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  await navigator.clipboard.writeText(activeQuestion);
+                                  setQuestionCopied(true);
+                                  setTimeout(() => setQuestionCopied(false), 2000);
+                                }}
+                                className="shrink-0 inline-flex items-center justify-center rounded-lg border border-blue-200 bg-white/70 p-1.5 text-blue-700 transition-colors hover:bg-white hover:border-blue-300"
+                                title="Copy question"
+                              >
+                                {questionCopied ? (
+                                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
 

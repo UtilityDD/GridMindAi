@@ -50,10 +50,12 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
     setLoading(true);
     setError("");
     try {
+      const origin = window.location.origin;
+      const next = encodeURIComponent(`${origin}/`);
       const { error } = await getSupabase().auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${origin}/auth/callback?next=${next}`,
           queryParams: { access_type: "offline", prompt: "select_account" },
         },
       });

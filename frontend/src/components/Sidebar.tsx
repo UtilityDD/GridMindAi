@@ -191,14 +191,14 @@ function SidebarContent({
                             className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-700`}
                         >
                             <MessageSquare className="w-4 h-4" />
-                            {!collapsed && <span>New Inquiry</span>}
+                            {!collapsed && <span className="truncate whitespace-nowrap">New Inquiry</span>}
                         </button>
                         <Link 
                             href="/explorer"
                             className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm font-bold transition-all hover:bg-slate-50 hover:border-slate-300 group`}
                         >
                             <Search className={`w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform`} />
-                            {!collapsed && <span>GridMind Explorer</span>}
+                            {!collapsed && <span className="truncate whitespace-nowrap">GridMind Explorer</span>}
                         </Link>
                     </div>
                 </div>
@@ -225,7 +225,7 @@ function SidebarContent({
                                     className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2 px-3'} py-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-200 text-xs text-left group transition-all`}
                                     title={collapsed ? item.question : undefined}
                                 >
-                                    <span className={`truncate flex-1 ${collapsed ? 'hidden' : 'block'}`}>{item.question}</span>
+                                    <span className={`truncate whitespace-nowrap flex-1 ${collapsed ? 'hidden' : 'block'}`}>{item.question}</span>
                                     {collapsed ? <History className="w-4 h-4" /> : <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />}
                                 </button>
                             ))
@@ -240,7 +240,7 @@ function SidebarContent({
                         className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl border border-blue-200 bg-blue-50 text-blue-600 text-xs font-bold transition-all hover:bg-blue-100 group shadow-sm`}
                     >
                         <ShieldCheck className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        {!collapsed && <span>Share Document</span>}
+                        {!collapsed && <span className="truncate whitespace-nowrap">Share Document</span>}
                     </button>
                 </div>
             </div>
@@ -252,15 +252,15 @@ function SidebarContent({
                         <div className="flex items-center gap-2">
                             <Cpu className="w-3 h-3 text-blue-600" />
                             {!collapsed && (
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">Consumption</span>
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <span className="text-[10px] font-bold text-slate-700 uppercase tracking-widest whitespace-nowrap">Consumption</span>
                                     {usage.hasCustomLimit && (
-                                        <span className="text-[8px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-300 uppercase tracking-tighter">
+                                        <span className="text-[8px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-300 uppercase tracking-tighter whitespace-nowrap">
                                             Promo Active
                                         </span>
                                     )}
                                     {usage.isTrialExpired && (
-                                        <span className="text-[8px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300 uppercase tracking-tighter">
+                                        <span className="text-[8px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300 uppercase tracking-tighter whitespace-nowrap">
                                             Expired
                                         </span>
                                     )}
@@ -307,15 +307,15 @@ function SidebarContent({
                     {!collapsed && (
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                                <p className="text-xs font-semibold text-slate-900 truncate">{userEmail.split('@')[0]}</p>
+                                <p className="text-xs font-semibold text-slate-900 truncate whitespace-nowrap">{userEmail.split('@')[0]}</p>
                                 <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-md border ${userTier === 'pro' ? 'bg-blue-100/80 border-blue-400 text-blue-700' :
                                     userTier === 'basic' ? 'bg-slate-200 border-slate-400 text-slate-700' :
                                         'bg-slate-200 border-slate-400 text-slate-700'
-                                    }`}>
+                                    } whitespace-nowrap`}>
                                     {usage?.hasCustomLimit ? 'Promo' : (usage?.tierName || userTier)}
                                 </span>
                                 {usage?.hasCustomLimit && (
-                                    <span className="text-[8px] font-bold text-slate-600 uppercase">
+                                    <span className="text-[8px] font-bold text-slate-600 uppercase whitespace-nowrap">
                                         Applied
                                     </span>
                                 )}
