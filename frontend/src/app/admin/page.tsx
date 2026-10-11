@@ -6,20 +6,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Users,
   Shield,
-  ShieldAlert,
   Search,
   CheckCircle2,
   AlertTriangle,
   ArrowLeft,
   RefreshCw,
-  Sliders,
-  Check,
   Ban,
   TrendingUp,
   Cpu,
-  Mail,
+  Lock,
   Calendar,
-  Lock
+  Sparkles,
+  Check,
+  ChevronRight,
+  UserCheck,
+  UserX
 } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { isUserAdmin } from "@/lib/admin";
@@ -162,7 +163,7 @@ export default function AdminUsersPage() {
         })
       );
 
-      showToast("User updated successfully");
+      showToast("User account settings saved");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Save failed";
       alert(msg);
@@ -197,13 +198,15 @@ export default function AdminUsersPage() {
     return { total, activeToday, proOrAdmin, restricted };
   }, [users]);
 
-  // Auth Loading
+  // Verification Screen
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
-        <div className="flex flex-col items-center gap-3">
-          <RefreshCw className="w-6 h-6 animate-spin text-indigo-400" />
-          <p className="text-xs uppercase tracking-widest text-slate-400">Verifying Admin Access...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 font-sans">
+        <div className="flex flex-col items-center gap-3 bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm">
+          <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Verifying Admin Authorization...
+          </p>
         </div>
       </div>
     );
@@ -212,22 +215,22 @@ export default function AdminUsersPage() {
   // Unauthorized Screen
   if (!user || !currentUserIsAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 text-white">
-        <div className="max-w-md w-full bg-slate-900 border border-red-500/30 rounded-3xl p-8 text-center flex flex-col items-center gap-5 shadow-2xl">
-          <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 font-sans text-slate-900">
+        <div className="max-w-md w-full bg-white border border-slate-200/90 rounded-3xl p-8 text-center flex flex-col items-center gap-5 shadow-xl">
+          <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
             <Lock className="w-7 h-7" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Access Restricted</h1>
-            <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-              This console is reserved exclusively for system administrators ({isUserAdmin(user?.email) ? "" : "dipnkr.das@gmail.com"}).
+            <h1 className="text-xl font-bold tracking-tight text-slate-900">Access Restricted</h1>
+            <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+              This administrative console is reserved exclusively for system administrators.
             </p>
           </div>
           <Link
             href="/"
-            className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-widest transition-all"
+            className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs uppercase tracking-wider transition-all shadow-sm active:scale-95"
           >
-            Back to Dashboard
+            Return to Dashboard
           </Link>
         </div>
       </div>
@@ -235,105 +238,131 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-[#fcfcfd] text-slate-900 font-sans selection:bg-slate-900 selection:text-white flex flex-col">
       {/* Toast Notification */}
       <AnimatePresence>
         {toastMessage && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-6 right-6 z-50 flex items-center gap-2.5 bg-emerald-500 text-slate-950 px-5 py-3 rounded-2xl font-bold text-xs shadow-2xl shadow-emerald-500/20"
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-6 right-6 z-50 flex items-center gap-2.5 bg-slate-900 text-white px-4 py-3 rounded-2xl font-semibold text-xs shadow-2xl shadow-slate-900/20 border border-slate-800"
           >
-            <CheckCircle2 className="w-4 h-4" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             <span>{toastMessage}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Top Header */}
-      <header className="border-b border-white/5 bg-slate-900/50 backdrop-blur-xl sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 py-3.5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
             <Link
               href="/"
-              className="p-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all"
-              title="Return to Main Dashboard"
+              className="p-2 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-all shadow-sm"
+              title="Return to Main Chat"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <div>
               <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-indigo-400" />
-                <h1 className="text-base font-bold tracking-tight text-white">GridMind User Management</h1>
-                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                  Admin Console
+                <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center shadow-sm">
+                  <Shield className="w-3.5 h-3.5" />
+                </div>
+                <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-900">
+                  GridMind Admin Console
+                </h1>
+                <span className="hidden sm:inline-flex text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                  Governance
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 mt-0.5">Manage accounts, query quotas, and administrative privileges</p>
+              <p className="text-[11px] text-slate-500 mt-0.5 hidden sm:block">
+                Manage accounts, query consumption quotas, and administrative permissions
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={fetchUsers}
               disabled={loading}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-200 transition-all active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 shadow-sm transition-all active:scale-95 disabled:opacity-50"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-              <span>Refresh</span>
+              <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${loading ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Refresh</span>
             </button>
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>{user.email}</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 border border-slate-200 text-[11px] text-slate-700 font-medium">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="truncate max-w-[140px] sm:max-w-none">{user.email}</span>
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-6 py-8 flex-1 w-full flex flex-col gap-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full flex flex-col gap-6">
         {/* Metric Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-5 flex flex-col gap-1">
-            <div className="flex items-center justify-between text-slate-400 mb-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider">Total Users</span>
-              <Users className="w-4 h-4 text-indigo-400" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Total Users */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-all flex flex-col gap-1">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider">Total Accounts</span>
+              <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
+                <Users className="w-4 h-4" />
+              </div>
             </div>
-            <span className="text-3xl font-extrabold text-white tracking-tight">{stats.total}</span>
-            <span className="text-[10px] text-slate-500">Registered accounts</span>
+            <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-mono">
+              {stats.total}
+            </span>
+            <span className="text-[11px] text-slate-500">Registered users in database</span>
           </div>
 
-          <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-5 flex flex-col gap-1">
-            <div className="flex items-center justify-between text-slate-400 mb-2">
+          {/* Active Today */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-all flex flex-col gap-1">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
               <span className="text-[11px] font-bold uppercase tracking-wider">Active Today</span>
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4" />
+              </div>
             </div>
-            <span className="text-3xl font-extrabold text-emerald-400 tracking-tight">{stats.activeToday}</span>
-            <span className="text-[10px] text-slate-500">Sent queries today</span>
+            <span className="text-2xl sm:text-3xl font-extrabold text-emerald-600 tracking-tight font-mono">
+              {stats.activeToday}
+            </span>
+            <span className="text-[11px] text-slate-500">Submitted queries today</span>
           </div>
 
-          <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-5 flex flex-col gap-1">
-            <div className="flex items-center justify-between text-slate-400 mb-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider">Pro / Admin</span>
-              <Cpu className="w-4 h-4 text-blue-400" />
+          {/* High Tiers */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-all flex flex-col gap-1">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider">Pro & Admin</span>
+              <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center">
+                <Cpu className="w-4 h-4" />
+              </div>
             </div>
-            <span className="text-3xl font-extrabold text-white tracking-tight">{stats.proOrAdmin}</span>
-            <span className="text-[10px] text-slate-500">High bandwidth tiers</span>
+            <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-mono">
+              {stats.proOrAdmin}
+            </span>
+            <span className="text-[11px] text-slate-500">High bandwidth tiers</span>
           </div>
 
-          <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-5 flex flex-col gap-1">
-            <div className="flex items-center justify-between text-slate-400 mb-2">
+          {/* Restricted Accounts */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-all flex flex-col gap-1">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
               <span className="text-[11px] font-bold uppercase tracking-wider">Restricted</span>
-              <Ban className="w-4 h-4 text-rose-400" />
+              <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center">
+                <Ban className="w-4 h-4" />
+              </div>
             </div>
-            <span className="text-3xl font-extrabold text-rose-400 tracking-tight">{stats.restricted}</span>
-            <span className="text-[10px] text-slate-500">Access disabled</span>
+            <span className="text-2xl sm:text-3xl font-extrabold text-rose-600 tracking-tight font-mono">
+              {stats.restricted}
+            </span>
+            <span className="text-[11px] text-slate-500">Access disabled</span>
           </div>
         </div>
 
         {/* Filters & Search Toolbar */}
-        <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between bg-slate-900/40 border border-white/5 p-4 rounded-2xl">
+        <div className="bg-white border border-slate-200/80 p-3 sm:p-4 rounded-2xl shadow-sm flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
           {/* Search Box */}
           <div className="relative flex-1 max-w-md">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -341,63 +370,70 @@ export default function AdminUsersPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by email or user UID..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+              placeholder="Search by email or UID..."
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200/90 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all font-medium"
             />
           </div>
 
           {/* Tier Filters */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
             {[
-              { id: "all", label: "All" },
-              { id: "free", label: "Basic" },
-              { id: "pro", label: "Pro" },
-              { id: "admin", label: "Admin" },
-              { id: "restricted", label: "Restricted" },
+              { id: "all", label: "All Users", count: users.length },
+              { id: "free", label: "Basic", count: users.filter((u) => u.tier_id === "free" || u.tier_id === "basic").length },
+              { id: "pro", label: "Pro", count: users.filter((u) => u.tier_id === "pro").length },
+              { id: "admin", label: "Admin", count: users.filter((u) => u.tier_id === "admin").length },
+              { id: "restricted", label: "Restricted", count: stats.restricted },
             ].map((f) => (
               <button
                 key={f.id}
                 onClick={() => setTierFilter(f.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 ${
                   tierFilter === f.id
-                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
-                    : "bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 border border-white/5"
+                    ? "bg-slate-900 text-white shadow-sm"
+                    : "bg-slate-50 text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200/70"
                 }`}
               >
-                {f.label}
+                <span>{f.label}</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    tierFilter === f.id ? "bg-white/20 text-white" : "bg-slate-200/70 text-slate-600"
+                  }`}
+                >
+                  {f.count}
+                </span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Error message */}
+        {/* Error Notification */}
         {error && (
-          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-red-300 text-xs flex items-center gap-3">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-800 text-xs flex items-center gap-3">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
+            <span className="font-medium">{error}</span>
           </div>
         )}
 
         {/* Users Table */}
-        <div className="border border-white/5 bg-slate-900/50 rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-white/[0.02] border-b border-white/5 text-slate-400 uppercase tracking-wider text-[10px] font-bold">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-600 uppercase tracking-wider text-[10px] font-bold">
                 <tr>
-                  <th className="py-4 px-6">User Account</th>
-                  <th className="py-4 px-4">Tier Assignment</th>
-                  <th className="py-4 px-4">Daily Quota</th>
-                  <th className="py-4 px-4 text-center">Today Queries</th>
-                  <th className="py-4 px-4 text-center">Account Status</th>
-                  <th className="py-4 px-6 text-right">Actions</th>
+                  <th className="py-3.5 px-6">User Account</th>
+                  <th className="py-3.5 px-4">Tier Assignment</th>
+                  <th className="py-3.5 px-4">Daily Quota</th>
+                  <th className="py-3.5 px-4 text-center">Today Queries</th>
+                  <th className="py-3.5 px-4 text-center">Account Status</th>
+                  <th className="py-3.5 px-6 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-slate-100">
                 {loading && users.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-16 text-center text-slate-400">
-                      <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-3 text-indigo-400" />
-                      Loading user records...
+                      <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-3 text-blue-600" />
+                      Loading user accounts...
                     </td>
                   </tr>
                 ) : filteredUsers.length === 0 ? (
@@ -420,31 +456,38 @@ export default function AdminUsersPage() {
                       draft.custom_daily_limit !== (u.custom_daily_limit ? String(u.custom_daily_limit) : "");
 
                     return (
-                      <tr key={u.id} className="hover:bg-white/[0.02] transition-colors">
+                      <tr key={u.id} className="hover:bg-slate-50/60 transition-colors">
                         {/* User Identity */}
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
                             <div
-                              className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs uppercase shrink-0 ${
+                              className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs uppercase shrink-0 shadow-sm ${
                                 u.is_admin
-                                  ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
-                                  : "bg-white/5 text-slate-300 border border-white/10"
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-slate-100 text-slate-700 border border-slate-200"
                               }`}
                             >
                               {u.email[0]}
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="font-semibold text-white truncate max-w-xs">{u.email}</span>
+                                <span className="font-semibold text-slate-900 truncate max-w-xs">{u.email}</span>
                                 {u.is_admin && (
-                                  <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                                  <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                                     Admin
                                   </span>
                                 )}
                               </div>
-                              <span className="text-[10px] text-slate-500 font-mono block truncate max-w-[180px]">
-                                UID: {u.id}
-                              </span>
+                              <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400 font-mono">
+                                <span className="truncate max-w-[140px] sm:max-w-[200px]" title={u.id}>
+                                  ID: {u.id.slice(0, 8)}...
+                                </span>
+                                {u.created_at && (
+                                  <span className="text-slate-400 hidden sm:inline">
+                                    • Joined {new Date(u.created_at).toLocaleDateString()}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -459,7 +502,7 @@ export default function AdminUsersPage() {
                                 [u.id]: { ...draft, tier_id: e.target.value },
                               })
                             }
-                            className="bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
+                            className="bg-slate-50 border border-slate-200/90 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-800 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white cursor-pointer transition-all"
                           >
                             {TIERS.map((t) => (
                               <option key={t.id} value={t.id}>
@@ -477,7 +520,7 @@ export default function AdminUsersPage() {
                               min="0"
                               placeholder={
                                 draft.tier_id === "admin"
-                                  ? "Unlimited"
+                                  ? "∞ Unlimited"
                                   : draft.tier_id === "pro"
                                   ? "150"
                                   : draft.tier_id === "advance"
@@ -491,17 +534,19 @@ export default function AdminUsersPage() {
                                   [u.id]: { ...draft, custom_daily_limit: e.target.value },
                                 })
                               }
-                              className="w-24 bg-slate-900 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                              className="w-24 bg-slate-50 border border-slate-200/90 rounded-xl px-2.5 py-1.5 text-xs font-mono text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all"
                             />
-                            <span className="text-[10px] text-slate-500">/day</span>
+                            <span className="text-[10px] font-semibold text-slate-400">/day</span>
                           </div>
                         </td>
 
                         {/* Today's Usage */}
                         <td className="py-4 px-4 text-center">
                           <span
-                            className={`font-mono font-bold text-xs ${
-                              u.today_queries > 0 ? "text-emerald-400" : "text-slate-500"
+                            className={`font-mono font-bold text-xs px-2.5 py-1 rounded-lg inline-block ${
+                              u.today_queries > 0
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                : "text-slate-400"
                             }`}
                           >
                             {u.today_queries}
@@ -518,13 +563,23 @@ export default function AdminUsersPage() {
                                 [u.id]: { ...draft, is_enabled: !draft.is_enabled },
                               })
                             }
-                            className={`px-3 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all border ${
+                            className={`px-3 py-1 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border inline-flex items-center gap-1.5 ${
                               draft.is_enabled
-                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
-                                : "bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                                : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
                             }`}
                           >
-                            {draft.is_enabled ? "Active" : "Disabled"}
+                            {draft.is_enabled ? (
+                              <>
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                <span>Active</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                <span>Disabled</span>
+                              </>
+                            )}
                           </button>
                         </td>
 
@@ -534,16 +589,19 @@ export default function AdminUsersPage() {
                             type="button"
                             disabled={!isModified || savingId === u.id}
                             onClick={() => handleUpdateUser(u.id)}
-                            className={`px-4 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ml-auto ${
                               isModified
-                                ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 active:scale-95"
-                                : "bg-white/5 text-slate-600 border border-white/5 cursor-not-allowed"
+                                ? "bg-slate-900 hover:bg-slate-800 text-white shadow-sm active:scale-95"
+                                : "bg-slate-100 text-slate-400 border border-slate-200/60 cursor-not-allowed"
                             }`}
                           >
                             {savingId === u.id ? (
-                              <RefreshCw className="w-3.5 h-3.5 animate-spin mx-auto" />
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                             ) : (
-                              "Save"
+                              <>
+                                {isModified && <Check className="w-3.5 h-3.5 text-emerald-400" />}
+                                <span>Save</span>
+                              </>
                             )}
                           </button>
                         </td>
