@@ -95,3 +95,25 @@ UPDATE public.user_tiers SET daily_limit = 10, monthly_limit = 999999, name = 'B
 UPDATE public.user_tiers SET daily_limit = 50, monthly_limit = 999999, name = 'Advance' WHERE id = 'advance';
 UPDATE public.user_tiers SET daily_limit = 150, monthly_limit = 999999, name = 'Pro' WHERE id = 'pro';
 ```
+
+---
+
+## 🎨 7. UI Architecture & Design Standards
+
+### Landing Page ([LandingPage.tsx](file:///c:/Dipankar/GridMindAi/frontend/src/components/LandingPage.tsx))
+- **Aesthetic**: Authentic power utility editorial design. No generic AI templates, pulsating glows, or buzzword marketing.
+- **Key Features**:
+  - Live Operational Case Terminal (Section 135 theft, 11kV/33kV line clearances, DTR failure timeframes, DPS formulas, ROPA 2020 pay scales).
+  - Editorial comparison: *Why Generic AI Fails for Power Utilities* (hallucinations vs. verified operative circulars).
+  - Live Circular Index Docket Preview with direct link to the 4,200+ circular directory at `/explorer`.
+
+### Main Inquiry Console ([page.tsx](file:///c:/Dipankar/GridMindAi/frontend/src/app/page.tsx))
+- **Aesthetic**: ChatGPT clone UX.
+- **Layout Elements**:
+  - Sticky header with sidebar toggle, model indicator pill (`GridMind 4.0`), and new chat button.
+  - Centered empty state with greeting (*"What can I help with?"*) and 2x2 clickable prompt cards.
+  - User bubble in ChatGPT gray (`#f4f4f4`, `rounded-3xl`, right-aligned).
+  - Assistant response with markdown tables, clean citations, and ChatGPT-style action bar (Copy, Thumbs Up/Down, Regenerate, Share, and Report).
+  - Floating bottom input bar (`rounded-[26px] bg-[#f4f4f4]`) with auto-expanding textarea, Plus button, verbosity depth slider, and circular send button.
+  - Draggable split-screen PDF viewer for side-by-side circular verification.
+
