@@ -214,9 +214,9 @@ function SidebarContent({
                         {isUserAdmin(userEmail, userTier) && (
                             <Link 
                                 href="/admin"
-                                className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-sm font-bold transition-all hover:bg-indigo-100 hover:border-indigo-300 group shadow-sm`}
+                                className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 text-xs font-semibold transition-all hover:bg-slate-200/80 group shadow-sm`}
                             >
-                                <Shield className="w-4 h-4 text-indigo-600 group-hover:scale-110 transition-transform" />
+                                <Shield className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform" />
                                 {!collapsed && <span className="truncate whitespace-nowrap">Admin Console</span>}
                             </Link>
                         )}
