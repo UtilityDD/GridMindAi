@@ -5,14 +5,8 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BrainCircuit,
-  Zap,
   ArrowRight,
-  FileText,
   Search,
-  Shield,
-  CheckCircle2,
-  ExternalLink,
-  BookOpen,
 } from "lucide-react";
 
 interface LandingPageProps {
@@ -22,36 +16,12 @@ interface LandingPageProps {
 }
 
 const ROTATING_TOPICS = [
-  {
-    topic: "WBSEDCL Operative Circulars",
-    query: "What is the procedure for Section 135 unauthorized extraction?",
-    answer: "Immediate disconnection under Section 135(1A) of the Electricity Act 2003, with provisional assessment served within 48 hours as per WBSEDCL commercial procedure.",
-    ref: "WBSEDCL Cir. No. 28/2021 · Clause 4.3",
-  },
-  {
-    topic: "WBERC Tariff & Billing Orders",
-    query: "What is the Delayed Payment Surcharge (DPS) rate under operative tariff order?",
-    answer: "Delayed Payment Surcharge is levied at 1.25% per month on simple interest basis for the duration of default under WBERC Tariff Schedule.",
-    ref: "WBERC Tariff Order · Para 4.6",
-  },
-  {
-    topic: "CEA Safety & Ground Clearance",
-    query: "Minimum vertical ground clearance for 11kV overhead lines over buildings?",
-    answer: "Minimum 3.7 meters (12 ft) vertical clearance above highest point of building under Regulation 61 of CEA Safety Regulations 2010.",
-    ref: "CEA Safety Regulations 2010 · Reg. 61",
-  },
-  {
-    topic: "DTR Overload & Restoration Norms",
-    query: "What is the mandatory supply restoration time on distribution transformer failure?",
-    answer: "Supply must be restored within 24 hours in urban areas and 48 hours in rural areas under WBERC Standard of Performance Regulations.",
-    ref: "WBERC SOP Reg. 5.3 · Schedule II",
-  },
-  {
-    topic: "ROPA 2020 Pay Matrix & Service Rules",
-    query: "What is the pay fixation entitlement after 16 years of continuous service?",
-    answer: "Placement in the next higher Pay Level in the Pay Matrix with one notional increment of 3% added under WBSEDCL ROPA 2020 rules.",
-    ref: "Office Order P/ROPA/2020/01 · Para 8",
-  },
+  "WBSEDCL Operative Circulars",
+  "WBERC Tariff & Billing Orders",
+  "CEA Safety & Clearance Standards",
+  "DTR Restoration & Supply Norms",
+  "Section 135 Inspection & Theft SOPs",
+  "ROPA 2020 Pay Matrix Rules",
 ];
 
 export default function LandingPage({
@@ -68,7 +38,7 @@ export default function LandingPage({
     return () => clearInterval(timer);
   }, []);
 
-  const current = ROTATING_TOPICS[index];
+  const currentTopic = ROTATING_TOPICS[index];
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-slate-900 selection:text-white flex flex-col justify-between">
@@ -116,14 +86,14 @@ export default function LandingPage({
           <span className="block mt-2 sm:mt-3 text-blue-600 min-h-[1.3em]">
             <AnimatePresence mode="wait">
               <motion.span
-                key={current.topic}
+                key={currentTopic}
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -14 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
                 className="inline-block"
               >
-                {current.topic}
+                {currentTopic}
               </motion.span>
             </AnimatePresence>
           </span>
@@ -151,51 +121,8 @@ export default function LandingPage({
           </Link>
         </div>
 
-        {/* ── Clean Live Query Preview Card (Single, Uncluttered) ── */}
-        <div className="w-full mt-14 text-left">
-          <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-sm transition-all">
-            <div className="flex items-center justify-between text-xs text-slate-400 mb-3">
-              <div className="flex items-center gap-1.5 font-semibold text-slate-600">
-                <Search className="w-3.5 h-3.5 text-blue-600" />
-                <span>Example Query</span>
-              </div>
-              <span className="font-mono text-[11px] bg-white border border-slate-200 px-2 py-0.5 rounded text-slate-500">
-                {current.ref}
-              </span>
-            </div>
-
-            <p className="text-sm sm:text-base font-semibold text-slate-900 mb-2">
-              "{current.query}"
-            </p>
-
-            <div className="p-3.5 bg-white rounded-xl border border-slate-200/60 text-xs sm:text-sm text-slate-700 leading-relaxed font-normal">
-              {current.answer}
-            </div>
-
-            {/* Micro indicators */}
-            <div className="flex items-center justify-between mt-3 text-[11px] text-slate-400">
-              <span className="flex items-center gap-1 text-emerald-600 font-medium">
-                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                Original circular citation verified
-              </span>
-              <div className="flex items-center gap-1.5">
-                {ROTATING_TOPICS.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setIndex(i)}
-                    className={`h-1.5 rounded-full transition-all ${
-                      index === i ? "w-6 bg-blue-600" : "w-1.5 bg-slate-200 hover:bg-slate-300"
-                    }`}
-                    aria-label={`Select sample ${i + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── 3 Essential Value Points (No Dense Lists or Tables) ── */}
-        <div className="grid sm:grid-cols-3 gap-6 w-full mt-14 text-left border-t border-slate-100 pt-10">
+        {/* ── 3 Essential Value Points ── */}
+        <div className="grid sm:grid-cols-3 gap-6 w-full mt-16 sm:mt-20 text-left border-t border-slate-100 pt-10">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <div className="w-5 h-5 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
