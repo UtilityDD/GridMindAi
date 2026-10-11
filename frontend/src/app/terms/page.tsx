@@ -1,104 +1,135 @@
 import Link from "next/link";
-import { Scale, ArrowLeft } from "lucide-react";
+import { Scale, ArrowLeft, AlertTriangle, FileCheck, ShieldAlert, Mail } from "lucide-react";
 
 export default function TermsPage() {
-    const lastUpdated = "March 29, 2026";
+  const lastUpdated = "October 2026";
 
-    return (
-        <div className="min-h-screen bg-slate-950 text-slate-300 font-sans selection:bg-indigo-500/30">
-            <div className="max-w-4xl mx-auto px-6 py-20">
-
-                {/* Header */}
-                <div className="flex flex-col items-center mb-16 text-center">
-                    <Link href="/" className="mb-8 inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 transition-colors group">
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                        <span className="text-xs font-bold uppercase tracking-widest">Back to Dashboard</span>
-                    </Link>
-                    <div className="w-16 h-16 rounded-2xl bg-amber-900 border border-amber-500/10 flex items-center justify-center shadow-2xl mb-6">
-                        <Scale className="w-8 h-8 text-amber-500" />
-                    </div>
-                    <h1 className="text-4xl font-bold text-white tracking-tight mb-4">Terms of Use</h1>
-                    <p className="text-sm text-slate-500 uppercase tracking-widest font-medium">Last Updated: {lastUpdated}</p>
-                </div>
-
-                <div className="space-y-16">
-                    <section className="scroll-mt-20">
-                        <div className="prose prose-invert max-w-none space-y-6 text-slate-400 leading-relaxed text-sm">
-                            <p className="text-lg text-slate-300">
-                                This document dictates the robust limitations and binding obligations governing your specialized use of the <strong>GridMind AI Platform</strong>. 
-                                We exist exclusively as a Semantic Technical Index. We are NOT legal advisors.
-                            </p>
-
-                            <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 my-8">
-                                <p className="text-amber-500 font-bold mb-2 uppercase tracking-widest text-[11px] flex items-center gap-2">
-                                    <Scale className="w-4 h-4" /> Non-Affiliation Mandate
-                                </p>
-                                <p className="text-slate-300 italic text-sm leading-relaxed">
-                                    GridMind AI is an independent index system. <strong>We are NOT affiliated with, endorsed by, funded by, or authorized by WBSEDCL, WBERC, the Ministry of Power, the Central Electricity Authority (CEA), or any other Government Entity.</strong> Do not misrepresent AI output as official departmental rulings to your superiors, subordinates, or consumers.
-                                </p>
-                            </div>
-
-                            <h3 className="text-white font-semibold mt-10 uppercase tracking-widest text-[11px] border-b border-white/10 pb-2">1. Limitation of Liability (Neural Hallucinations)</h3>
-                            <ul className="list-disc pl-6 space-y-3 mb-4">
-                                <li>
-                                    <strong className="text-slate-300">System Imperfection:</strong> Neural networks (LLMs) used in the Retrieval Authmented Generation (RAG) backend are probabilistically driven. They can and will occasionally hallucinate numbers, misread tabular specifications, or conflate WBERC ROPA years (e.g., swapping a 2020 pay-matrix with a 2009 revision).
-                                </li>
-                                <li>
-                                    <strong className="text-slate-300">Zero Liability:</strong> The developers of GridMind AI expressly bear absolutely zero liability for any operational grid accidents, legal disputes, suspension from duty, financial losses, or estimation errors originating from decisions you executed based on AI synthesized answers. 
-                                </li>
-                                <li>
-                                    <strong className="text-slate-300">Obligation to Verify:</strong> You agree that GridMind AI serves only to <em>locate</em> potentially relevant policies. <strong>You MUST manually verify the raw, original documents (Gazettes, Circulars) before signing estimates, taking legal action, or altering field equipment.</strong>
-                                </li>
-                            </ul>
-
-                            <h3 className="text-white font-semibold mt-10 uppercase tracking-widest text-[11px] border-b border-white/10 pb-2">2. Source of Truth Hierarchy</h3>
-                             <p>
-                                When citing rules or taking official actions, the hierarchy of authority unconditionally places the <strong>Original Official Gazette or Departmental Order</strong> above any textual summary or interpretation provided on GridMind AI. If the AI output contradicts a physical circular you hold, the circular is correct. If you find anomalies, it is your responsibility as the platform user to report the error so the indexing can be corrected.
-                             </p>
-
-                            <h3 className="text-white font-semibold mt-10 uppercase tracking-widest text-[11px] border-b border-white/10 pb-2">3. Proprietary RAG Database & Anti-Scraping Policy</h3>
-                            <p>
-                                While the core electricity acts, standards, and circular text are strictly public domain, the <strong>GridMind AI proprietary Semantic Vector Index (the database schema, document meta-tags, and retrieval weights)</strong> is highly protected intellectual property.
-                            </p>
-                            <ul className="list-disc pl-6 space-y-3 mb-4">
-                                <li>You are strictly prohibited from automating basic queries, bulk-downloading files via scripts, or using bots to scrape our processed documents to build a competing model.</li>
-                                <li>Accounts found executing programmatic, unnatural bursts of requests will be permanently banned via IP and Email footprinting.</li>
-                                <li>The raw files provided directly to consumers via WBSEDCL/WBERC portals are not ours stringently; however, abusing the bandwidth of GridMind AI’s indexing services is theft of service.</li>
-                            </ul>
-
-                            <h3 className="text-white font-semibold mt-10 uppercase tracking-widest text-[11px] border-b border-white/10 pb-2">4. Share Document Service (Safe Harbor & Liability)</h3>
-                            <p>
-                                GridMind features a <strong>"Share Document"</strong> service allowing utility personnel to asynchronously upload hard-to-find internal circulars for the collective intelligence of the grid community.
-                            </p>
-                            <ul className="list-disc pl-6 space-y-3 mb-4">
-                                <li><strong>User Indemnification:</strong> By uploading a file, you certify that the file does NOT violate third-party copyrighted patents, is not classified/confidential, and does not contain PII (Personally Identifiable Information) or sensitive national security grid schematics. You are wholly legally liable for the materials you inject into the vault.</li>
-                                <li><strong>Safe Harbor Status:</strong> GridMind AI acts fundamentally as a passive digital service provider. We do not proactively screen every file uploaded. If copyrighted material is posted, we abide by the DMCA (Digital Millennium Copyright Act) protocols. </li>
-                                <li>GridMind Administrators reserve the absolute, unquestionable right to reject, delete, or blacklist any document or user without prior warning.</li>
-                            </ul>
-
-                            <h3 className="text-white font-semibold mt-10 uppercase tracking-widest text-[11px] border-b border-white/10 pb-2">5. DMCA / Takedown / Contact Procedures</h3>
-                            <p>
-                                If you are an official representing WBSEDCL, WBERC, or the MoP and you discover controlled, confidential internal-only documents mistakenly uploaded to the GridMind Index, please issue an immediate Takedown Notice to our administrative wing. We will purge the vectors and files instantly.
-                            </p>
-                            <p className="mt-4">
-                                Legal Affairs & Takedown Notices:
-                                <br/><strong className="text-amber-500">gridmind.info@gmail.com</strong>
-                            </p>
-                        </div>
-                    </section>
-                </div>
-
-                {/* Footer */}
-                <div className="mt-24 pt-12 border-t border-white/5 flex flex-col items-center justify-center space-y-4">
-                    <p className="text-xs text-slate-600 italic">GridMind AI: Decide Fast. Act Fast.</p>
-                    <div className="flex space-x-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                        <Link href="/terms" className="text-amber-500">Terms of Use</Link>
-                        <span>|</span>
-                        <Link href="/privacy" className="hover:text-indigo-400 transition-colors">Privacy Policy</Link>
-                    </div>
-                </div>
-
-            </div>
+  return (
+    <div className="min-h-screen bg-[#fcfcfd] text-slate-800 font-sans selection:bg-slate-900 selection:text-white flex flex-col justify-between">
+      {/* Top Navigation Bar */}
+      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80">
+        <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors group"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            <span>Back to Dashboard</span>
+          </Link>
+          <span className="text-[11px] font-semibold text-slate-400">
+            GridMind AI Legal
+          </span>
         </div>
-    );
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-3xl mx-auto px-6 py-12 sm:py-16 flex-1 w-full">
+        {/* Title Header */}
+        <div className="flex flex-col items-center text-center mb-12">
+          <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-600 shadow-sm mb-5">
+            <Scale className="w-7 h-7" />
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
+            Terms of Use
+          </h1>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Last Updated: {lastUpdated}
+          </p>
+        </div>
+
+        {/* Non-Affiliation Mandate Banner */}
+        <div className="p-5 sm:p-6 rounded-2xl bg-amber-50/70 border border-amber-200 shadow-sm mb-12">
+          <div className="flex items-center gap-2 text-amber-800 font-bold text-xs uppercase tracking-wider mb-2">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+            <span>Independent Research Tool & Non-Affiliation Mandate</span>
+          </div>
+          <p className="text-amber-900/90 text-xs sm:text-sm leading-relaxed italic">
+            "GridMind AI is an independent technical research index. We are NOT affiliated with, endorsed by, funded by, or authorized by WBSEDCL, WBERC, the Central Electricity Authority (CEA), or any government body. AI synthesized answers must be independently cross-verified against official gazetted documents."
+          </p>
+        </div>
+
+        {/* Terms Body */}
+        <div className="space-y-10 text-xs sm:text-sm text-slate-600 leading-relaxed">
+          {/* Section 1 */}
+          <section className="space-y-3">
+            <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2 border-b border-slate-200/80 pb-2">
+              <ShieldAlert className="w-4 h-4 text-amber-600" />
+              <span>1. Limitation of Liability & Verification Duty</span>
+            </h2>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>
+                <strong className="text-slate-800">Probabilistic Nature of AI:</strong> Retrieval-Augmented Generation (RAG) models produce synthesized outputs probabilistically. Users recognize that AI may occasionally misinterpret tables, omit historical amendments, or conflate revision years.
+              </li>
+              <li>
+                <strong className="text-slate-800">No Legal or Engineering Liability:</strong> The developers and operators of GridMind AI accept zero liability for grid operational decisions, administrative actions, tariff estimations, or compliance filings based on AI responses.
+              </li>
+              <li>
+                <strong className="text-slate-800">Mandatory Human Verification:</strong> Users are obligated to examine the cited raw circular or official notification before signing estimates or taking formal departmental actions.
+              </li>
+            </ul>
+          </section>
+
+          {/* Section 2 */}
+          <section className="space-y-3">
+            <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2 border-b border-slate-200/80 pb-2">
+              <FileCheck className="w-4 h-4 text-amber-600" />
+              <span>2. Hierarchy of Authority</span>
+            </h2>
+            <p>
+              In any discrepancy between AI synthesized summaries and the signed physical or digital departmental circular issued by the competent authority, the <strong>Original Official Notification or Gazette</strong> shall unconditionally prevail as the definitive authority.
+            </p>
+          </section>
+
+          {/* Section 3 */}
+          <section className="space-y-3">
+            <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2 border-b border-slate-200/80 pb-2">
+              <Scale className="w-4 h-4 text-amber-600" />
+              <span>3. Anti-Scraping & Acceptable Usage</span>
+            </h2>
+            <p>
+              GridMind’s semantic vector index, chunking architecture, and retrieval weights are protected systems:
+            </p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Automated scraping, bulk programmatic extraction, and denial-of-service abuse are strictly forbidden.</li>
+              <li>Accounts found generating abusive request bursts or attempting to compromise backend security will be revoked immediately.</li>
+            </ul>
+          </section>
+
+          {/* Section 4 */}
+          <section className="space-y-3">
+            <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2 border-b border-slate-200/80 pb-2">
+              <Mail className="w-4 h-4 text-amber-600" />
+              <span>4. Takedown Notices & Inquiries</span>
+            </h2>
+            <p>
+              If you represent an official authority and believe any document should be removed or corrected, please contact our administrative team:
+            </p>
+            <div className="mt-3 p-4 rounded-xl bg-slate-100/70 border border-slate-200 text-xs text-slate-700">
+              Legal & Administrative Inquiries:
+              <br />
+              <strong className="text-slate-900 font-semibold font-mono text-[13px] mt-1 inline-block">
+                gridmind.info@gmail.com
+              </strong>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-200/80 bg-white py-8 px-6 mt-16">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+          <p>© {new Date().getFullYear()} GridMind AI. All rights reserved.</p>
+          <div className="flex items-center gap-4 text-[11px] font-semibold uppercase tracking-wider">
+            <Link href="/terms" className="text-amber-600 font-bold">
+              Terms of Use
+            </Link>
+            <span>•</span>
+            <Link href="/privacy" className="text-slate-500 hover:text-slate-900 transition-colors">
+              Privacy Policy
+            </Link>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
 }
