@@ -933,7 +933,7 @@ export default function Home() {
                   What can I help with?
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 max-w-md mb-8">
-                  Ask any question across 4,200+ indexed WBSEDCL circulars, tariff orders, and CEA technical standards.
+                  Ask any question across 4,200+ indexed documents, tariff orders, and CEA technical standards.
                 </p>
 
                 {/* ChatGPT-style 2x2 Suggestion Cards */}
@@ -1118,7 +1118,7 @@ export default function Home() {
                     <Link
                       href="/explorer"
                       className="w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-colors shrink-0"
-                      title="Explore 4,200+ Circular Vault"
+                      title="Explore 4,200+ Document Vault"
                     >
                       <Plus className="w-4 h-4" />
                     </Link>

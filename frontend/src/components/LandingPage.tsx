@@ -60,7 +60,7 @@ export default function LandingPage({
               className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg border border-slate-200/80 hover:bg-slate-50 transition-colors"
             >
               <Search className="w-3.5 h-3.5 text-slate-400" />
-              <span>Browse 4,200+ Circulars</span>
+              <span>Browse 4,200+ Documents</span>
             </Link>
             <button
               onClick={onGetStarted}
@@ -101,7 +101,7 @@ export default function LandingPage({
 
         {/* Clean, concise subtitle */}
         <p className="text-base sm:text-lg text-slate-500 mt-5 max-w-xl leading-relaxed font-normal">
-          Instant clause-level determinations across 4,200+ indexed WBSEDCL circulars, WBERC tariff orders, and CEA safety regulations.
+          Instant clause-level determinations across 4,200+ indexed documents, tariff orders, and CEA safety regulations.
         </p>
 
         {/* Action Buttons */}
@@ -131,7 +131,7 @@ export default function LandingPage({
               <h3 className="text-sm font-bold text-slate-900">4,200+ Documents</h3>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Every operative circular from WBSEDCL, WBERC, and CEA indexed down to the clause.
+              Every operative document from WBSEDCL, WBERC, and CEA indexed down to the clause.
             </p>
           </div>
 
