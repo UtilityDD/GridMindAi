@@ -6,6 +6,9 @@
     "start": "cd frontend && npm run start",
     "dev": "cd frontend && npm run dev"
   },
+  "dependencies": {
+    "next": "15.5.7"
+  },
   "devDependencies": {
     "dotenv": "^17.4.0",
     "tsx": "^4.21.0"
