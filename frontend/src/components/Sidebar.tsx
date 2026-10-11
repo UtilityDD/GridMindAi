@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { BrainCircuit, ChevronRight, History, LogOut, MessageSquare, X, PanelLeftClose, PanelLeftOpen, Cpu, Menu, AlertCircle, Lock, ShieldCheck, Search } from "lucide-react";
+import { BrainCircuit, ChevronRight, History, LogOut, MessageSquare, X, PanelLeftClose, PanelLeftOpen, Cpu, Menu, AlertCircle, Lock, ShieldCheck, Search, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import ShareDocument from "./ShareDocument";
+import { isUserAdmin } from "@/lib/admin";
 
 interface Source {
     doc_id: string;
@@ -200,6 +201,15 @@ function SidebarContent({
                             <Search className={`w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform`} />
                             {!collapsed && <span className="truncate whitespace-nowrap">GridMind Explorer</span>}
                         </Link>
+                        {isUserAdmin(userEmail, userTier) && (
+                            <Link 
+                                href="/admin"
+                                className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-sm font-bold transition-all hover:bg-indigo-100 hover:border-indigo-300 group shadow-sm`}
+                            >
+                                <Shield className="w-4 h-4 text-indigo-600 group-hover:scale-110 transition-transform" />
+                                {!collapsed && <span className="truncate whitespace-nowrap">Admin Console</span>}
+                            </Link>
+                        )}
                     </div>
                 </div>
 

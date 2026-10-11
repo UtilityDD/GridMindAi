@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
+import { isUserAdmin } from "@/lib/admin";
 import { retrieve, buildContext, extractKeywords, embedSingle } from "@/lib/rag";
 import { generateAnswer } from "@/lib/llm";
 import { classifyQueryIntent } from "@/lib/router";
@@ -16,12 +17,14 @@ export async function POST(req: NextRequest) {
 
   const token = authHeader.slice(7);
   let userId: string | null = null;
+  let userEmail: string | null = null;
   try {
     const { data, error } = await getSupabaseAdmin().auth.getUser(token);
     if (error || !data.user) {
       return NextResponse.json({ detail: "Invalid token" }, { status: 401 });
     }
     userId = data.user.id;
+    userEmail = data.user.email || null;
   } catch {
     return NextResponse.json({ detail: "Auth failed" }, { status: 401 });
   }
@@ -35,19 +38,21 @@ export async function POST(req: NextRequest) {
       .eq("id", userId)
       .single();
 
+    const isAdmin = isUserAdmin(userEmail, profileData?.tier_id);
+
     if (!profileError && profileData) {
       userTier = profileData.tier_id;
 
       // 0. Check if account is enabled
-      if (profileData.is_enabled === false) {
+      if (!isAdmin && profileData.is_enabled === false) {
         return NextResponse.json(
           { detail: "Your account has been restricted. Please contact support for assistance." },
           { status: 403 }
         );
       }
 
-      // 1b. Check Trial Expiry (30 days) - ONLY for Free Users
-      if (userTier === "free" && profileData.created_at) {
+      // 1b. Check Trial Expiry (30 days) - ONLY for Free Users (Non-Admin)
+      if (!isAdmin && userTier === "free" && profileData.created_at) {
         const registrationDate = new Date(profileData.created_at);
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -60,8 +65,8 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 2. Burst Protection (Rapid Fire Prevention) - ONLY for Free Users
-      if (userTier === "free") {
+      // 2. Burst Protection (Rapid Fire Prevention) - ONLY for Free Users (Non-Admin)
+      if (!isAdmin && userTier === "free") {
         const isUnderBurstLimit = await checkBurstFromAnalytics(userId, 3, 30);
         if (!isUnderBurstLimit) {
           return NextResponse.json(
@@ -85,24 +90,30 @@ export async function POST(req: NextRequest) {
       };
 
       let dailyLimit = profileData.custom_daily_limit ?? tierInfo.daily_limit ?? 10;
-      if (userTier === "free") dailyLimit = Math.min(dailyLimit, 10); // Strict limit for free
+      if (isAdmin || userTier === "admin") {
+        dailyLimit = 999999;
+      } else if (userTier === "free") {
+        dailyLimit = Math.min(dailyLimit, 10); // Strict limit for free
+      }
       // Monthly cap removed for simplicity as per user request (returning high value for UI)
       const monthlyLimit = 999999;
 
-      // 3. Check daily limit
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const { count: dailyCount } = await getSupabaseAdmin()
-        .from("user_analytics")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .gte("created_at", today.toISOString());
+      // 3. Check daily limit (Non-Admin only)
+      if (!isAdmin && userTier !== "admin") {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const { count: dailyCount } = await getSupabaseAdmin()
+          .from("user_analytics")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .gte("created_at", today.toISOString());
 
-      if (dailyCount !== null && dailyCount >= dailyLimit) {
-        return NextResponse.json(
-          { detail: `Daily limit of ${dailyLimit} queries reached. Upgrade your Strategic Intelligence bandwidth for more access.` },
-          { status: 429 }
-        );
+        if (dailyCount !== null && dailyCount >= dailyLimit) {
+          return NextResponse.json(
+            { detail: `Daily limit of ${dailyLimit} queries reached. Upgrade your Strategic Intelligence bandwidth for more access.` },
+            { status: 429 }
+          );
+        }
       }
 
       // 4. Monthly limit check REMOVED for simplicity as per user request

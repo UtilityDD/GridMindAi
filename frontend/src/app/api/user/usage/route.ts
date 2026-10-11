@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
+import { isUserAdmin } from "@/lib/admin";
 
 export async function GET(req: NextRequest) {
     const authHeader = req.headers.get("authorization");
@@ -9,12 +10,14 @@ export async function GET(req: NextRequest) {
 
     const token = authHeader.slice(7);
     let userId: string | null = null;
+    let userEmail: string | null = null;
     try {
         const { data, error } = await getSupabaseAdmin().auth.getUser(token);
         if (error || !data.user) {
             return NextResponse.json({ detail: "Invalid token" }, { status: 401 });
         }
         userId = data.user.id;
+        userEmail = data.user.email || null;
     } catch {
         return NextResponse.json({ detail: "Auth failed" }, { status: 401 });
     }
@@ -25,11 +28,52 @@ export async function GET(req: NextRequest) {
 
     try {
         // Fetch profile and tier limits
-        const { data: profile, error: profileError } = await getSupabaseAdmin()
+        let { data: profile, error: profileError } = await getSupabaseAdmin()
             .from("profiles")
             .select("tier_id, custom_daily_limit, custom_monthly_limit, created_at, user_tiers(id, daily_limit, monthly_limit)")
             .eq("id", userId)
             .single();
+
+        const userIsAdmin = isUserAdmin(userEmail, profile?.tier_id);
+
+        // Auto-activate admin profile for dipnkr.das@gmail.com
+        if (userIsAdmin && profile?.tier_id !== "admin") {
+            try {
+                // Ensure 'admin' tier exists in user_tiers table
+                await getSupabaseAdmin()
+                    .from("user_tiers")
+                    .upsert(
+                        { id: "admin", name: "Administrator", daily_limit: 999999, monthly_limit: 999999 },
+                        { onConflict: "id" }
+                    );
+
+                // Auto-promote profile
+                await getSupabaseAdmin()
+                    .from("profiles")
+                    .upsert(
+                        {
+                            id: userId,
+                            tier_id: "admin",
+                            custom_daily_limit: 999999,
+                            custom_monthly_limit: 999999,
+                            is_enabled: true
+                        },
+                        { onConflict: "id" }
+                    );
+
+                // Re-fetch upgraded profile
+                const { data: updatedProfile } = await getSupabaseAdmin()
+                    .from("profiles")
+                    .select("tier_id, custom_daily_limit, custom_monthly_limit, created_at, user_tiers(id, daily_limit, monthly_limit)")
+                    .eq("id", userId)
+                    .single();
+                if (updatedProfile) {
+                    profile = updatedProfile;
+                }
+            } catch (adminErr) {
+                console.error("Failed to auto-promote admin profile:", adminErr);
+            }
+        }
 
         if (profileError || !profile) {
             console.log("Profile not found, using defaults");
@@ -76,7 +120,8 @@ export async function GET(req: NextRequest) {
             'free': 'Basic',
             'basic': 'Basic+',
             'advance': 'Advance',
-            'pro': 'Pro'
+            'pro': 'Pro',
+            'admin': 'Administrator'
         };
         // Use name from DB tierInfo if present, otherwise fallback to local map
         const displayName = (tierInfo as any).name || TIER_NAME_MAP[tierId] || TIER_NAME_MAP[tierName] || tierName;
@@ -112,7 +157,8 @@ export async function GET(req: NextRequest) {
             hasCustomLimit,
             registeredAt: profile?.created_at || new Date().toISOString(),
             isTrialExpired,
-            daysUntilExpiry
+            daysUntilExpiry,
+            isAdmin: userIsAdmin
         });
     } catch {
         return NextResponse.json({ detail: "Internal server error during usage check" }, { status: 500 });
