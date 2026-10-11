@@ -1,79 +1,97 @@
-# 💳 Developer Payment & Subscription Guide
+# 💳 GridMind AI Developer & Operations Guide
 
-This guide explains how to manage user tiers, modify pricing, and create promo codes for the GridMind AI project.
-
-## 🏗️ Architecture Overview
-
-The payment system is integrated across three layers:
-1.  **Frontend (UI)**: [plans.ts](file:///d:/Dipankar/MyCodes/AI%20Projects/GridMindAi/frontend/src/lib/plans.ts) — Displays names, features, and prices.
-2.  **Backend (API)**: [order/route.ts](file:///d:/Dipankar/MyCodes/AI%20Projects/GridMindAi/frontend/src/app/api/razorpay/order/route.ts) — Handles Razorpay charges.
-3.  **Supabase (Database)**: `user_tiers` — Defines daily query limits.
+This guide covers subscription management, admin controls, environment variables, and the deployment pipeline for GridMind AI.
 
 ---
 
-## 🔼 1. How to Modify Subscription Tiers
+## 🌐 1. Repository & Deployment Infrastructure
 
-To change a plan's price or description, update these two files:
-
-### Step 1: Update Frontend Display
-Modify the `PLANS` array in [plans.ts](file:///d:/Dipankar/MyCodes/AI%20Projects/GridMindAi/frontend/src/lib/plans.ts).
-- **Price**: For display only (e.g., `price: 200`).
-- **Description**: Use standard technical terms:
-    - **"Standard Response"**: Used for Basic and Basic+.
-    - **"Detailed/In-depth Intelligence"**: Applied to Advance and Pro.
-
-### Step 2: Update Charge (Razorpay)
-Update `PRICE_MAP_INR` in [order/route.ts](file:///d:/Dipankar/MyCodes/AI%20Projects/GridMindAi/frontend/src/app/api/razorpay/order/route.ts).
-> [!IMPORTANT]
-> Razorpay prices are in **paise** (100 paise = ₹1).
-> Example: For ₹200 (Advance), set `price: 20000`.
+- **Primary Repository**: [https://github.com/gridmindinfo/GridMindAI.git](https://github.com/gridmindinfo/GridMindAI.git)
+- **Framework & Subdirectory**: Next.js 15 (App Router) located in `/frontend`.
+- **Hosting Platform**: Vercel (Hobby Tier).
+- **Vercel Settings**:
+  - **Root Directory**: `frontend`
+  - **Framework Preset**: `Next.js`
+  - **Build Command**: `npm run build` (`next build --no-lint`)
+  - **Output Directory**: `.next`
 
 ---
 
-## 📊 2. Managing Usage Limits (Daily Only)
+## 👑 2. Administrator Access & Auto-Activation
 
-GridMind AI uses **Daily Query Caps** for simplicity. Monthly caps are disabled (set to 999999).
+### Primary Admin Account: `dipnkr.das@gmail.com`
+- **Automatic Promotion**:  
+  When `dipnkr.das@gmail.com` logs in, the backend ([/api/user/usage](file:///c:/Dipankar/GridMindAi/frontend/src/app/api/user/usage/route.ts)) automatically upgrades the profile:
+  - `tier_id = 'admin'`
+  - `custom_daily_limit = 999999` (Unlimited)
+  - `is_enabled = true`
+- **Bypassed Restrictions**:
+  - No 30-day trial expiry.
+  - No burst cooldowns (30s rapid-fire restriction).
+  - No daily query caps.
 
-1.  Open **Supabase Dashboard** -> `user_tiers` table.
-2.  **Mapping Reference**:
-    - `free`: Displayed as **Basic** (10 queries/day).
-    - `basic`: Displayed as **Basic+** (10 queries/day).
-    - `advance`: Displayed as **Advance** (50 queries/day).
-    - `pro`: Displayed as **Pro** (150 queries/day).
-3.  **Display Names**: Use the `name` column in `user_tiers` to see/set the "Nice Name" (e.g., 'Basic+').
-
----
-
-## 🎟️ 3. Creating Promo Codes
-
-Promo codes are in the `promo_codes` table.
-- **code**: User input (e.g., `OFFER50`). UPPERCASE.
-- **discount_percent**: Percentage off (e.g., 100 for free).
-- **restricted_to_email**: Restrict to a specific user (comma-separated).
-
-> [!NOTE]
-> 100% discount codes offer a "Claim Free Access" button in the UI, bypassing Razorpay.
+### Visual Admin Console: `/admin`
+- Accessible directly via the sidebar navigation (*Admin Console* link with a Shield icon) or at `/admin`.
+- Allows administrators to:
+  - View all registered accounts, join dates, and today's query usage.
+  - Change any user's tier (*Basic, Basic+, Advance, Pro, Administrator*).
+  - Set custom daily limits per user.
+  - Toggle account status (*Active* / *Disabled*).
 
 ---
 
-## 🛠️ 4. SQL Templates for Fast Management
+## 🏗️ 3. Payment & Subscription Architecture
 
-### 🔌 A. Sync Tiers (Reset to Default Daily Limits)
+The payment system spans three layers:
+1. **Frontend (UI)**: [plans.ts](file:///c:/Dipankar/GridMindAi/frontend/src/lib/plans.ts) — Displays names, features, and prices.
+2. **Backend (API)**: [order/route.ts](file:///c:/Dipankar/GridMindAi/frontend/src/app/api/razorpay/order/route.ts) — Handles Razorpay charges.
+3. **Supabase (Database)**: `user_tiers` & `profiles` — Controls query quotas.
+
+### Modifying Tiers:
+- **Frontend Display**: Update `PLANS` in [plans.ts](file:///c:/Dipankar/GridMindAi/frontend/src/lib/plans.ts).
+- **Charges (Razorpay)**: Update `PRICE_MAP_INR` in [order/route.ts](file:///c:/Dipankar/GridMindAi/frontend/src/app/api/razorpay/order/route.ts). (Amounts in paise: ₹200 = `20000`).
+
+---
+
+## 📊 4. Usage Quota Mapping
+
+| Tier ID | Display Name | Default Daily Cap |
+| :--- | :--- | :--- |
+| `free` | Basic | 10 queries/day (30-day trial) |
+| `basic` | Basic+ | 10 queries/day |
+| `advance` | Advance | 50 queries/day |
+| `pro` | Pro | 150 queries/day |
+| `admin` | Administrator | 999,999 (Unlimited) |
+
+Monthly caps are set to 999,999 for simplicity.
+
+---
+
+## 🎟️ 5. Promo Codes
+
+Promo codes live in the `promo_codes` table:
+- `code`: UPPERCASE string (e.g., `SPECIAL100`).
+- `discount_percent`: 0 to 100. (100% discount allows instant bypass via "Claim Free Access").
+- `restricted_to_email`: Optional email restriction.
+
+---
+
+## 🛠️ 6. Useful SQL Commands (Supabase SQL Editor)
+
 ```sql
+-- 1. Ensure Admin Tier Exists
+INSERT INTO public.user_tiers (id, name, daily_limit, monthly_limit)
+VALUES ('admin', 'Administrator', 999999, 999999)
+ON CONFLICT (id) DO UPDATE SET daily_limit = 999999;
+
+-- 2. Manually Promote Any User to Admin
+UPDATE public.profiles
+SET tier_id = 'admin', custom_daily_limit = 999999, is_enabled = true
+WHERE id = (SELECT id FROM auth.users WHERE email = 'user@example.com');
+
+-- 3. Reset Standard Tier Limits
 UPDATE public.user_tiers SET daily_limit = 10, monthly_limit = 999999, name = 'Basic' WHERE id = 'free';
 UPDATE public.user_tiers SET daily_limit = 10, monthly_limit = 999999, name = 'Basic+' WHERE id = 'basic';
 UPDATE public.user_tiers SET daily_limit = 50, monthly_limit = 999999, name = 'Advance' WHERE id = 'advance';
 UPDATE public.user_tiers SET daily_limit = 150, monthly_limit = 999999, name = 'Pro' WHERE id = 'pro';
 ```
-
-### 👤 B. Instantly Upgrade User (Manual)
-```sql
-UPDATE profiles SET tier_id = 'pro' WHERE id = (SELECT id FROM auth.users WHERE email = 'user@example.com');
-```
-
----
-
-## 🛠️ Testing Checklist
-1. **Pricing**: Confirm price in [PricingModal](file:///d:/Dipankar/MyCodes/AI%20Projects/GridMindAi/frontend/src/components/PricingModal.tsx).
-2. **Razorpay**: Check the amount in the checkout popup (it must match paise).
-3. **Brain Check**: Verify "Detailed/In-depth" plans use Gemini Flash in [llm.ts](file:///d:/Dipankar/MyCodes/AI%20Projects/GridMindAi/frontend/src/lib/llm.ts).
