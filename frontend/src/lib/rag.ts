@@ -4,7 +4,7 @@ import { REWRITE_QUERY_TEMPLATE, KEYWORD_EXTRACTION_TEMPLATE } from "./prompts";
 
 const EMBEDDING_MODEL = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 768;
-const LLM_MODEL = "gemini-1.5-flash";
+const LLM_MODEL = "gemini-3.8-flash";
 const TOP_K_CHUNKS = 30; // Increased from 15 to 30 for high-breath reranking
 const TOP_K_SUMMARIES = 8;
 const TOP_K_TITLES = 5;
@@ -34,14 +34,10 @@ class KeyPool {
   }
 }
 
+// 100% Free Providers Pool
 const Pools = {
   Gemini: new KeyPool("GEMINI_KEY_POOL", "GEMINI_API_KEY"),
   Groq: new KeyPool("GROQ_KEY_POOL", "GROQ_API_KEY"),
-  SambaNova: new KeyPool("SAMBANOVA_KEY_POOL", "SAMBANOVA_API_KEY"),
-  Cerebras: new KeyPool("CEREBRAS_KEY_POOL", "CEREBRAS_API_KEY"),
-  Together: new KeyPool("TOGETHER_KEY_POOL", "TOGETHER_API_KEY"),
-  GitHub: new KeyPool("GITHUB_KEY_POOL", "GITHUB_MODELS_KEY"),
-  OpenRouter: new KeyPool("OPENROUTER_KEY_POOL", "OPENROUTER_API_KEY"),
 };
 
 async function withGeminiRetry<T>(fn: (client: GoogleGenAI) => Promise<T>, retryCount = 0): Promise<T> {
@@ -53,11 +49,19 @@ async function withGeminiRetry<T>(fn: (client: GoogleGenAI) => Promise<T>, retry
     return await fn(client);
   } catch (e: any) {
     const msg = e?.message?.toLowerCase() || "";
-    // Allow rotation on 403/Permission Denied so we can bypass the isolated leaked API key
-    const isRetryable = msg.includes("429") || msg.includes("quota") || msg.includes("expired") || msg.includes("400") || msg.includes("403") || msg.includes("permission_denied") || msg.includes("leaked");
+    const isRetryable =
+      msg.includes("429") ||
+      msg.includes("503") ||
+      msg.includes("quota") ||
+      msg.includes("expired") ||
+      msg.includes("400") ||
+      msg.includes("403") ||
+      msg.includes("permission_denied") ||
+      msg.includes("leaked") ||
+      msg.includes("not valid");
 
-    if (isRetryable && retryCount < Pools.Gemini.size) {
-      console.warn(`RAG Gemini Key failed (${msg.substring(0, 30)}...). Rotating... (${retryCount + 1}/${Pools.Gemini.size})`);
+    if (isRetryable && retryCount < Pools.Gemini.size * 2) {
+      console.warn(`RAG Gemini Key retry (${msg.substring(0, 30)}...). Rotating... (${retryCount + 1})`);
       return withGeminiRetry(fn, retryCount + 1);
     }
     throw e;
@@ -76,82 +80,62 @@ export async function embedSingle(text: string): Promise<number[]> {
 }
 
 /**
- * Advanced Multi-Pool fallback for RAG tasks (Rewrite/Keywords) 
- * Cycles through Groq, GitHub, and SambaNova for Free users.
+ * Fast Multi-Key Free Pool for RAG tasks (Rewrite/Keywords/Rerank)
+ * Uses the 9-key Groq Free Pool with instant fallback to Gemini 3.8 Flash.
  */
 async function callPoolForRAG(prompt: string, retryCount = 0): Promise<string> {
-  // Determine which pool to use based on retry count
-  // Strategy: Try Groq -> GitHub -> SambaNova if they exist
-  const providers = [];
-  if (Pools.Cerebras.size > 0) providers.push({ name: "Cerebras", pool: Pools.Cerebras, url: "https://api.cerebras.ai/v1", model: "qwen-3-235b-a22b-instruct-2507" });
-  if (Pools.Groq.size > 0) providers.push({ name: "Groq", pool: Pools.Groq, url: "https://api.groq.com/openai/v1", model: "llama-3.3-70b-versatile" });
-  if (Pools.Together.size > 0) providers.push({ name: "Together", pool: Pools.Together, url: "https://api.together.xyz/v1", model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" });
-  if (Pools.GitHub.size > 0) providers.push({ name: "GitHub", pool: Pools.GitHub, url: "https://models.inference.ai.azure.com", model: "gpt-4o-mini" });
-  if (Pools.SambaNova.size > 0) providers.push({ name: "SambaNova", pool: Pools.SambaNova, url: "https://api.sambanova.ai/v1", model: "Meta-Llama-3.3-70B-Instruct" });
+  // Try Groq Free Pool first (blazing fast ~200ms)
+  if (Pools.Groq.size > 0 && retryCount < Pools.Groq.size * 2) {
+    const apiKey = Pools.Groq.getNext();
+    if (apiKey) {
+      try {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "openai/gpt-oss-120b",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.1,
+            max_tokens: 300,
+          }),
+        });
 
-  if (providers.length === 0) {
-    // Last ditch: check legacy OPENAI_API_KEY
-    const legacyKey = process.env.OPENAI_API_KEY;
-    if (legacyKey) return callLegacyOpenAI(prompt, legacyKey);
-    throw new Error("No free providers configured for RAG fallback");
-  }
-
-  const provider = providers[retryCount % providers.length];
-  const apiKey = provider.pool.getNext();
-
-  try {
-    const response = await fetch(`${provider.url}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: provider.model,
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: 300,
-      }),
-    });
-
-    if (!response.ok) throw new Error(`${provider.name} failed`);
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || "";
-  } catch (e) {
-    if (retryCount < providers.length * 2) {
-      console.warn(`RAG provider ${provider.name} failed (Attempt ${retryCount + 1}). Rotating to next provider...`);
+        if (response.ok) {
+          const data = await response.json();
+          const content = data.choices?.[0]?.message?.content;
+          if (content) return content;
+        }
+      } catch (err) {
+        console.warn(`Groq RAG key retry (${retryCount + 1}):`, err);
+      }
       return callPoolForRAG(prompt, retryCount + 1);
     }
-    throw e;
   }
-}
 
-async function callLegacyOpenAI(prompt: string, apiKey: string): Promise<string> {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "gpt-4o-mini", messages: [{ role: "user", content: prompt }], max_tokens: 300 }),
-  });
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || "";
-}
-
-export async function rewriteQuery(question: string, tier: string = "free"): Promise<string> {
-  const prompt = REWRITE_QUERY_TEMPLATE.replace("{question}", question);
-  const isFree = tier === "free" || tier === "basic";
-
+  // Fallback: Gemini Free Pool
   try {
-    if (isFree) {
-      const rewritten = await callPoolForRAG(prompt);
-      return rewritten?.trim() || question;
-    }
-
     return await withGeminiRetry(async (genai) => {
       const response = await genai.models.generateContent({
         model: LLM_MODEL,
         contents: prompt,
+        config: { temperature: 0.1 },
       });
-      return response.text?.trim() || question;
+      return response.text || "";
     });
+  } catch (geminiErr) {
+    console.error("All RAG pools failed for prompt:", geminiErr);
+    return "";
+  }
+}
+
+export async function rewriteQuery(question: string, tier: string = "free"): Promise<string> {
+  const prompt = REWRITE_QUERY_TEMPLATE.replace("{question}", question);
+  try {
+    const rewritten = await callPoolForRAG(prompt);
+    return rewritten?.trim() || question;
   } catch (e) {
     console.warn("Query rewrite failed, using original:", e);
     return question;
@@ -160,22 +144,9 @@ export async function rewriteQuery(question: string, tier: string = "free"): Pro
 
 export async function extractKeywords(question: string, tier: string = "free"): Promise<string[]> {
   const prompt = KEYWORD_EXTRACTION_TEMPLATE.replace("{question}", question);
-  const isFree = tier === "free" || tier === "basic";
 
   try {
-    let text = "";
-    if (isFree) {
-      text = await callPoolForRAG(prompt);
-    } else {
-      text = await withGeminiRetry(async (genai) => {
-        const response = await genai.models.generateContent({
-          model: LLM_MODEL,
-          contents: prompt,
-        });
-        return response.text?.trim() || "";
-      });
-    }
-
+    const text = await callPoolForRAG(prompt);
     if (!text || text === "General Inquiry") return [];
 
     return text.split(",")
