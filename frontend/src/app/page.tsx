@@ -245,8 +245,8 @@ const ANTI_SCRAPING_PATTERNS = [
 
 
 
-function ThinkingIndicator() {
-  return <AIProgressIndicator />;
+function ThinkingIndicator({ onStop }: { onStop?: () => void }) {
+  return <AIProgressIndicator onStop={onStop} />;
 }
 
 
@@ -1001,19 +1001,12 @@ export default function Home() {
 
                 {/* Loading State */}
                 {loading && (
-                  <div className="flex items-start gap-4 py-6">
-                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="flex items-start gap-4 py-4">
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 mt-1 shadow-sm">
                       <BrainCircuit className="w-4 h-4 text-white" />
                     </div>
-                    <div className="flex-1">
-                      <ThinkingIndicator />
-                      <button
-                        onClick={handleStopSearch}
-                        className="mt-4 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 flex items-center gap-1.5"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                        <span>Stop Search</span>
-                      </button>
+                    <div className="flex-1 min-w-0">
+                      <ThinkingIndicator onStop={handleStopSearch} />
                     </div>
                   </div>
                 )}
