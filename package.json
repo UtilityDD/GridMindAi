@@ -1,4 +1,11 @@
 {
+  "name": "gridmind-ai-root",
+  "private": true,
+  "scripts": {
+    "build": "cd frontend && npm install --no-save && npm run build",
+    "start": "cd frontend && npm run start",
+    "dev": "cd frontend && npm run dev"
+  },
   "devDependencies": {
     "dotenv": "^17.4.0",
     "tsx": "^4.21.0"
