@@ -133,7 +133,17 @@ function SidebarContent({
     userEmail, onSignOut, history, onHistoryClick, onClose, showClose, userTier, onUpgradeClick, onNewInquiry, onToggleCollapse, usage, collapsed, onVaultOpen
 }: SidebarContentProps) {
     const [logoHovered, setLogoHovered] = useState(false);
-    const progress = usage ? Math.min(100, (usage.dailyCount / usage.dailyLimit) * 100) : 0;
+    const isUnlimited = userTier === 'admin' || (usage ? usage.dailyLimit >= 99999 : false);
+    const formatNumber = (num: number) => {
+        if (num >= 99999) return "∞";
+        if (num >= 1000000) return `${(num / 1000000).toFixed(1).replace(/\.0$/, '')}M`;
+        if (num >= 10000) return `${(num / 1000).toFixed(0)}k`;
+        if (num >= 1000) return `${(num / 1000).toFixed(num % 1000 === 0 ? 0 : 1)}k`;
+        return num.toString();
+    };
+    const progress = usage && !isUnlimited
+        ? Math.min(100, Math.round((usage.dailyCount / Math.max(1, usage.dailyLimit)) * 100))
+        : 0;
 
     return (
         <>
@@ -257,46 +267,64 @@ function SidebarContent({
 
             {/* Consumption Meter */}
             {usage && (
-                <div className={`${collapsed ? 'px-2 py-3 mx-2' : 'px-6 py-4 mx-3'} mb-6 bg-slate-100 border border-slate-300 rounded-2xl space-y-3`}>
-                    <div className={`flex items-center ${collapsed ? 'flex-col gap-1' : 'justify-between'}`}>
-                        <div className="flex items-center gap-2">
-                            <Cpu className="w-3 h-3 text-blue-600" />
+                <div className={`${collapsed ? 'px-2 py-3 mx-2' : 'px-3.5 py-3 mx-2.5'} mb-6 bg-slate-100 border border-slate-300 rounded-2xl space-y-2.5`}>
+                    <div className={`flex items-center ${collapsed ? 'flex-col gap-1' : 'justify-between gap-2'} min-w-0`}>
+                        <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
+                            <Cpu className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                             {!collapsed && (
-                                <div className="flex items-center gap-2 min-w-0">
-                                    <span className="text-[10px] font-bold text-slate-700 uppercase tracking-widest whitespace-nowrap">Consumption</span>
-                                    {usage.hasCustomLimit && (
-                                        <span className="text-[8px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-300 uppercase tracking-tighter whitespace-nowrap">
-                                            Promo Active
+                                <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
+                                    <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider truncate">Consumption</span>
+                                    {isUnlimited && (
+                                        <span className="text-[8px] font-black text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded border border-blue-200 uppercase tracking-tight shrink-0">
+                                            Unlimited
                                         </span>
                                     )}
-                                    {usage.isTrialExpired && (
-                                        <span className="text-[8px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300 uppercase tracking-tighter whitespace-nowrap">
+                                    {!isUnlimited && usage.hasCustomLimit && (
+                                        <span className="text-[8px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-300 uppercase tracking-tight shrink-0">
+                                            Custom
+                                        </span>
+                                    )}
+                                    {!isUnlimited && usage.isTrialExpired && (
+                                        <span className="text-[8px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300 uppercase tracking-tight shrink-0">
                                             Expired
                                         </span>
                                     )}
                                 </div>
                             )}
                         </div>
-                        <span className="text-[10px] font-bold text-slate-900 tracking-widest leading-none">
-                            {collapsed ? `${usage.dailyCount}/${usage.dailyLimit}` : `${usage.dailyCount} / ${usage.dailyLimit}`}
+                        <span className="text-[10px] font-bold font-mono text-slate-900 shrink-0 leading-none">
+                            {collapsed
+                                ? (isUnlimited ? `${formatNumber(usage.dailyCount)}/∞` : `${formatNumber(usage.dailyCount)}/${formatNumber(usage.dailyLimit)}`)
+                                : (isUnlimited ? `${formatNumber(usage.dailyCount)} / ∞` : `${formatNumber(usage.dailyCount)} / ${formatNumber(usage.dailyLimit)}`)}
                         </span>
                     </div>
-                    <div className="h-1.5 w-full bg-slate-300 rounded-full overflow-hidden border border-slate-400/50">
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progress}%` }}
-                            transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                            className={`h-full ${progress > 90 ? 'bg-red-500' : progress > 70 ? 'bg-orange-400' : 'bg-blue-600'} shadow-[0_0_10px_rgba(37,99,235,0.3)]`}
-                        />
-                    </div>
+                    {!isUnlimited && (
+                        <div className="h-1.5 w-full bg-slate-300 rounded-full overflow-hidden border border-slate-400/50">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${progress}%` }}
+                                transition={{ type: "spring", damping: 20, stiffness: 100 }}
+                                className={`h-full ${progress > 90 ? 'bg-red-500' : progress > 70 ? 'bg-orange-400' : 'bg-blue-600'} shadow-[0_0_10px_rgba(37,99,235,0.3)]`}
+                            />
+                        </div>
+                    )}
                     {!collapsed && (
                         <p className="text-[9px] text-slate-600 font-medium leading-tight">
-                            {usage.isTrialExpired 
-                                ? "Your 30-day trial has concluded." 
-                                : <>Daily limit resets in approx. {24 - new Date().getHours()}h. {(usage.daysUntilExpiry !== undefined && usage.daysUntilExpiry !== null) ? <span className="text-red-500 font-bold ml-1">Expires in {usage.daysUntilExpiry} days.</span> : ""}</>}
+                            {isUnlimited ? (
+                                "Unlimited daily queries authorized."
+                            ) : usage.isTrialExpired ? (
+                                "Your 30-day trial has concluded."
+                            ) : (
+                                <>
+                                    Daily limit resets in approx. {24 - new Date().getHours()}h.
+                                    {usage.daysUntilExpiry !== undefined && usage.daysUntilExpiry !== null ? (
+                                        <span className="text-red-500 font-bold ml-1">Expires in {usage.daysUntilExpiry}d.</span>
+                                    ) : ""}
+                                </>
+                            )}
                         </p>
                     )}
-                    {usage.isTrialExpired && !collapsed && (
+                    {!isUnlimited && usage.isTrialExpired && !collapsed && (
                         <div className="w-full py-1.5 px-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-medium text-center">
                             Contact admin to extend quota
                         </div>
