@@ -27,6 +27,17 @@ import {
   Download,
   RefreshCcw,
   Minimize2,
+  ChevronDown,
+  Plus,
+  PanelLeft,
+  SquarePen,
+  Search as SearchIcon,
+  ThumbsUp,
+  ThumbsDown,
+  RotateCcw,
+  Paperclip,
+  Globe,
+  SlidersHorizontal,
 } from "lucide-react";
 
 import { useAuth } from "@/components/AuthProvider";
@@ -835,252 +846,294 @@ export default function Home() {
         </div>
 
         {/* Top Header / Bar */}
+        {/* Top Header / Bar (ChatGPT Style) */}
         <header
-          className="relative z-50 bg-white border-b border-slate-200 sticky top-0 px-6 py-3 flex items-center justify-between shadow-sm"
+          className="relative z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200/80 sticky top-0 px-4 sm:px-6 py-2.5 flex items-center justify-between"
         >
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="md:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all"
-                aria-label="Open menu"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all"
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="hidden md:flex p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all"
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              <PanelLeft className="w-4 h-4" />
+            </button>
+
+            {/* Model Pill (ChatGPT Style) */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-slate-100 text-slate-800 text-sm font-semibold cursor-default transition-colors">
+              <span className="font-bold">GridMind 4.0</span>
+              <span className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">RAG</span>
             </div>
           </div>
 
+          <div className="flex items-center gap-2">
+            {/* New Chat Button */}
+            <button
+              onClick={handleNewInquiry}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-sm transition-all active:scale-95"
+              title="Start New Inquiry"
+            >
+              <SquarePen className="w-3.5 h-3.5 text-slate-600" />
+              <span className="hidden sm:inline">New Chat</span>
+            </button>
 
-          <div className="flex items-center gap-3">
             {userTier !== 'pro' && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <button
                 onClick={() => setIsPricingOpen(true)}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-all shadow-sm"
               >
-                <Sparkles className="w-3 h-3" />
-                Get Pro
-              </motion.button>
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Upgrade</span>
+              </button>
             )}
-            <div className="hidden md:block ml-2 border-l border-white/5 pl-4 py-1">
+            <div className="hidden md:block ml-1 border-l border-slate-200 pl-3">
               <LiveStats />
             </div>
           </div>
         </header>
 
         {/* ── MOBILE LIVE STATS BAR ── */}
-        <div className="md:hidden bg-white border-b border-slate-200 px-4 py-2 flex justify-center sticky top-[61px] z-40 shadow-sm">
+        <div className="md:hidden bg-slate-50 border-b border-slate-200 px-4 py-1.5 flex justify-center sticky top-[53px] z-40">
           <LiveStats />
         </div>
 
-        {/* ── EMPTY STATE: Centered Input ── */}
-        <AnimatePresence>
-          {!result && !loading && (
-            <motion.div
-              key="centered-input"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, y: -30 }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="flex-1 flex flex-col items-center justify-center px-8"
-            >
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="text-center mb-10"
-              >
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight mb-4">
-                  <span className="block text-slate-600 font-semibold text-xl sm:text-2xl mb-2 tracking-widest uppercase">Ask me anything on</span>
-                  <span
-                    className="relative block w-full"
-                    style={{ minHeight: "1.4em", overflow: "hidden" }}
-                  >
-                    <AnimatePresence mode="wait">
-                      <motion.span
-                        key={topicIndex}
-                        initial={{ y: "100%", opacity: 0 }}
-                        animate={{ y: "0%", opacity: 1 }}
-                        exit={{ y: "-100%", opacity: 0 }}
-                        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                        className="block w-full text-blue-600 text-center"
-                      >
-                        {DYNAMIC_SEARCH_TOPICS[topicIndex]}
-                      </motion.span>
-                    </AnimatePresence>
-                  </span>
-                </h2>
-                <p className="text-[10px] sm:text-xs text-slate-500 max-w-md mx-auto uppercase tracking-widest font-medium opacity-80 mt-3">
-                  Power Sector Intelligence — Instantly
-                </p>
-              </motion.div>
+        {/* ── CHAT CONTAINER (ChatGPT Style) ── */}
+        <div className="flex-1 flex flex-col justify-between overflow-y-auto">
+          {/* Main conversation scroll area */}
+          <div className="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-6 flex flex-col">
+            {/* Graceful Limit Alert */}
+            {error && (() => {
+              const lowerErr = error.toLowerCase();
+              const isLimit = lowerErr.includes("limit") || lowerErr.includes("reached") || lowerErr.includes("lockout") || lowerErr.includes("cooling") || lowerErr.includes("bandwidth");
+              const isExpired = lowerErr.includes("expired") || lowerErr.includes("trial");
 
-
-              {/* Graceful Limit Alert */}
-              <AnimatePresence>
-                {(() => {
-                  if (!error) return null;
-                  const lowerErr = error.toLowerCase();
-                  const isLimit = lowerErr.includes("limit") ||
-                    lowerErr.includes("reached") ||
-                    lowerErr.includes("lockout") ||
-                    lowerErr.includes("cooling") ||
-                    lowerErr.includes("bandwidth");
-                  
-                  const isExpired = lowerErr.includes("expired") || lowerErr.includes("trial");
-
-                  if (!isLimit && !isExpired) return null;
-
-                  return (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className={`w-full max-w-2xl mb-8 p-6 glass-panel border-blue-300/30 shadow-xl shadow-blue-100/20 flex flex-col sm:flex-row items-center gap-6 rounded-3xl ${isExpired ? "bg-amber-50" : "bg-blue-50"}`}
+              return (
+                <div className={`mb-6 p-4 border rounded-2xl flex items-center justify-between gap-4 ${isExpired ? "bg-amber-50 border-amber-200 text-amber-900" : "bg-red-50 border-red-200 text-red-900"}`}>
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className={`w-5 h-5 shrink-0 ${isExpired ? "text-amber-600" : "text-red-600"}`} />
+                    <p className="text-xs font-medium leading-relaxed">{error}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => setIsPricingOpen(true)}
+                      className="px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-all"
                     >
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border border-blue-300/50 overflow-hidden ${isExpired ? "bg-amber-100" : "bg-blue-100"}`}>
-                        <LottieCDNWrapper src={isExpired ? "/lock.lottie" : "/unlock.lottie"} className="w-full h-full transform scale-125" />
-                      </div>
-                      <div className="flex-1 text-center sm:text-left">
-                        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-1.5 flex items-center justify-center sm:justify-start gap-2">
-                          {isExpired ? "Trial Expired" : "Limit reached!"}
-                          <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isExpired ? "bg-amber-500" : "bg-blue-500"}`} />
-                        </h3>
-                        <p className="text-xs text-slate-700 leading-relaxed font-medium">
-                          {error}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => setIsPricingOpen(true)}
-                        className="shrink-0 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-indigo-600/20 active:scale-95 whitespace-nowrap"
-                      >
-                        Upgrade
-                      </button>
-                      <button
-                        onClick={() => setError("")}
-                        className="absolute top-4 right-4 text-slate-600 hover:text-slate-400 transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </motion.div>
-                  );
-                })()}
-              </AnimatePresence>
+                      Upgrade
+                    </button>
+                    <button onClick={() => setError("")} className="p-1 text-slate-400 hover:text-slate-600">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
 
-              <div className="w-full max-w-2xl">
-                <div className="relative group mb-6">
-                  <div className="relative flex flex-col gap-0 bg-white border border-slate-300 rounded-xl focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-200 transition-all duration-200 shadow-sm hover:shadow-md">
-                    <div className="relative w-full">
-                      <textarea
-                        ref={inputRef}
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        rows={3}
-                        placeholder="Ask GridMind anything..."
-                        className="w-full bg-transparent text-[14px] text-slate-900 placeholder:text-slate-400 outline-none resize-none leading-relaxed p-4 z-10 relative"
-                        style={{ minHeight: "80px", maxHeight: "240px" }}
-                        onInput={(e) => {
-                          const target = e.target as HTMLTextAreaElement;
-                          target.style.height = "80px";
-                          target.style.height = target.scrollHeight + "px";
+            {/* ── EMPTY STATE: ChatGPT Landing Prompt ── */}
+            {!result && !loading && (
+              <div className="my-auto py-12 flex flex-col items-center text-center">
+                <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center mb-5 shadow-sm">
+                  <BrainCircuit className="w-6 h-6 text-white" />
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 tracking-tight mb-2">
+                  What can I help with?
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-500 max-w-md mb-8">
+                  Ask any question across 4,200+ indexed WBSEDCL circulars, tariff orders, and CEA technical standards.
+                </p>
+
+                {/* ChatGPT-style 2x2 Suggestion Cards */}
+                <div className="grid sm:grid-cols-2 gap-3 w-full text-left">
+                  {[
+                    {
+                      title: "Theft & Inspection Procedure",
+                      desc: "Section 135 unauthorized extraction steps",
+                      query: "What is the procedure for Section 135 unauthorized extraction?",
+                    },
+                    {
+                      title: "Supply Restoration Norms",
+                      desc: "Restoration time for a blown transformer fuse",
+                      query: "What is the restoration time for a blown transformer fuse in urban areas?",
+                    },
+                    {
+                      title: "Single-Phase Load Ceiling",
+                      desc: "Maximum connected load permitted on 230V",
+                      query: "What is the maximum connected load permitted on single-phase 230V?",
+                    },
+                    {
+                      title: "Delayed Payment Surcharge",
+                      desc: "Tariff order interest rate calculation",
+                      query: "What is the Delayed Payment Surcharge rate under the 2024-25 tariff order?",
+                    },
+                  ].map((card, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setQuery(card.query);
+                        handleSubmit(card.query);
+                      }}
+                      className="p-4 rounded-2xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-slate-300 text-left transition-all group flex flex-col justify-between"
+                    >
+                      <span className="text-xs font-semibold text-slate-800 group-hover:text-slate-950">{card.title}</span>
+                      <span className="text-[12px] text-slate-500 mt-1 line-clamp-1 group-hover:text-slate-600">{card.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── ACTIVE CONVERSATION (ChatGPT Style) ── */}
+            {(loading || result) && (
+              <div className="flex flex-col gap-6 pb-32">
+                {/* User Message Bubble */}
+                {activeQuestion && (
+                  <div className="flex justify-end">
+                    <div className="max-w-[85%] sm:max-w-[75%] px-5 py-3 rounded-3xl bg-[#f4f4f4] text-slate-900 text-[15px] leading-relaxed shadow-sm flex items-start gap-3">
+                      <p className="flex-1">{activeQuestion}</p>
+                      <button
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(activeQuestion);
+                          setQuestionCopied(true);
+                          setTimeout(() => setQuestionCopied(false), 2000);
                         }}
-                      />
-                      
-                      {/* "Suggest Question" button: stays visible so user can reshuffle */}
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.5 }}
-                        className="absolute top-3 right-3 z-30"
+                        className="text-slate-400 hover:text-slate-600 p-0.5"
+                        title="Copy question"
                       >
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const pool = ALL_INTERESTING_QUERIES;
-                            let idx: number;
-                            do {
-                              idx = Math.floor(Math.random() * pool.length);
-                            } while (idx === lastRandomRef.current && pool.length > 1);
-                            lastRandomRef.current = idx;
-                            setQuery(pool[idx]);
-                            inputRef.current?.focus();
-                            // No auto-submit — user presses Enter or the send button
-                          }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-50/85 to-blue-50/85 backdrop-blur-sm border border-indigo-100/60 text-indigo-700/85 rounded-full text-[10px] font-bold uppercase tracking-widest hover:text-indigo-700 hover:shadow-sm hover:border-indigo-200 hover:from-indigo-50 hover:to-blue-50 transition-all active:scale-95 group"
-                        >
-                          <Sparkles className="w-3 h-3 text-indigo-500/80 group-hover:text-indigo-600" />
-                          <span>{query.trim() ? "Try Another" : "Suggest Question"}</span>
-                        </button>
-                      </motion.div>
-
-                      {/* Local Clarification Overlay */}
-                      <AnimatePresence>
-                        {clarificationData && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            className="absolute inset-0 z-40 bg-white/95 backdrop-blur-sm p-4 flex flex-col justify-center items-center text-center gap-4 rounded-xl border border-blue-200 shadow-xl"
-                          >
-                            <div className="flex flex-col gap-1">
-                              <h4 className="text-[12px] font-black text-blue-900 uppercase tracking-widest">{clarificationData.title}</h4>
-                              <p className="text-[10px] text-slate-500 font-medium italic">Please refine your question to save time and get a better answer.</p>
-                            </div>
-                            <div className="flex flex-wrap justify-center gap-2 max-w-sm">
-                              {clarificationData.options.map((opt) => (
-                                <button
-                                  key={opt}
-                                  onClick={() => {
-                                    const refined = `${opt} ${clarificationData.originalQuery}`;
-                                    setQuery(refined);
-                                    setClarificationData(null);
-                                    // Trigger submission with refined query
-                                    setTimeout(() => handleSubmit(refined), 50);
-                                  }}
-                                  className="px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-bold hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all active:scale-95 shadow-sm"
-                                >
-                                  {opt}
-                                </button>
-                              ))}
-                              <button
-                                onClick={() => {
-                                  // Skip clarification and go straight to AI
-                                  const q = clarificationData.originalQuery;
-                                  setClarificationData(null);
-                                  setTimeout(() => handleSubmit(q), 50);
-                                }}
-                                className="px-3 py-1.5 rounded-full bg-slate-100 border border-slate-300 text-slate-600 text-[11px] font-bold hover:bg-slate-200 transition-all active:scale-95"
-                              >
-                                Skip & Ask Anyway
-                              </button>
-                            </div>
-                            <button 
-                              onClick={() => setClarificationData(null)}
-                              className="absolute top-2 right-2 p-2 text-slate-400 hover:text-slate-600"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                    <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50 rounded-b-[10px]">
-                      <span className="text-[11px] text-slate-500 font-medium"></span>
-                      <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleSubmit()}
-                        disabled={loading || !query.trim()}
-                        className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
-                      >
-                        <ArrowUp className="w-4 h-4" />
-                      </motion.button>
+                        {questionCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
                     </div>
                   </div>
+                )}
 
-                  {/* Response Length Slider moved here */}
-                  <div className="mt-3 px-4">
+                {/* Loading State */}
+                {loading && (
+                  <div className="flex items-start gap-4 py-6">
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 mt-0.5">
+                      <BrainCircuit className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <ThinkingIndicator />
+                      <button
+                        onClick={handleStopSearch}
+                        className="mt-4 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 flex items-center gap-1.5"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        <span>Stop Search</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Assistant Response (ChatGPT Style) */}
+                {result && !loading && (
+                  <div ref={resultsRef} className="flex items-start gap-4 pt-2">
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 mt-1 shadow-sm">
+                      <BrainCircuit className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {/* Markdown Body */}
+                      <div className="markdown-content text-[15px] text-slate-800 leading-[1.75] font-normal">
+                        <TypingMarkdown
+                          text={result.answer}
+                          speed={2}
+                          sources={result.sources}
+                          onSourceClick={(url, title) => setActiveSource({ url, title })}
+                        />
+                      </div>
+
+                      {/* Sources Section (ChatGPT Search style) */}
+                      {result.sources.length > 0 && (
+                        <SourcesSection
+                          sources={result.sources}
+                          onOpenSource={(source) => setActiveSource({ url: source.source_url, title: source.title })}
+                        />
+                      )}
+
+                      {/* Action Bar (ChatGPT Style) */}
+                      <ChatGptActionBar
+                        result={result}
+                        query={activeQuestion || query}
+                        onRetry={() => handleSubmit(activeQuestion || query)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ── FLOATING CHATGPT INPUT BAR ── */}
+          <div className="sticky bottom-0 bg-gradient-to-t from-white via-white/95 to-transparent pt-4 pb-4 px-4 sm:px-6 z-30">
+            <div className="max-w-3xl mx-auto w-full">
+              {/* Clarification Alert Overlay if needed */}
+              <AnimatePresence>
+                {clarificationData && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="mb-3 bg-white p-4 rounded-2xl border border-blue-200 shadow-xl flex flex-col gap-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-blue-900">{clarificationData.title}</span>
+                      <button onClick={() => setClarificationData(null)} className="text-slate-400 hover:text-slate-600">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {clarificationData.options.map((opt) => (
+                        <button
+                          key={opt}
+                          onClick={() => {
+                            const refined = `${opt} ${clarificationData.originalQuery}`;
+                            setQuery(refined);
+                            setClarificationData(null);
+                            setTimeout(() => handleSubmit(refined), 50);
+                          }}
+                          className="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold hover:bg-blue-600 hover:text-white transition-all"
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* ChatGPT Input Pill */}
+              <div className="relative flex flex-col bg-[#f4f4f4] rounded-[26px] border border-slate-200/90 shadow-sm focus-within:bg-white focus-within:border-slate-400 focus-within:shadow-md transition-all duration-200 p-2">
+                <textarea
+                  ref={inputRef}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  rows={1}
+                  placeholder="Message GridMind..."
+                  className="w-full bg-transparent text-[15px] text-slate-900 placeholder:text-slate-400 outline-none resize-none px-3.5 pt-2 pb-1 leading-relaxed"
+                  style={{ minHeight: "44px", maxHeight: "180px" }}
+                  onInput={(e) => {
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = "44px";
+                    target.style.height = `${Math.min(target.scrollHeight, 180)}px`;
+                  }}
+                />
+
+                <div className="flex items-center justify-between px-2 pt-1">
+                  {/* Left Controls: Plus / Browse Vault & Response Depth Slider */}
+                  <div className="flex items-center gap-1">
+                    <Link
+                      href="/explorer"
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-colors shrink-0"
+                      title="Explore 4,200+ Circular Vault"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Link>
                     <VerbositySlider
                       value={verbosity}
                       onChange={setVerbosity}
@@ -1088,179 +1141,29 @@ export default function Home() {
                       onUpgradeClick={() => setIsPricingOpen(true)}
                     />
                   </div>
+
+                  {/* Right Control: Iconic Round Send Button */}
+                  <button
+                    onClick={() => handleSubmit()}
+                    disabled={loading || !query.trim()}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                      query.trim() && !loading
+                        ? "bg-slate-900 text-white hover:bg-slate-700 active:scale-95 shadow-sm"
+                        : "bg-slate-300 text-slate-500 cursor-not-allowed opacity-50"
+                    }`}
+                    title="Send message"
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ── ACTIVE STATE: Loading + Results + Bottom Input ── */}
-        <AnimatePresence>
-          {(loading || result) && (
-            <motion.div
-              key="active-state"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex-1 flex flex-col"
-            >
-              {/* Scrollable Results Area */}
-              <div className="flex-1 w-full max-w-4xl mx-auto px-8 pt-6">
-                {/* Loading Animation */}
-                <AnimatePresence>
-                  {loading && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex flex-col items-center justify-center py-32"
-                    >
-                      <ThinkingIndicator />
-                      <motion.button
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={handleStopSearch}
-                        className="mt-6 inline-flex items-center gap-2 rounded-xl border border-rose-300 bg-rose-50 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-rose-700 transition-all hover:bg-rose-100"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                        Stop Search
-                      </motion.button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Common Error Display (Simple) */}
-                <AnimatePresence>
-                  {error && (
-                    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] w-full max-w-md px-4">
-                      <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="p-4 rounded-2xl bg-white border border-red-300 shadow-2xl flex items-center gap-3"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
-                          <X className="w-4 h-4 text-red-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[11px] font-bold text-red-700 uppercase tracking-widest leading-tight">Query Failed</p>
-                          <p className="text-xs text-slate-700 truncate">{error}</p>
-                        </div>
-                        <button
-                          onClick={() => setError("")}
-                          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 transition-colors"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </motion.div>
-                    </div>
-                  )}
-                </AnimatePresence>
-
-                {/* Strategic Results View */}
-                <AnimatePresence>
-                  {result && (
-                    <motion.div
-                      layout
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="space-y-8 pb-48"
-                    >
-                      {/* User Query Bubble */}
-                      <div className="flex justify-end">
-                        <div className="max-w-[80%] px-5 py-3 rounded-2xl rounded-br-md bg-blue-100 border border-blue-300 text-sm text-blue-900 select-none">
-                          <div className="flex items-start gap-3">
-                            <p className="min-w-0 flex-1 leading-relaxed">{activeQuestion}</p>
-                            {activeQuestion && (
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  await navigator.clipboard.writeText(activeQuestion);
-                                  setQuestionCopied(true);
-                                  setTimeout(() => setQuestionCopied(false), 2000);
-                                }}
-                                className="shrink-0 inline-flex items-center justify-center rounded-lg border border-blue-200 bg-white/70 p-1.5 text-blue-700 transition-colors hover:bg-white hover:border-blue-300"
-                                title="Copy question"
-                              >
-                                {questionCopied ? (
-                                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                ) : (
-                                  <Copy className="w-3.5 h-3.5" />
-                                )}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* AI Response */}
-                      <div ref={resultsRef} className="glass-panel rounded-[2rem] overflow-hidden shadow-2xl shadow-slate-200/20">
-                        {/* Result Header */}
-                        <div className="px-8 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 flex items-center justify-center shrink-0">
-                              <BrainCircuit className="w-6 h-6 text-blue-600" />
-                            </div>
-                            <h1 className="text-sm font-bold tracking-tight text-slate-900 leading-tight animate-in fade-in slide-in-from-left-2 duration-300">
-                              GridMind <span className="text-blue-600">AI</span>
-                            </h1>
-                          </div>
-
-                          <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-300">
-                            <div className="flex items-center gap-1.5 text-slate-700 hover:text-blue-600 transition-colors group cursor-default">
-                              <Cpu className="w-3.5 h-3.5" />
-                              <span className="text-[9px] font-bold uppercase tracking-[0.1em] max-w-0 group-hover:max-w-[200px] opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap overflow-hidden">
-                                {result.model_used?.replace(/\s*\(\s*pool\s*\)/gi, "").replace(/pool/gi, "").replace(/\s*\(\s*\)/g, "").trim()}
-                              </span>
-                            </div>
-                            <div className="w-[1px] h-2.5 bg-slate-300" />
-                            <div className="flex items-center gap-1.5 text-slate-700">
-                              <Clock className="w-3.5 h-3.5" />
-                              <span className="text-[9px] font-bold uppercase tracking-[0.1em]">{(result.elapsed_ms / 1000).toFixed(1)}s</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Answer Content Area with Typing Animation */}
-                        <div className="px-8 py-8">
-                          <div className="markdown-content text-[15px] text-slate-800 leading-[1.7] font-normal">
-                            <TypingMarkdown 
-                              text={result.answer} 
-                              speed={2} 
-                              sources={result.sources} 
-                              onSourceClick={(url, title) => setActiveSource({ url, title })}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Share bar node */}
-                        <ShareBar result={result} query={query} />
-
-                        {/* Structured Sources Section */}
-                        {result.sources.length > 0 && (
-                          <SourcesSection 
-                            sources={result.sources}
-                            onOpenSource={(source) => setActiveSource({ url: source.source_url, title: source.title })}
-                          />
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-              {/* Removed Bottom Input Bar for cleaner look */}
-            </motion.div>
-          )
-          }
-        </AnimatePresence >
-
-        <div className="pb-4 px-8 max-w-4xl mx-auto flex items-start gap-4">
-          <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-          <p className="text-[9px] leading-relaxed text-slate-500 font-medium">
-            <span className="font-bold text-amber-600 uppercase tracking-widest mr-1">Legal Disclaimer:</span>
-            This response is synthesized by AI using available WBSEDCL/WBERC documents. It does <span className="font-bold text-slate-900 underline decoration-amber-500/50 underline-offset-2">NOT</span> constitute legal advice or an official interpretation. For legal purposes, please refer only to the Original Gazette or the official authority website. Read our <Link href="/privacy" className="text-blue-600 hover:text-blue-800 underline decoration-blue-200">Privacy Policy</Link> and <Link href="/terms" className="text-blue-600 hover:text-blue-800 underline decoration-blue-200">Terms of Use</Link>.
-          </p>
+              {/* Micro Disclaimer */}
+              <p className="text-[11px] text-center text-slate-400 mt-2 font-normal">
+                GridMind can make mistakes. Always verify critical statutory clauses from official circulars.
+              </p>
+            </div>
+          </div>
         </div>
         </div>
 
@@ -1656,8 +1559,17 @@ function TypingMarkdown({ text = "", speed = 2, sources, onSourceClick }: {
   );
 }
 
-function ShareBar({ result, query }: { result: QueryResult; query: string }) {
+function ChatGptActionBar({
+  result,
+  query,
+  onRetry,
+}: {
+  result: QueryResult;
+  query: string;
+  onRetry?: () => void;
+}) {
   const [copied, setCopied] = useState(false);
+  const [feedback, setFeedback] = useState<"up" | "down" | null>(null);
 
   const buildShareText = () => {
     let text = `Tactical Query: ${query}\n\nStrategic Synthesis:\n${result.answer}`;
@@ -1671,7 +1583,7 @@ function ShareBar({ result, query }: { result: QueryResult; query: string }) {
   };
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(buildShareText());
+    await navigator.clipboard.writeText(result.answer);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -1688,58 +1600,78 @@ function ShareBar({ result, query }: { result: QueryResult; query: string }) {
   };
 
   return (
-    <div className="px-8 py-4 border-t border-slate-300 flex items-center gap-3 bg-slate-50">
+    <div className="flex items-center gap-1 text-slate-500 pt-3 mt-2 border-t border-slate-100">
+      {/* Copy button */}
       <button
         onClick={handleCopy}
-        title="Copy Intelligence"
-        className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-100 hover:border-blue-300 border border-transparent transition-all duration-200"
+        title="Copy answer"
+        className="p-1.5 rounded-lg hover:bg-slate-100 hover:text-slate-800 transition-colors flex items-center gap-1 text-xs"
       >
-        {copied ? (
-          <Check className="w-4 h-4 text-emerald-400" />
-        ) : (
-          <Copy className="w-4 h-4" />
-        )}
+        {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+        {copied && <span className="text-[11px] text-emerald-600 font-medium">Copied</span>}
       </button>
+
+      {/* Thumbs up */}
+      <button
+        onClick={() => setFeedback(feedback === "up" ? null : "up")}
+        title="Good response"
+        className={`p-1.5 rounded-lg hover:bg-slate-100 transition-colors ${
+          feedback === "up" ? "text-blue-600 bg-blue-50" : "hover:text-slate-800"
+        }`}
+      >
+        <ThumbsUp className="w-4 h-4" />
+      </button>
+
+      {/* Thumbs down */}
+      <button
+        onClick={() => setFeedback(feedback === "down" ? null : "down")}
+        title="Bad response"
+        className={`p-1.5 rounded-lg hover:bg-slate-100 transition-colors ${
+          feedback === "down" ? "text-rose-600 bg-rose-50" : "hover:text-slate-800"
+        }`}
+      >
+        <ThumbsDown className="w-4 h-4" />
+      </button>
+
+      {/* Retry / Regenerate */}
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          title="Regenerate response"
+          className="p-1.5 rounded-lg hover:bg-slate-100 hover:text-slate-800 transition-colors"
+        >
+          <RotateCcw className="w-4 h-4" />
+        </button>
+      )}
+
+      {/* Share */}
       <button
         onClick={handleShare}
-        title="Distribute Strategy"
-        className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-100 border border-transparent transition-all duration-200"
+        title="Share synthesis"
+        className="p-1.5 rounded-lg hover:bg-slate-100 hover:text-slate-800 transition-colors"
       >
         <Share2 className="w-4 h-4" />
       </button>
 
-      <div className="flex-1" />
+      {/* Report error link */}
+      <a
+        href={`https://mail.google.com/mail/?view=cm&fs=1&to=gridmind.info@gmail.com&su=${encodeURIComponent("Report: Inaccurate GridMind Response")}&body=${encodeURIComponent(
+          `QUERY:\n${query}\n\nMODEL USED:\n${result.model_used}\n\nIssue Details:\n[Please describe the issue or missing circular]`
+        )}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="p-1.5 rounded-lg hover:bg-rose-50 hover:text-rose-600 transition-colors text-slate-400"
+        title="Report inaccuracy"
+      >
+        <MessageSquare className="w-4 h-4" />
+      </a>
 
-      <div className="relative group/feedback flex items-center">
-        <a
-          href={`https://mail.google.com/mail/?view=cm&fs=1&to=gridmind.info@gmail.com&su=${encodeURIComponent("Report: Inaccurate GridMind Response")}&body=${encodeURIComponent(
-            `TACTICAL QUERY:\n${query}\n\nMODEL USED:\n${result.model_used}\n\nIssue Details:\n[Please describe why this response was unsatisfactory or what latest info is missing]`
-          )}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center p-2 rounded-lg hover:bg-rose-100 transition-all text-slate-600 hover:text-rose-600 group-hover/feedback:text-rose-600"
-          title="Report missing latest info or an error"
-        >
-          <div className="relative">
-            <MessageSquare className="w-4 h-4" />
-            <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-rose-500/80 shadow-[0_0_8px_rgba(244,63,94,0.4)] animate-pulse" />
-          </div>
-        </a>
-
-        {/* Minimal Tooltip Prompt */}
-        <div className="absolute right-0 bottom-full mb-3 pointer-events-none opacity-0 group-hover/feedback:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-200">
-          <div className="bg-white border border-slate-300 rounded-xl px-4 py-2 shadow-2xl flex flex-col gap-1 w-56">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-3 h-3 text-rose-600" />
-              <span className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">Feedback</span>
-            </div>
-            <p className="text-[10px] text-slate-700 leading-relaxed">
-              Report missing latest info on this topic or report an analytical error.
-            </p>
-          </div>
-          {/* Tooltip arrow */}
-          <div className="absolute top-full right-4 -translate-y-1 w-2 h-2 bg-white border-r border-b border-slate-300 rotate-45" />
-        </div>
+      {/* Model & elapsed time */}
+      <div className="ml-auto flex items-center gap-1.5 text-[11px] text-slate-400 font-mono">
+        <Cpu className="w-3 h-3 text-slate-400" />
+        <span>{result.model_used?.replace(/\s*\(\s*pool\s*\)/gi, "").replace(/pool/gi, "").trim()}</span>
+        <span>•</span>
+        <span>{(result.elapsed_ms / 1000).toFixed(1)}s</span>
       </div>
     </div>
   );
@@ -1835,53 +1767,49 @@ function SourcesSection({
   onOpenSource?: (source: Source) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? sources : sources.slice(0, 5);
+  const visible = expanded ? sources : sources.slice(0, 4);
 
   return (
-    <div className="border-t border-slate-300 px-8 py-5 space-y-1 bg-slate-50">
-      <div className="flex items-center gap-2 mb-3">
-        <FileText className="w-3 h-3 text-blue-600" />
-        <span className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">
-          Sources · {sources.length}
-        </span>
+    <div className="mt-4 pt-3 border-t border-slate-100">
+      <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold mb-2.5">
+        <Globe className="w-3.5 h-3.5 text-slate-400" />
+        <span>Sources ({sources.length})</span>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {visible.map((source, i) => (
-          <div
-            key={source.doc_id}
-            className="flex items-center gap-3 group"
+          <button
+            key={source.doc_id || i}
+            type="button"
+            onClick={() => onOpenSource?.(source)}
+            className="flex items-start gap-2.5 p-2 rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-slate-100 hover:border-slate-300 text-left transition-all group"
           >
-            {/* PDF icon – internal viewer button */}
-            <button
-              type="button"
-              onClick={() => onOpenSource?.(source)}
-              className="shrink-0 w-6 h-6 flex items-center justify-center rounded bg-slate-200 hover:bg-slate-300 border border-slate-400 transition-all"
-              title="View document"
-            >
-              <FileText className="w-3 h-3 text-blue-600" />
-            </button>
-
-            {/* Label */}
-            <span className="text-[10px] font-black text-blue-700 uppercase tracking-tight shrink-0">
-              [{source.ref || `SRC-${i + 1}`}]
-            </span>
-            <span className="text-[11px] text-slate-700 truncate leading-tight">
-              {source.title}
-            </span>
-            {source.date && (
-              <span className="text-[9px] text-slate-600 shrink-0 font-medium">{source.date}</span>
-            )}
-          </div>
+            <div className="w-6 h-6 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 mt-0.5 group-hover:border-slate-400 transition-colors">
+              <FileText className="w-3.5 h-3.5 text-blue-600" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[11px] font-bold text-slate-800 truncate">
+                  {source.ref || `DOC-${i + 1}`}
+                </span>
+                {source.date && (
+                  <span className="text-[10px] text-slate-400 font-medium shrink-0">{source.date}</span>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-500 line-clamp-1 group-hover:text-slate-700 transition-colors">
+                {source.title}
+              </p>
+            </div>
+          </button>
         ))}
       </div>
 
-      {sources.length > 5 && (
+      {sources.length > 4 && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="mt-2 text-[10px] font-bold text-indigo-400/60 hover:text-indigo-400 uppercase tracking-widest transition-colors"
+          className="mt-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
         >
-          {expanded ? "Show less ↑" : `+${sources.length - 5} more ↓`}
+          {expanded ? "Show fewer sources ↑" : `+${sources.length - 4} more sources ↓`}
         </button>
       )}
     </div>
