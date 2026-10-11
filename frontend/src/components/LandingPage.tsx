@@ -111,17 +111,17 @@ export default function LandingPage({
         </div>
 
         {/* Dynamic Main Headline */}
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-950 leading-[1.15] max-w-3xl">
-          Verified statutory answers for{" "}
-          <span className="inline-block relative text-blue-600 overflow-hidden h-[1.25em] align-top text-left font-extrabold min-w-[280px] sm:min-w-[420px]">
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-950 leading-tight max-w-4xl">
+          Verified statutory answers for
+          <span className="block mt-2 sm:mt-3 text-blue-600 min-h-[1.3em]">
             <AnimatePresence mode="wait">
               <motion.span
                 key={current.topic}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.35, ease: "easeInOut" }}
-                className="absolute inset-0 whitespace-nowrap"
+                exit={{ opacity: 0, y: -14 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="inline-block"
               >
                 {current.topic}
               </motion.span>
