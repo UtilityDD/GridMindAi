@@ -124,73 +124,6 @@ const SAMPLE_DOCKETS = [
   },
 ];
 
-const PLANS = [
-  {
-    id: "free",
-    name: "Free Trial",
-    price: "₹0",
-    period: "30-Day Evaluation",
-    limit: "10 queries / day",
-    highlight: false,
-    badge: "Evaluation",
-    features: [
-      "10 statutory queries daily",
-      "Full search of 4,200+ indexed circulars",
-      "Exact clause citations & PDF page references",
-      "WBSEDCL, WBERC & CEA standards",
-      "Side-by-side original PDF verification",
-    ],
-  },
-  {
-    id: "basic",
-    name: "Basic+",
-    price: "₹100",
-    period: "Perpetual Access",
-    limit: "10 queries / day",
-    highlight: false,
-    badge: "No Expiry",
-    features: [
-      "10 queries daily with no time expiration",
-      "Full regulatory & tariff database access",
-      "Complete document vault search access",
-      "Priority query indexing",
-      "Standard processing speed",
-    ],
-  },
-  {
-    id: "advance",
-    name: "Advance",
-    price: "₹200",
-    period: "Perpetual Access",
-    limit: "50 queries / day",
-    highlight: true,
-    badge: "Most Popular for Engineers",
-    features: [
-      "50 queries daily bandwidth",
-      "Comprehensive multi-source statutory synthesis",
-      "Cross-subsidy & tariff formula calculations",
-      "Instant PDF viewer side-by-side verification",
-      "High-priority server compute priority",
-    ],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: "₹300",
-    period: "Perpetual Access",
-    limit: "150 queries / day",
-    highlight: false,
-    badge: "Legal & Divisional Teams",
-    features: [
-      "150 queries daily bandwidth",
-      "Highest-depth statutory intelligence",
-      "Full export & citation sharing capabilities",
-      "Direct document vault contribution",
-      "Dedicated server compute allocation",
-    ],
-  },
-];
-
 export default function LandingPage({
   onGetStarted,
   buttonLabel = "Launch Intelligence Console",
@@ -249,8 +182,8 @@ export default function LandingPage({
             <a href="#regulatory-corpus" className="hover:text-slate-950 transition-colors">
               Corpus Coverage
             </a>
-            <a href="#pricing" className="hover:text-slate-950 transition-colors">
-              Pricing & Tiers
+            <a href="#access-control" className="hover:text-slate-950 transition-colors">
+              Access & Quotas
             </a>
             <Link href="/explorer" className="hover:text-blue-600 transition-colors flex items-center gap-1">
               <span>Circular Directory</span>
@@ -631,89 +564,74 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* ── Section: Pricing & Tiers ── */}
-      <section id="pricing" className="py-16 px-4 sm:px-6 max-w-7xl mx-auto border-b border-slate-200">
+      {/* ── Section: Administrative Access & Authorization ── */}
+      <section id="access-control" className="py-16 px-4 sm:px-6 max-w-7xl mx-auto border-b border-slate-200">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-slate-100 border border-slate-200 text-slate-700 text-xs font-mono mb-3">
-            <span>TRANSPARENT PRICING</span>
+            <span>ACCESS & AUTHORIZATION</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
-            Simple, Perpetual Access Plans
+            Managed via Administrative Console
           </h2>
           <p className="text-sm text-slate-600 mt-2 leading-relaxed">
-            Start with our 30-day free evaluation. Upgrade seamlessly via UPI or cards with zero recurring lock-ins.
+            User access tiers, daily inquiry limits, and organizational quotas are provisioned and managed directly by the system administrator.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {PLANS.map((plan) => (
-            <div
-              key={plan.id}
-              className={`rounded-2xl p-6 flex flex-col justify-between transition-all ${
-                plan.highlight
-                  ? "border-2 border-slate-900 bg-slate-950 text-white shadow-xl relative"
-                  : "border border-slate-200 bg-white text-slate-900 shadow-sm"
-              }`}
-            >
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className={`text-base font-bold ${plan.highlight ? "text-white" : "text-slate-950"}`}>
-                    {plan.name}
-                  </h3>
-                  <span
-                    className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
-                      plan.highlight ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700"
-                    }`}
-                  >
-                    {plan.badge}
-                  </span>
-                </div>
-
-                <div className="mb-4">
-                  <span className="text-3xl font-extrabold tracking-tight font-mono">{plan.price}</span>
-                  <span
-                    className={`text-xs ml-1.5 font-medium ${plan.highlight ? "text-slate-400" : "text-slate-500"}`}
-                  >
-                    / {plan.period}
-                  </span>
-                </div>
-
-                <div
-                  className={`p-2.5 rounded-lg mb-6 text-xs font-semibold ${
-                    plan.highlight
-                      ? "bg-white/10 text-slate-200"
-                      : "bg-slate-50 text-slate-700 border border-slate-200/60"
-                  }`}
-                >
-                  {plan.limit}
-                </div>
-
-                <ul className="space-y-2.5 mb-8">
-                  {plan.features.map((feat, i) => (
-                    <li key={i} className="text-xs flex items-start gap-2">
-                      <Check
-                        className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${
-                          plan.highlight ? "text-blue-400" : "text-blue-600"
-                        }`}
-                      />
-                      <span className={plan.highlight ? "text-slate-300" : "text-slate-600"}>{feat}</span>
-                    </li>
-                  ))}
-                </ul>
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="p-6 rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold mb-4">
+                <BrainCircuit className="w-5 h-5 text-blue-600" />
               </div>
-
-              <button
-                onClick={onGetStarted}
-                className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
-                  plan.highlight
-                    ? "bg-white text-slate-950 hover:bg-slate-100 shadow-md"
-                    : "bg-slate-900 text-white hover:bg-slate-800"
-                }`}
-              >
-                Select {plan.name}
-              </button>
+              <h3 className="text-base font-bold text-slate-900 mb-2">Immediate Evaluation</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                All registered accounts receive instant baseline access to query over 4,200+ indexed circulars, safety codes, and tariff determinations.
+              </p>
             </div>
-          ))}
+            <div className="mt-6 pt-4 border-t border-slate-100 text-[11px] font-mono text-slate-400">
+              Active Baseline Access
+            </div>
+          </div>
+
+          <div className="p-6 rounded-2xl border-2 border-slate-900 bg-slate-950 text-white shadow-xl flex flex-col justify-between">
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-white/10 text-white flex items-center justify-center font-bold mb-4">
+                <Shield className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-white mb-2">Administrative Provisioning</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Divisional managers, vigilance officers, and legal teams are authorized and assigned custom daily limits directly via the User Management Console.
+              </p>
+            </div>
+            <div className="mt-6 pt-4 border-t border-slate-800 text-[11px] font-mono text-emerald-400">
+              Managed at /admin
+            </div>
+          </div>
+
+          <div className="p-6 rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold mb-4">
+                <FileText className="w-5 h-5 text-emerald-600" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 mb-2">Audited Citations</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Every query delivers strict clause-level verification, paragraph references, and direct access to original scanned circular PDFs.
+              </p>
+            </div>
+            <div className="mt-6 pt-4 border-t border-slate-100 text-[11px] font-mono text-slate-400">
+              100% Verifiable PDF Records
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center mt-10">
+          <button
+            onClick={onGetStarted}
+            className="px-8 py-3 rounded-xl bg-[#0d0d0d] hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-95"
+          >
+            {isLoggedIn ? "Open Console" : "Sign In with Account"}
+          </button>
         </div>
       </section>
 

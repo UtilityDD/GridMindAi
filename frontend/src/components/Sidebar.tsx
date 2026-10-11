@@ -297,13 +297,9 @@ function SidebarContent({
                         </p>
                     )}
                     {usage.isTrialExpired && !collapsed && (
-                        <button 
-                            onClick={onUpgradeClick}
-                            className="w-full py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
-                        >
-                            <Lock className="w-3 h-3" />
-                            Renew Access
-                        </button>
+                        <div className="w-full py-1.5 px-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-medium text-center">
+                            Contact admin to extend quota
+                        </div>
                     )}
                 </div>
             )}
@@ -328,14 +324,6 @@ function SidebarContent({
                                     <span className="text-[8px] font-bold text-slate-600 uppercase whitespace-nowrap">
                                         Applied
                                     </span>
-                                )}
-                                {userTier !== 'pro' && !usage?.hasCustomLimit && (
-                                    <button
-                                        onClick={onUpgradeClick}
-                                        className="text-[9px] font-bold text-blue-600 hover:text-blue-700 underline underline-offset-2 transition-colors"
-                                    >
-                                        Upgrade
-                                    </button>
                                 )}
                             </div>
                             <p className="text-[10px] text-slate-600 truncate">{userEmail}</p>

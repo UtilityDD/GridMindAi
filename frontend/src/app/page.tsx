@@ -818,19 +818,22 @@ export default function Home() {
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         userTier={userTier}
-        onUpgradeClick={() => setIsPricingOpen(true)}
+        onUpgradeClick={() => {}}
         onNewInquiry={handleNewInquiry}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         usage={usage}
       />
 
-      <PricingModal
-        isOpen={isPricingOpen}
-        onClose={() => setIsPricingOpen(false)}
-        currentTier={userTier}
-        onSelectPlan={handleSelectPlan}
-      />
+      {/* PricingModal hidden: authorization managed via admin panel */}
+      {false && (
+        <PricingModal
+          isOpen={isPricingOpen}
+          onClose={() => setIsPricingOpen(false)}
+          currentTier={userTier}
+          onSelectPlan={handleSelectPlan}
+        />
+      )}
 
       {/* Main content + PDF split container */}
       <div ref={containerRef} className="flex-1 flex min-w-0 relative">
@@ -884,15 +887,6 @@ export default function Home() {
               <span className="hidden sm:inline">New Chat</span>
             </button>
 
-            {userTier !== 'pro' && (
-              <button
-                onClick={() => setIsPricingOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-all shadow-sm"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Upgrade</span>
-              </button>
-            )}
             <div className="hidden md:block ml-1 border-l border-slate-200 pl-3">
               <LiveStats />
             </div>
@@ -921,12 +915,6 @@ export default function Home() {
                     <p className="text-xs font-medium leading-relaxed">{error}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => setIsPricingOpen(true)}
-                      className="px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-all"
-                    >
-                      Upgrade
-                    </button>
                     <button onClick={() => setError("")} className="p-1 text-slate-400 hover:text-slate-600">
                       <X className="w-4 h-4" />
                     </button>
@@ -1681,16 +1669,12 @@ function ChatGptActionBar({
 function VerbositySlider({
   value,
   onChange,
-  userTier,
-  onUpgradeClick,
 }: {
   value: number;
   onChange: (v: number) => void;
-  userTier: string;
-  onUpgradeClick: () => void;
+  userTier?: string;
+  onUpgradeClick?: () => void;
 }) {
-  const isPaid = userTier.toLowerCase() !== 'free';
-
   return (
     <div className="flex items-center gap-4 px-1 py-1 flex-1">
       <div className="flex items-center gap-2.5 shrink-0">
@@ -1707,7 +1691,6 @@ function VerbositySlider({
         />
         <div className="absolute inset-x-0 flex justify-between px-0.5 pointer-events-none">
           {[1, 2, 3, 4, 5].map((step) => {
-            const isLocked = !isPaid && step > 3;
             return (
               <div
                 key={step}
@@ -1715,22 +1698,7 @@ function VerbositySlider({
                   ? "bg-blue-600 border-blue-500 shadow-sm shadow-blue-600/20"
                   : "bg-slate-300 border-slate-400"
                   }`}
-              >
-                {isLocked && (
-                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white border border-slate-300 rounded-xl px-3 py-1.5 pointer-events-none z-50 whitespace-nowrap shadow-2xl flex flex-col items-center gap-1">
-                    <span className="text-[9px] font-black text-slate-900 uppercase tracking-[0.2em]">{VERBOSITY_LABELS[step - 1]}</span>
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-100 border border-amber-300">
-                      <Lock className="w-2.5 h-2.5 text-amber-600" />
-                      <span className="text-[8px] font-bold text-amber-600 uppercase tracking-widest">Upgrade</span>
-                    </div>
-                  </div>
-                )}
-                {!isPaid && step > 3 && (
-                  <div className="absolute inset-0 flex items-center justify-center opacity-40">
-                    <div className="w-1 h-1 bg-amber-500 rounded-full" />
-                  </div>
-                )}
-              </div>
+              />
             );
           })}
         </div>
@@ -1740,16 +1708,7 @@ function VerbositySlider({
           max={5}
           step={1}
           value={value}
-          onChange={(e) => {
-            const newVal = Number(e.target.value);
-            if (!isPaid && newVal > 3) {
-              onUpgradeClick();
-              // Prevent actual change to locked values for free users
-              onChange(Math.min(value, 3));
-            } else {
-              onChange(newVal);
-            }
-          }}
+          onChange={(e) => onChange(Number(e.target.value))}
           className="absolute inset-0 w-full opacity-0 cursor-pointer z-10"
         />
       </div>
