@@ -6,7 +6,8 @@ This guide covers subscription management, admin controls, environment variables
 
 ## 🌐 1. Repository & Deployment Infrastructure
 
-- **Primary Repository**: [https://github.com/gridmindinfo/GridMindAI.git](https://github.com/gridmindinfo/GridMindAI.git)
+- **Primary Repository**: [https://github.com/gridmindinfo/GridMindAI.git](https://github.com/gridmindinfo/GridMindAI.git) (`origin`)
+- **Mirror Repository**: [https://github.com/UtilityDD/GridMindAi.git](https://github.com/UtilityDD/GridMindAi.git) (`utilitydd`)
 - **Framework & Subdirectory**: Next.js 15 (App Router) located in `/frontend`.
 - **Hosting Platform**: Vercel (Hobby Tier).
 - **Vercel Settings**:
@@ -170,4 +171,35 @@ GridMind AI operates on a 100% free multi-provider LLM infrastructure with autom
   - Emits proper `Content-Type: application/pdf`, `Content-Disposition: inline`, and CORS headers (`*`) to ensure immediate preview without download-forcing behavior.
 - **Quick-Action Toolbar**:
   - Single-click **Open in New Tab** (`ExternalLink`) and **Download** (`Download`) options so users always have unrestricted access to original documents.
+
+---
+
+## 🚀 11. Safe Deployment & Verification Protocol
+
+Follow this verified sequence for every deployment:
+
+### Step 1: Pre-Commit Quality Gate
+Run from `frontend/`:
+```bash
+# 1. Type validation
+npx tsc --noEmit
+
+# 2. Production build verification
+npm run build
+```
+
+### Step 2: Git Synchronization
+Stage, commit, and push to both remotes:
+```bash
+git add .
+git commit -m "feat/fix: descriptive summary of changes"
+git push origin main
+git push utilitydd main
+```
+
+### Step 3: Post-Deployment Smoke Tests
+1. **Health Check**: `GET /api/health` returns `{ "status": "ok" }`.
+2. **Quota & Analytics**: `GET /api/user/usage` returns current user tier and today's usage.
+3. **Document Proxy**: Verify `/api/pdf-proxy?url=<pdf_url>` returns `HTTP 200` with `Content-Type: application/pdf`.
+4. **Interactive Chat**: Submit test query in the console; confirm instant response streaming, accurate citations, and live usage count update in the top header.
 
