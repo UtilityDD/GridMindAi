@@ -122,7 +122,7 @@ UPDATE public.user_tiers SET daily_limit = 150, monthly_limit = 999999, name = '
   - User bubble in high-contrast ChatGPT styling (`#f4f4f4`, `rounded-3xl`, right-aligned).
   - Assistant response with markdown tables, statutory citations, and action bar (Copy, Thumbs Up/Down, Regenerate, Share, and Report).
   - Floating bottom input bar (`rounded-[26px] bg-[#f4f4f4]`) with auto-expanding textarea, Plus button, verbosity depth slider, and circular send button.
-  - Draggable split-screen PDF viewer for side-by-side circular verification.
+  - Draggable split-screen document viewer for side-by-side circular verification, supporting native high-performance inline PDF rendering, Reader mode, and Markdown summaries.
 
 ---
 
@@ -155,4 +155,19 @@ GridMind AI operates on a 100% free multi-provider LLM infrastructure with autom
   `GET /api/user/usage` queries `user_analytics` for the authenticated user since midnight (IST), calculating exact real-time consumption.
 - **Client Sync**:
   Live stats pill in the top header and the user profile modal automatically refresh after each inquiry, ensuring the quota counter stays in lockstep with database usage.
+
+---
+
+## 📑 10. Document & PDF Viewer Engine
+
+- **Unrestricted, High-Fidelity Rendering**:
+  - Eliminated artificial right-click blocking, restrictive security warnings, and text selection prevention. Users and utility engineers can highlight text, copy order references, and inspect tables freely.
+  - Native browser PDF rendering (`iframe` / `object`) serves as the primary engine, guaranteeing that 100% of pages in multi-page circulars load smoothly without Canvas GPU memory limits or lazy-load race conditions.
+  - Built-in Reader Mode (sequential PDF.js) and Markdown support (`ReactMarkdown`) provide multi-format flexibility.
+- **Smart Proxy & Normalization ([pdf-proxy/route.ts](file:///c:/Dipankar/GridMindAi/frontend/src/app/api/pdf-proxy/route.ts))**:
+  - Automatically resolves DNS routing anomalies (e.g., `www.tssawbseb.com` lacking an A-record, resolving seamlessly to `tssawbseb.com`).
+  - Normalizes GitHub repository links (`/blob/` -> `raw.githubusercontent.com`).
+  - Emits proper `Content-Type: application/pdf`, `Content-Disposition: inline`, and CORS headers (`*`) to ensure immediate preview without download-forcing behavior.
+- **Quick-Action Toolbar**:
+  - Single-click **Open in New Tab** (`ExternalLink`) and **Download** (`Download`) options so users always have unrestricted access to original documents.
 
