@@ -29,10 +29,12 @@ GridMind AI is built on a modern, scalable stack focusing on high-performance re
 2. **Hybrid Retrieval**:
    - **Vector Search**: Uses `pgvector` to find semantically relevant chunks across thousands of regulatory pages.
    - **Keyword Extraction**: Simultaneously extracts key policy terms for granular analytics.
-3. **Context Injection**: The `rag.ts` layer builds a dense context from top-ranked fragments, including automatic amendment-awareness logic.
-4. **LLM Synthesis**: The final answer is generated using models like **Gemini 2.5 Flash** or **Llama 3.3 70B**, enforcing a formal, 7-section structured output.
+3. **Context Injection**: The `rag.ts` layer builds a dense context from top-ranked fragments, including automatic amendment-awareness logic and a vector-match safety net if reranking scores conservatively.
+4. **LLM Synthesis**: The final answer is generated using a free multi-key rotating pool across Groq (`openai/gpt-oss-120b`, `qwen/qwen3.8-27b`) and Google Gemini (`gemini-2.5-flash`), with dedicated token headroom for internal reasoning buffers.
+5. **Universal Analytics Logging**: Every query path (synthesis, cache hit, zero match) logs to `user_analytics` to ensure transparent daily consumption tracking and quota enforcement.
 
-### 🔐 Multi-Layer Controls
+### 🔐 Multi-Layer Controls & UI Architecture
+- **Unified Single Header**: Streamlined desktop and mobile layout with a single 56px top header (`page.tsx`) and smooth collapsible sidebar rail (`Sidebar.tsx`), eliminating visual clutter.
 - **Supabase Integration**: Handles Auth, RLS (Row Level Security), and vectorized storage.
 - **Account status**: The `is_enabled` flag at the API level provides instant administrative account control.
 - **Custom Overrides**: A flexible limit system allows developers to override tier defaults for specific priority users directly in the database.

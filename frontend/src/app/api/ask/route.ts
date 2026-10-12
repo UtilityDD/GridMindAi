@@ -136,6 +136,23 @@ export async function POST(req: NextRequest) {
   const supabase = getSupabaseAdmin();
   let queryEmbedding: number[] | null = null;
 
+  // Helper to accurately record consumption analytics in Supabase
+  const logAnalytics = async (rewritten: string | null = null, kw: string[] = []) => {
+    if (!userId) return;
+    try {
+      await getSupabaseAdmin()
+        .from("user_analytics")
+        .insert({
+          user_id: userId,
+          original_query: question,
+          rewritten_query: rewritten,
+          keywords: kw,
+        });
+    } catch (e) {
+      console.error("Failed to log analytics:", e);
+    }
+  };
+
   // --- 1. SMART SEMANTIC CACHE LAYER ---
   try {
     queryEmbedding = await embedSingle(question);
@@ -152,6 +169,7 @@ export async function POST(req: NextRequest) {
 
     // A. Direct Hit (State is still the same)
     if (new Date(cache.state_token).getTime() >= new Date(currentToken).getTime()) {
+      await logAnalytics("CACHED", []);
       return NextResponse.json({
         answer: cache.answer,
         sources: cache.sources || [],
@@ -173,6 +191,7 @@ export async function POST(req: NextRequest) {
       // New info exists in DB but is IRRELEVANT to this query.
       // Update cache token to latest to avoid re-verifying until next upload.
       await supabase.from("query_cache").update({ state_token: currentToken }).eq("id", cache.id);
+      await logAnalytics("SMART_SYNC", []);
 
       return NextResponse.json({
         answer: cache.answer,
@@ -196,6 +215,7 @@ export async function POST(req: NextRequest) {
   ]);
 
   if (retrievalResult.docIds.length === 0) {
+    await logAnalytics(retrievalResult.rewrittenQuery, keywords);
     return NextResponse.json({
       answer: "No relevant documents found for your query.",
       sources: [],
@@ -253,21 +273,8 @@ export async function POST(req: NextRequest) {
     ? citedSources
     : result.sources.slice(0, 3);
 
-  // Log analytics (asynchronously, but we await to ensure it's recorded in serverless)
-  if (userId) {
-    try {
-      await getSupabaseAdmin()
-        .from("user_analytics")
-        .insert({
-          user_id: userId,
-          original_query: question,
-          rewritten_query: retrievalResult.rewrittenQuery,
-          keywords: keywords,
-        });
-    } catch (e) {
-      console.error("Failed to log analytics:", e);
-    }
-  }
+  // Log analytics for completed query
+  await logAnalytics(retrievalResult.rewrittenQuery, keywords);
 
   // --- 3. CACHE BACKFILL (Async) ---
   if (result.answer && !result.answer.includes("No relevant documents found") && queryEmbedding) {

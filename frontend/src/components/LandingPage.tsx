@@ -80,10 +80,12 @@ export default function LandingPage({
           <span>West Bengal Power Distribution & Regulatory Intelligence</span>
         </div>
 
-        {/* Dynamic Main Headline */}
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-950 leading-tight max-w-4xl">
-          Verified statutory answers for
-          <span className="block mt-2 sm:mt-3 text-blue-600 min-h-[1.3em]">
+        {/* Dynamic Main Headline: Strictly completed in 2 lines (Line 1: Fixed, Line 2: Changing) */}
+        <h1 className="text-[20px] min-[400px]:text-[22px] min-[480px]:text-2xl sm:text-4xl md:text-[44px] lg:text-[52px] xl:text-[56px] font-extrabold tracking-tight text-slate-950 leading-tight max-w-5xl mx-auto">
+          <span className="block whitespace-nowrap">
+            Verified statutory answers for
+          </span>
+          <span className="flex items-center justify-center mt-2 sm:mt-3.5 text-blue-600 h-[1.3em] overflow-hidden whitespace-nowrap">
             <AnimatePresence mode="wait">
               <motion.span
                 key={currentTopic}
@@ -91,7 +93,7 @@ export default function LandingPage({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -14 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
-                className="inline-block"
+                className="inline-block whitespace-nowrap"
               >
                 {currentTopic}
               </motion.span>

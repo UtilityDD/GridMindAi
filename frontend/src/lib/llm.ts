@@ -7,7 +7,7 @@ import type { SourceMeta } from "./rag";
 export const GROQ_PRIMARY_MODEL = "openai/gpt-oss-120b";
 export const GROQ_FALLBACK_MODEL = "openai/gpt-oss-20b";
 export const GROQ_QWEN_MODEL = "qwen/qwen3.8-27b";
-export const GEMINI_MODEL = "gemini-3.8-flash";
+export const GEMINI_MODEL = "gemini-2.5-flash";
 
 const SUPPORTED_GROQ_MODELS = new Set([
   GROQ_PRIMARY_MODEL,
@@ -73,10 +73,11 @@ async function callGroqFree(
         { role: "user", content: userPrompt },
       ],
       temperature: 0.2,
-      max_tokens: 1500,
+      max_tokens: 2500,
     });
 
-    const content = response.choices[0]?.message?.content ?? "";
+    const msg = response.choices[0]?.message;
+    const content = msg?.content || (msg as any)?.reasoning || "";
     if (!content.trim()) throw new Error("Empty response from Groq");
     return { text: content, modelUsed: `Groq/${model}` };
   } catch (e: any) {

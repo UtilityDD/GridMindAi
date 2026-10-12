@@ -7,9 +7,10 @@ A Retrieval-Augmented Generation system for WBSEDCL (West Bengal State Electrici
 - **Web scraper** that fetches all circulars from the TSSA website
 - **Three-way RAG retrieval** (chunks, per-document summaries, document titles) for high-quality results
 - **Gemini vision OCR** for image-based PDFs (paid initial batch), with Tesseract fallback
-- **Gemini embeddings** (`gemini-embedding-001`) and Gemini LLM for answer generation, with OpenAI fallback
-- **ChromaDB** local vector store (free, no server needed)
+- **Gemini embeddings** (`gemini-embedding-001`) and multi-key free LLM generation (Groq `openai/gpt-oss-120b` & `qwen/qwen3.8-27b`, with Google `gemini-2.5-flash` failover)
+- **Supabase pgvector** & **ChromaDB** dual vector-store compatibility
 - **"Adding new files" workflow** — drop PDFs in a folder, run the pipeline, done
+- **Next.js 15 Web Application** with unified single-header UI and real-time usage quotas
 
 ## Project Structure
 

@@ -61,9 +61,9 @@ export default function Sidebar({ userEmail, onSignOut, history, onHistoryClick,
             {/* Desktop: collapsible sidebar */}
             <motion.aside
                 initial={false}
-                animate={{ width: collapsed ? 80 : 256 }}
+                animate={{ width: collapsed ? 72 : 256 }}
                 transition={{ type: "spring", damping: 25, stiffness: 250 }}
-                className="bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0 shrink-0 hidden md:flex overflow-hidden"
+                className="bg-white border-r border-slate-200 flex flex-col h-full shrink-0 hidden md:flex overflow-hidden"
             >
                 <SidebarContent
                     userEmail={userEmail}
@@ -132,7 +132,6 @@ interface SidebarContentProps extends SidebarProps {
 function SidebarContent({
     userEmail, onSignOut, history, onHistoryClick, onClose, showClose, userTier, onUpgradeClick, onNewInquiry, onToggleCollapse, usage, collapsed, onVaultOpen
 }: SidebarContentProps) {
-    const [logoHovered, setLogoHovered] = useState(false);
     const isUnlimited = userTier === 'admin' || (usage ? usage.dailyLimit >= 99999 : false);
     const formatNumber = (num: number) => {
         if (num >= 99999) return "∞";
@@ -147,76 +146,56 @@ function SidebarContent({
 
     return (
         <>
-            {/* Brand */}
-            <div className={`p-6 flex items-center ${collapsed ? 'justify-center' : 'justify-between'} gap-3 border-b border-slate-200 bg-white`}>
-                <div
-                    className="flex items-center gap-3 cursor-pointer group"
-                    onMouseEnter={() => setLogoHovered(true)}
-                    onMouseLeave={() => setLogoHovered(false)}
-                    onClick={collapsed ? onToggleCollapse : undefined}
-                >
-                    <div className="w-8 h-8 flex items-center justify-center shrink-0">
-                        {collapsed && logoHovered ? (
-                            <PanelLeftOpen className="w-6 h-6 text-blue-600 animate-in fade-in zoom-in duration-200" />
-                        ) : (
-                            <BrainCircuit className="w-6 h-6 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
-                        )}
-                    </div>
-                    {!collapsed && (
-                        <div className="animate-in fade-in slide-in-from-left-2 duration-300">
+            {/* Mobile-only Header: visible only inside mobile drawer */}
+            {showClose && (
+                <div className="h-14 px-4 flex items-center justify-between border-b border-slate-200 bg-white shrink-0">
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/20">
+                            <BrainCircuit className="w-5 h-5" />
+                        </div>
+                        <div>
                             <h1 className="text-sm font-bold tracking-tight text-slate-900 leading-tight">
                                 GridMind <span className="text-blue-600">AI</span>
                             </h1>
-                            <p className="text-[9px] text-blue-600/60 font-bold tracking-wide uppercase mt-0.5 whitespace-nowrap">
+                            <p className="text-[9px] text-blue-600/70 font-bold uppercase tracking-wider">
                                 Decide Fast. Act Fast.
                             </p>
                         </div>
-                    )}
-                </div>
-                {!collapsed && (
-                    <div className="flex items-center gap-1">
-                        {!showClose && onToggleCollapse && (
-                            <button onClick={onToggleCollapse} className="p-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-200 transition-all" title="Collapse sidebar">
-                                <PanelLeftClose className="w-4 h-4" />
-                            </button>
-                        )}
-                        {showClose && (
-                            <button onClick={onClose} className="p-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-200 transition-all">
-                                <X className="w-4 h-4" />
-                            </button>
-                        )}
                     </div>
-                )}
-            </div>
-            {/* Collapsed view spacer replaced redundant menu button */}
-            {collapsed && <div className="h-6" />}
-
+                    <button onClick={onClose} className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+            )}
 
             {/* Navigation */}
-            <div className={`flex-1 overflow-y-auto py-6 ${collapsed ? 'px-2' : 'px-3'} space-y-8`}>
+            <div className={`flex-1 overflow-y-auto py-4 ${collapsed ? 'px-2' : 'px-3'} space-y-6`}>
                 <div className="space-y-1">
-                    {!collapsed && <label className="px-3 text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-2 block">Intelligence</label>}
-                    <div className="space-y-1">
+                    {!collapsed && <label className="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Intelligence</label>}
+                    <div className="space-y-1.5">
                         <button 
                             onClick={() => { onNewInquiry?.(); onClose(); }}
-                            className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-700`}
+                            className={`w-full flex items-center ${collapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2'} rounded-xl bg-blue-600 text-white text-sm font-bold shadow-md shadow-blue-600/20 transition-all hover:bg-blue-700 active:scale-95`}
+                            title={collapsed ? "New Inquiry" : undefined}
                         >
-                            <MessageSquare className="w-4 h-4" />
+                            <MessageSquare className="w-4 h-4 shrink-0" />
                             {!collapsed && <span className="truncate whitespace-nowrap">New Inquiry</span>}
                         </button>
                         <Link 
                             href="/explorer"
-                            className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm font-bold transition-all hover:bg-slate-50 hover:border-slate-300 group`}
+                            className={`w-full flex items-center ${collapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2'} rounded-xl bg-white border border-slate-200 text-slate-900 text-sm font-semibold transition-all hover:bg-slate-50 hover:border-slate-300 group`}
+                            title={collapsed ? "GridMind Explorer" : undefined}
                         >
-                            <Search className={`w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform`} />
+                            <Search className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform shrink-0" />
                             {!collapsed && <span className="truncate whitespace-nowrap">GridMind Explorer</span>}
                         </Link>
                         {isUserAdmin(userEmail, userTier) && (
                             <Link 
                                 href="/admin"
-                                className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 text-xs font-semibold transition-all hover:bg-slate-200/80 group shadow-sm`}
+                                className={`w-full flex items-center ${collapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2'} rounded-xl bg-slate-100 border border-slate-200 text-slate-800 text-xs font-semibold transition-all hover:bg-slate-200/80 group shadow-sm`}
+                                title={collapsed ? "Admin Console" : undefined}
                             >
-                                <Shield className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform" />
+                                <Shield className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform shrink-0" />
                                 {!collapsed && <span className="truncate whitespace-nowrap">Admin Console</span>}
                             </Link>
                         )}
@@ -257,9 +236,10 @@ function SidebarContent({
                     {!collapsed && <label className="px-3 text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1 block">Community</label>}
                     <button 
                         onClick={() => { onVaultOpen(); onClose(); }}
-                        className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl border border-blue-200 bg-blue-50 text-blue-600 text-xs font-bold transition-all hover:bg-blue-100 group shadow-sm`}
+                        className={`w-full flex items-center ${collapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2'} rounded-xl border border-blue-200 bg-blue-50 text-blue-600 text-xs font-bold transition-all hover:bg-blue-100 group shadow-sm`}
+                        title={collapsed ? "Share Document" : undefined}
                     >
-                        <ShieldCheck className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        <ShieldCheck className="w-4 h-4 group-hover:scale-110 transition-transform shrink-0" />
                         {!collapsed && <span className="truncate whitespace-nowrap">Share Document</span>}
                     </button>
                 </div>

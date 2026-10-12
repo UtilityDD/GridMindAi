@@ -4,13 +4,13 @@ import { REWRITE_QUERY_TEMPLATE, KEYWORD_EXTRACTION_TEMPLATE } from "./prompts";
 
 const EMBEDDING_MODEL = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 768;
-const LLM_MODEL = "gemini-3.8-flash";
+const LLM_MODEL = "gemini-2.5-flash";
 const TOP_K_CHUNKS = 30; // Increased from 15 to 30 for high-breath reranking
 const TOP_K_SUMMARIES = 8;
 const TOP_K_TITLES = 5;
 const MAX_CONTEXT_CHUNKS_PER_DOC = 3; 
 const RERANK_TOP_N = 10; // Increased from 7 to 10 for Gold-standard selection
-const MIN_RELEVANCE_SCORE = 7; // Chunks scoring below this are filtered out
+const MIN_RELEVANCE_SCORE = 6; // Chunks scoring below this are filtered out
 
 // --- Pool Manager (Consistent with llm.ts) ---
 class KeyPool {
@@ -81,10 +81,10 @@ export async function embedSingle(text: string): Promise<number[]> {
 
 /**
  * Fast Multi-Key Free Pool for RAG tasks (Rewrite/Keywords/Rerank)
- * Uses the 9-key Groq Free Pool with instant fallback to Gemini 3.8 Flash.
+ * Uses high-speed Groq Qwen/OSS with instant fallback to Gemini 2.5 Flash.
  */
 async function callPoolForRAG(prompt: string, retryCount = 0): Promise<string> {
-  // Try Groq Free Pool first (blazing fast ~200ms)
+  // Try Groq Free Pool first (blazing fast ~200ms with Qwen)
   if (Pools.Groq.size > 0 && retryCount < Pools.Groq.size * 2) {
     const apiKey = Pools.Groq.getNext();
     if (apiKey) {
@@ -96,17 +96,19 @@ async function callPoolForRAG(prompt: string, retryCount = 0): Promise<string> {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "openai/gpt-oss-120b",
+            model: "qwen/qwen3.8-27b",
             messages: [{ role: "user", content: prompt }],
             temperature: 0.1,
-            max_tokens: 300,
+            max_tokens: 800,
           }),
         });
 
         if (response.ok) {
           const data = await response.json();
-          const content = data.choices?.[0]?.message?.content;
-          if (content) return content;
+          const content = data.choices?.[0]?.message?.content || (data.choices?.[0]?.message as any)?.reasoning;
+          if (content && typeof content === "string" && content.trim()) {
+            return content.trim();
+          }
         }
       } catch (err) {
         console.warn(`Groq RAG key retry (${retryCount + 1}):`, err);
@@ -115,7 +117,7 @@ async function callPoolForRAG(prompt: string, retryCount = 0): Promise<string> {
     }
   }
 
-  // Fallback: Gemini Free Pool
+  // Fallback: Gemini Free Pool (gemini-2.5-flash)
   try {
     return await withGeminiRetry(async (genai) => {
       const response = await genai.models.generateContent({
@@ -123,7 +125,7 @@ async function callPoolForRAG(prompt: string, retryCount = 0): Promise<string> {
         contents: prompt,
         config: { temperature: 0.1 },
       });
-      return response.text || "";
+      return response.text?.trim() || "";
     });
   } catch (geminiErr) {
     console.error("All RAG pools failed for prompt:", geminiErr);
@@ -313,12 +315,15 @@ export async function retrieve(
   const uniqueChunks = Array.from(new Map(allChunkResults.map(c => [c.id, c])).values());
   const gradedChunks = await rerankChunks(question, uniqueChunks);
 
-  // Hard Filter: Keep only high-relevance chunks (Score >= 7)
+  // Hard Filter: Keep high-relevance chunks (Score >= MIN_RELEVANCE_SCORE), with safe fallback to top matches
   const filteredChunks = gradedChunks.filter(c => c.score >= MIN_RELEVANCE_SCORE);
+  const finalChunks = filteredChunks.length > 0 
+    ? filteredChunks 
+    : (gradedChunks.length > 0 ? gradedChunks.slice(0, 5) : uniqueChunks.slice(0, 5).map(c => ({ ...c, score: 5, bridge: "Standard vector match." })));
 
   // --- DEBUG LOGGING: RETRIEVED CHUNKS ---
-  console.log(`\n--- [DEBUG] NEURAL GRADED CHUNKS (${filteredChunks.length}) ---`);
-  filteredChunks.forEach((c, i) => {
+  console.log(`\n--- [DEBUG] NEURAL GRADED CHUNKS (${finalChunks.length}) ---`);
+  finalChunks.forEach((c, i) => {
     console.log(`[Chunk ${i+1}] Score: ${c.score}/10 | Ref: ${c.ref} | Sim: ${c.similarity?.toFixed(4)}`);
     console.log(`Bridge: ${c.bridge}`);
     console.log('---');
@@ -326,7 +331,7 @@ export async function retrieve(
 
   const seen = new Set<string>();
   const docIds: string[] = [];
-  for (const row of filteredChunks) {
+  for (const row of finalChunks) {
     if (row.doc_id && !seen.has(row.doc_id)) {
       seen.add(row.doc_id);
       docIds.push(row.doc_id);
@@ -335,7 +340,7 @@ export async function retrieve(
 
   return { 
     docIds, 
-    chunkResults: filteredChunks, 
+    chunkResults: finalChunks, 
     summaryResults: [], // Summaries are informative but secondary now
     titleResults: [], 
     rewrittenQuery,

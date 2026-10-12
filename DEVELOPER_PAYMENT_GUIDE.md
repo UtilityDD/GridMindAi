@@ -108,12 +108,51 @@ UPDATE public.user_tiers SET daily_limit = 150, monthly_limit = 999999, name = '
   - Live Circular Index Docket Preview with direct link to the 4,200+ circular directory at `/explorer`.
 
 ### Main Inquiry Console ([page.tsx](file:///c:/Dipankar/GridMindAi/frontend/src/app/page.tsx))
-- **Aesthetic**: ChatGPT clone UX.
-- **Layout Elements**:
-  - Sticky header with sidebar toggle, model indicator pill (`GridMind 4.0`), and new chat button.
+- **Aesthetic**: Modern, clean ChatGPT-grade utility console.
+- **Unified Single Header Architecture**:
+  - Eliminated cluttered dual headers (sidebar header pane + main header pane).
+  - Single, persistent top header (`h-14`, 56px) housing:
+    - Sidebar toggle button (`PanelLeftClose` / `PanelLeftOpen`) with clear tooltips.
+    - Model indicator pill (`4.0 RAG`).
+    - New Chat button with shortcut tooltip.
+    - LiveStats pill displaying today's verified query usage against the user's tier quota.
+  - Sidebar desktop container integrates seamlessly under the top header, collapsing cleanly into an icon rail without redundant branding blocks or duplicate close controls.
+- **Workspace Layout**:
   - Centered empty state with greeting (*"What can I help with?"*) and 2x2 clickable prompt cards.
-  - User bubble in ChatGPT gray (`#f4f4f4`, `rounded-3xl`, right-aligned).
-  - Assistant response with markdown tables, clean citations, and ChatGPT-style action bar (Copy, Thumbs Up/Down, Regenerate, Share, and Report).
+  - User bubble in high-contrast ChatGPT styling (`#f4f4f4`, `rounded-3xl`, right-aligned).
+  - Assistant response with markdown tables, statutory citations, and action bar (Copy, Thumbs Up/Down, Regenerate, Share, and Report).
   - Floating bottom input bar (`rounded-[26px] bg-[#f4f4f4]`) with auto-expanding textarea, Plus button, verbosity depth slider, and circular send button.
   - Draggable split-screen PDF viewer for side-by-side circular verification.
+
+---
+
+## 🤖 8. Free Multi-Key LLM Pool & RAG Pipeline
+
+GridMind AI operates on a 100% free multi-provider LLM infrastructure with automatic fallback and load-balancing:
+
+### Key Rotation & Model Hierarchy
+1. **Primary Synthesis Engine (Groq Pool)**:
+   - Rotates across multiple Groq API keys (`GROQ_API_KEY`, `GROQ_API_KEY_1`, ..., `GROQ_API_KEY_8`).
+   - Primary model: `openai/gpt-oss-120b` (or `qwen/qwen3.8-27b`).
+   - **Reasoning Token Management**:
+     - Configured with `max_tokens: 800` for RAG synthesis and `max_tokens: 2500` for conversational queries.
+     - Parses both standard response text (`message.content`) and chain-of-thought tokens (`message.reasoning`), preventing empty responses or timeout failures caused by exhausted reasoning budgets.
+2. **Fallback Synthesis Engine (Gemini Pool)**:
+   - Rotates across Google Gemini API keys (`GEMINI_API_KEY`, `GEMINI_API_KEY_1`, ...).
+   - Upgraded to `gemini-2.5-flash` for low latency (~2.5s) and zero 503 high-demand errors.
+3. **Embedding Engine**:
+   - `gemini-embedding-001` (768 dimensions), compatible with Supabase `pgvector`.
+4. **Retrieval Safety Fallback**:
+   - Neural reranking applies relevance scoring. If reranker scores conservatively, `retrieve()` automatically retains the top vector matches to guarantee context is never dropped to 0 chunks.
+
+---
+
+## 📈 9. Consumption & Analytics Pipeline
+
+- **Universal Query Logging**:
+  Every user inquiry—whether synthesized via LLM, served from memory cache, or returning zero matches—invokes `logAnalytics()`, inserting a record into `user_analytics`.
+- **Usage Calculation**:
+  `GET /api/user/usage` queries `user_analytics` for the authenticated user since midnight (IST), calculating exact real-time consumption.
+- **Client Sync**:
+  Live stats pill in the top header and the user profile modal automatically refresh after each inquiry, ensuring the quota counter stays in lockstep with database usage.
 

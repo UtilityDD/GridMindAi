@@ -30,6 +30,8 @@ import {
   ChevronDown,
   Plus,
   PanelLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
   SquarePen,
   Search as SearchIcon,
   ThumbsUp,
@@ -42,7 +44,6 @@ import {
 
 import { useAuth } from "@/components/AuthProvider";
 import { getSupabase } from "@/lib/supabase";
-import SearchGuidanceModal from "@/components/SearchGuidanceModal";
 import AIProgressIndicator from "@/components/AIProgressIndicator";
 import AnimatedLogo from "@/components/AnimatedLogo";
 
@@ -51,7 +52,6 @@ const LandingPage = dynamic(() => import("@/components/LandingPage"), { ssr: tru
 const LoginPage = dynamic(() => import("@/components/LoginPage"), { ssr: false });
 const Sidebar = dynamic(() => import("@/components/Sidebar"), { ssr: false });
 const PricingModal = dynamic(() => import("@/components/PricingModal"), { ssr: false });
-const DisclaimerModal = dynamic(() => import("@/components/DisclaimerModal"), { ssr: false });
 const LiveStats = dynamic(() => import("@/components/LiveStats"), { ssr: false });
 // ShareDocument is managed inside Sidebar.tsx
 
@@ -266,6 +266,312 @@ function normalizeGitHubPdfUrl(url: string): string {
   return url;
 }
 
+interface SampleQuestion {
+  title: string;
+  desc: string;
+  query: string;
+}
+
+const SAMPLE_QUESTIONS_POOL: SampleQuestion[] = [
+  // 1. Theft, Vigilance & Inspection SOPs
+  {
+    title: "Theft & Inspection Procedure",
+    desc: "Section 135 unauthorized extraction steps & FIR timeline",
+    query: "What is the statutory procedure for Section 135 unauthorized extraction inspection and FIR lodging?",
+  },
+  {
+    title: "Provisional Assessment Formula",
+    desc: "Electricity Act Sec 126 calculation rules",
+    query: "How is provisional assessment computed for unauthorized use of electricity under Section 126?",
+  },
+  {
+    title: "Tampered Meter Seizure",
+    desc: "Chain of custody and seizure list SOP",
+    query: "What is the mandatory procedure for seizure of tampered electronic meters during inspection?",
+  },
+  {
+    title: "Unauthorized Load Extension",
+    desc: "Commercial penalties for unapproved load addition",
+    query: "What action and penal tariff are prescribed if an industrial consumer extends connected load without prior sanction?",
+  },
+  {
+    title: "Compounding of Offenses",
+    desc: "Section 152 compounding rates and eligibility",
+    query: "What are the statutory compounding charges under Section 152 of the Electricity Act for first-time theft?",
+  },
+
+  // 2. Supply Restoration & Standards of Performance (WBERC SOP)
+  {
+    title: "DTR Failure Restoration",
+    desc: "Standard timeline for burnt transformer replacement",
+    query: "What is the maximum permissible timeline for replacing a burnt distribution transformer in urban vs rural areas?",
+  },
+  {
+    title: "Blown Fuse Replacement",
+    desc: "Guaranteed turnaround time for LT/HT fuses",
+    query: "What is the guaranteed time limit for restoring electricity supply after an LT fuse call?",
+  },
+  {
+    title: "Voltage Fluctuation Norms",
+    desc: "Statutory permissible limits at tail ends",
+    query: "What are the statutory voltage fluctuation percentage limits for LT and 11kV distribution systems?",
+  },
+  {
+    title: "New Connection Timeline",
+    desc: "Turnaround time for domestic LT connections",
+    query: "What is the statutory timeframe for providing a new LT domestic connection where no network extension is required?",
+  },
+  {
+    title: "Temporary Supply Terms",
+    desc: "Tariff rates and maximum permissible duration",
+    query: "What are the conditions and maximum duration for temporary power supply during construction or festivals?",
+  },
+  {
+    title: "Scheduled Outage Notice",
+    desc: "Mandatory advance notice period for maintenance shutdown",
+    query: "How many hours of advance public notice are required before taking a planned maintenance shutdown?",
+  },
+
+  // 3. Safety & Overhead Line Clearances (CEA Standards)
+  {
+    title: "11kV Ground Clearance",
+    desc: "Minimum statutory clearance along roads & open fields",
+    query: "What is the minimum ground clearance for 11kV overhead conductors along and across streets under CEA norms?",
+  },
+  {
+    title: "33kV Building Clearance",
+    desc: "Mandatory horizontal and vertical distance from structures",
+    query: "What are the mandatory horizontal and vertical clearances from buildings for 33kV lines?",
+  },
+  {
+    title: "Tree Trimming & Right of Way",
+    desc: "Safe clearance distances near live conductors",
+    query: "What are the standard safety clearances required between tree branches and live LT/11kV conductors?",
+  },
+  {
+    title: "Substation Earth Resistance",
+    desc: "Acceptable Ohm limits for 33/11kV sub-stations",
+    query: "What is the maximum permissible earth resistance value for a 33/11kV distribution substation?",
+  },
+  {
+    title: "LT Service Cable Clearance",
+    desc: "Overhead service line clearance at consumer premises",
+    query: "What is the minimum ground clearance required for LT overhead service connection cables at consumer premises?",
+  },
+  {
+    title: "Mandatory PPE for Linemen",
+    desc: "Required protective equipment before line work",
+    query: "What personal protective equipment (PPE) is mandatory for linemen before performing 11kV maintenance?",
+  },
+
+  // 4. Tariff, Billing & Commercial Operations (WBERC Tariff Orders)
+  {
+    title: "Delayed Payment Surcharge",
+    desc: "Interest rate calculation for late bill payment",
+    query: "What is the Delayed Payment Surcharge (DPS) calculation formula under the operative tariff order?",
+  },
+  {
+    title: "Single-Phase Load Ceiling",
+    desc: "Maximum connected load permitted on 230V",
+    query: "What is the maximum permissible connected load on single-phase 230V before three-phase conversion is required?",
+  },
+  {
+    title: "Defective Meter Billing",
+    desc: "Billing formula during non-recording or burnt periods",
+    query: "How is average consumption calculated for billing when a consumer meter is found stopped or defective?",
+  },
+  {
+    title: "Security Deposit Review",
+    desc: "Annual review and interest payable on consumer deposit",
+    query: "What is the statutory interest rate payable to consumers on security deposits under WBERC regulations?",
+  },
+  {
+    title: "TOD Tariff Applicability",
+    desc: "Time-of-Day billing hours and peak surcharges",
+    query: "Which consumer categories are mandatorily covered under TOD tariff and what are the peak/off-peak time slots?",
+  },
+  {
+    title: "Power Factor Penalty & Rebate",
+    desc: "Low power factor surcharge and rebate threshold",
+    query: "What are the power factor surcharge and rebate rates for bulk industrial consumers?",
+  },
+  {
+    title: "Disconnection Notice Period",
+    desc: "Section 56 statutory notice requirements",
+    query: "How many clear days of notice are required under Section 56 of the Electricity Act before disconnecting supply for non-payment?",
+  },
+  {
+    title: "Minimum Monthly Charge",
+    desc: "Fixed charge rules when electricity consumption is nil",
+    query: "How is the minimum monthly fixed charge calculated for domestic and commercial consumers when consumption is zero?",
+  },
+
+  // 5. ROPA 2020 & Pay Matrix (Pay Revision & Service Benefits)
+  {
+    title: "ROPA 2020 Pay Fixation",
+    desc: "Increment calculation on promotional upgrade",
+    query: "How is basic pay fixed upon promotion under the ROPA 2020 pay matrix in WBSEDCL?",
+  },
+  {
+    title: "Risk Allowance for Field Staff",
+    desc: "Eligible technical cadres and sanctioned monthly rates",
+    query: "Which technical cadres are entitled to Risk Allowance under ROPA 2020 and what is the sanctioned rate?",
+  },
+  {
+    title: "Medical Reimbursement Ceilings",
+    desc: "Indoor hospitalization coverage limits for employees",
+    query: "What are the rules and indoor hospitalization reimbursement ceilings under the WBSEDCL Medical Policy?",
+  },
+  {
+    title: "House Rent Allowance (HRA)",
+    desc: "Entitlement rates across Kolkata vs mofussil zones",
+    query: "What are the HRA percentage rates across different geographical zones under ROPA 2020?",
+  },
+  {
+    title: "Earned Leave Encashment",
+    desc: "Maximum accumulation and encashment at retirement",
+    query: "What is the maximum number of days of Earned Leave that can be encashed upon superannuation in WBSEDCL?",
+  },
+  {
+    title: "Night Halt & Tour Allowance",
+    desc: "Reimbursement rules for official travel",
+    query: "What are the revised Traveling Allowance (TA) and Night Halt rates for field engineers on official tour?",
+  },
+  {
+    title: "Shift Duty Compensation",
+    desc: "Substation operational staff shift allowance",
+    query: "What is the sanctioned rate of Shift Allowance for O&M staff working rotating shifts in sub-stations?",
+  },
+  {
+    title: "Pensionary Benefit at 80 Years",
+    desc: "Additional family pension quantum for senior pensioners",
+    query: "What is the quantum of additional pension granted to family pensioners upon attaining 80 years of age under ROPA 2020?",
+  },
+
+  // 6. Technical Maintenance & Distribution Engineering
+  {
+    title: "Transformer Oil BDV Test",
+    desc: "Minimum dielectric breakdown voltage threshold",
+    query: "What is the minimum acceptable breakdown voltage (BDV) for 11kV/415V distribution transformer oil?",
+  },
+  {
+    title: "Cable Megger Testing Norms",
+    desc: "Acceptable insulation resistance for 11kV cables",
+    query: "What are the minimum acceptable insulation resistance (IR) test values for 11kV XLPE underground cables?",
+  },
+  {
+    title: "Lightning Arrester Inspection",
+    desc: "Pre-monsoon maintenance and leakage current checks",
+    query: "What are the mandatory pre-monsoon inspection protocols for distribution transformer lightning arresters?",
+  },
+  {
+    title: "DTR Neutral Grounding Norms",
+    desc: "Twin independent earthing electrode mandate",
+    query: "Why are two separate and independent earth electrodes mandatory for distribution transformer neutral grounding?",
+  },
+  {
+    title: "VCB Overhaul & Contact Wear",
+    desc: "Vacuum circuit breaker maintenance intervals",
+    query: "What periodic maintenance checks are prescribed for 33kV Vacuum Circuit Breakers (VCB) in 33/11kV substations?",
+  },
+  {
+    title: "Insulator Creepage Distance",
+    desc: "Standards for high-salinity and coastal belts",
+    query: "What minimum creepage distance is mandated for 11kV insulators deployed in saline and coastal belts?",
+  },
+  {
+    title: "Phase Load Unbalance Limits",
+    desc: "Maximum allowable unbalance on DTR secondary",
+    query: "What is the maximum allowable neutral current and phase unbalance percentage on distribution transformer LT circuits?",
+  },
+
+  // 7. Solar, Net Metering & Grid Interconnection
+  {
+    title: "Rooftop Solar Net-Metering",
+    desc: "Maximum allowable capacity relative to contract load",
+    query: "What is the maximum solar rooftop plant capacity eligible for net-metering against sanctioned connected load?",
+  },
+  {
+    title: "Solar Energy Banking Period",
+    desc: "Settlement period and tariff for surplus export",
+    query: "How is unutilized banked solar energy settled at the end of the financial year under WBERC Net Metering regulations?",
+  },
+  {
+    title: "Gross vs Net Metering Threshold",
+    desc: "Capacity limits mandating gross metering",
+    query: "What is the threshold connected load beyond which gross metering becomes mandatory instead of net metering?",
+  },
+  {
+    title: "Solar Islanding Protection",
+    desc: "Automatic anti-islanding disconnection standards",
+    query: "What are the mandatory technical specifications for anti-islanding protection in grid-connected rooftop solar inverters?",
+  },
+
+  // 8. Human Resources, Disciplinary & Service Regulations
+  {
+    title: "Major vs Minor Penalties",
+    desc: "Disciplinary proceedings under Employees' Regulations",
+    query: "What constitutes the difference between major and minor penalties under the WBSEDCL Employees' Service Regulations?",
+  },
+  {
+    title: "Departmental Promotion Exam",
+    desc: "Eligibility and qualifying marks for AE/DE cadre",
+    query: "What are the eligibility criteria and passing score required for the Departmental Examination for promotion to Assistant Engineer?",
+  },
+  {
+    title: "Compassionate Appointment",
+    desc: "Eligibility norms for dependents of deceased employees",
+    query: "What are the current criteria and entitlement norms for appointment on compassionate grounds in WBSEDCL?",
+  },
+  {
+    title: "Suspension Subsistence Allowance",
+    desc: "Calculation and enhancement during prolonged inquiry",
+    query: "How is subsistence allowance calculated and enhanced during prolonged suspension under service regulations?",
+  },
+  {
+    title: "Maternity & Paternity Leave",
+    desc: "Duration and benefits admissible to employees",
+    query: "What is the duration of maternity leave and paternity leave admissible to permanent female and male employees?",
+  },
+
+  // 9. Consumer Redressal, Meters & Commercial Disputes
+  {
+    title: "Burnt Meter Replacement SOP",
+    desc: "Statutory replacement timeline and consumer liability",
+    query: "What is the procedure and timeline for replacing a burnt meter, and who bears the replacement cost?",
+  },
+  {
+    title: "Meter Dispute & Bench Testing",
+    desc: "Testing fee and accuracy verification in lab",
+    query: "What is the procedure and prescribed testing fee if a consumer disputes meter accuracy and requests an official bench test?",
+  },
+  {
+    title: "CGRF Complaint Filing",
+    desc: "Jurisdiction and timeline of Consumer Grievance Forum",
+    query: "What types of consumer disputes fall within the jurisdiction of the Consumer Grievance Redressal Forum (CGRF)?",
+  },
+  {
+    title: "Ombudsman Appeal Timeline",
+    desc: "Escalation rules against an unsatisfactory CGRF order",
+    query: "Within how many days must an appeal be filed before the Electricity Ombudsman against a CGRF order?",
+  },
+  {
+    title: "Name Mutation / Transfer",
+    desc: "Mandatory documents and charges for title change",
+    query: "What documents and charges are required for change of consumer name in an existing domestic electricity connection?",
+  },
+  {
+    title: "Load Reduction Procedure",
+    desc: "Application process and security deposit adjustment",
+    query: "What is the procedure for downscaling connected load and claiming partial security deposit refund?",
+  },
+  {
+    title: "Accident Ex-Gratia Compensation",
+    desc: "Compensation payable for fatal electrical accidents",
+    query: "What is the ex-gratia compensation payable to the next of kin in fatal non-departmental electrical accidents?",
+  },
+];
+
 export default function Home() {
   const { user, session, loading: authLoading, signOut } = useAuth();
 
@@ -275,6 +581,15 @@ export default function Home() {
   const [error, setError] = useState("");
   const [verbosity, setVerbosity] = useState(3);
   const [userTier, setUserTier] = useState<string>("free");
+
+  // Dynamic 4 sample question blocks randomized from pool on every page load
+  const [sampleCards, setSampleCards] = useState<SampleQuestion[]>(() => SAMPLE_QUESTIONS_POOL.slice(0, 4));
+
+  useEffect(() => {
+    // Pick 4 random distinct questions on every page load
+    const shuffled = [...SAMPLE_QUESTIONS_POOL].sort(() => 0.5 - Math.random());
+    setSampleCards(shuffled.slice(0, 4));
+  }, []);
   const [activeQuestion, setActiveQuestion] = useState("");
   const [questionCopied, setQuestionCopied] = useState(false);
   const [activeSource, setActiveSource] = useState<{ url: string; title: string } | null>(null);
@@ -282,7 +597,6 @@ export default function Home() {
   const [showDashboard, setShowDashboard] = useState(false);
   const [clarificationData, setClarificationData] = useState<{ keyword: string, title: string, options: string[], originalQuery: string } | null>(null);
   const [showLogin, setShowLogin] = useState(false);
-  const [showGuidanceModal, setShowGuidanceModal] = useState(false);
   
 
 
@@ -606,15 +920,6 @@ export default function Home() {
     const question = (q || query).trim();
     if (!question || loading) return;
 
-    // Guidance Modal logic: Show only for first-time or explicit manual triggers
-    if (typeof window !== "undefined" && !q) {
-      const seen = localStorage.getItem("gridmind_guidance_seen");
-      if (!seen) {
-        setShowGuidanceModal(true);
-        return;
-      }
-    }
-
     // Intermediate Clarification Step (Non-AI)
     if (!q) { // Only check if user is typing a new query, not clicking a history item
       const lowerQ = question.toLowerCase();
@@ -795,111 +1100,109 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <DisclaimerModal />
-      <SearchGuidanceModal 
-        isOpen={showGuidanceModal} 
-        onClose={() => {
-          setShowGuidanceModal(false);
-          localStorage.setItem("gridmind_guidance_seen", "true");
-          handleSubmit(); 
-        }}
-        onProceed={() => {
-          setShowGuidanceModal(false);
-          localStorage.setItem("gridmind_guidance_seen", "true");
-          handleSubmit();
-        }}
-      />
-      <Sidebar
-        userEmail={user?.email || ""}
-        onSignOut={signOut}
-        history={history}
-        onHistoryClick={(q, res) => handleSubmit(q, res)}
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        userTier={userTier}
-        onUpgradeClick={() => {}}
-        onNewInquiry={handleNewInquiry}
-        collapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-        usage={usage}
-      />
+    <div className="flex flex-col h-screen overflow-hidden bg-white">
+      {/* ── UNIFIED APPLICATION TOP HEADER ── */}
+      <header className="h-14 bg-white border-b border-slate-200/90 px-3 sm:px-5 flex items-center justify-between shrink-0 z-40 select-none">
+        {/* Left: Left Panel Toggle & Brand Identity */}
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          {/* Mobile Sidebar Toggle Button */}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="md:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95"
+            aria-label="Open navigation menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
 
-      {/* PricingModal hidden: authorization managed via admin panel */}
-      {false && (
-        <PricingModal
-          isOpen={isPricingOpen}
-          onClose={() => setIsPricingOpen(false)}
-          currentTier={userTier}
-          onSelectPlan={handleSelectPlan}
+          {/* Desktop Left Panel Toggle - THE ONLY COLLAPSE BUTTON */}
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="hidden md:flex p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95"
+            title={sidebarCollapsed ? "Expand left panel" : "Collapse left panel"}
+            aria-label={sidebarCollapsed ? "Expand left panel" : "Collapse left panel"}
+          >
+            {sidebarCollapsed ? (
+              <PanelLeftOpen className="w-5 h-5 text-slate-700 hover:text-blue-600 transition-colors" />
+            ) : (
+              <PanelLeftClose className="w-5 h-5 text-slate-700 hover:text-blue-600 transition-colors" />
+            )}
+          </button>
+
+          {/* Logo, Title & Model Badge */}
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/20 shrink-0">
+              <BrainCircuit className="w-5 h-5" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-sm sm:text-base font-bold tracking-tight text-slate-900">
+                GridMind <span className="text-blue-600">AI</span>
+              </span>
+              <span className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 hidden xs:inline-block">
+                4.0 RAG
+              </span>
+            </div>
+            <span className="hidden xl:inline text-[11px] text-slate-400 font-medium pl-2 border-l border-slate-200">
+              Decide Fast. Act Fast.
+            </span>
+          </div>
+        </div>
+
+        {/* Right: Actions & Live Stats */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Start New Inquiry button */}
+          <button
+            onClick={handleNewInquiry}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-sm transition-all active:scale-95"
+            title="Start New Inquiry"
+          >
+            <SquarePen className="w-3.5 h-3.5 text-slate-600" />
+            <span className="hidden sm:inline">New Chat</span>
+          </button>
+
+          {/* Live Stats */}
+          <div className="hidden sm:block border-l border-slate-200 pl-3">
+            <LiveStats />
+          </div>
+        </div>
+      </header>
+
+      {/* ── MOBILE LIVE STATS BAR ── */}
+      <div className="sm:hidden bg-slate-50 border-b border-slate-200 px-4 py-1.5 flex justify-center shrink-0 z-30">
+        <LiveStats />
+      </div>
+
+      {/* ── WORKSPACE CONTENT (Sidebar + AI Response Area + PDF Panel) ── */}
+      <div className="flex-1 flex min-w-0 overflow-hidden relative">
+        <Sidebar
+          userEmail={user?.email || ""}
+          onSignOut={signOut}
+          history={history}
+          onHistoryClick={(q, res) => handleSubmit(q, res)}
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          userTier={userTier}
+          onUpgradeClick={() => {}}
+          onNewInquiry={handleNewInquiry}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          usage={usage}
         />
-      )}
 
-      {/* Main content + PDF split container */}
-      <div ref={containerRef} className="flex-1 flex min-w-0 relative">
-        {/* Left: AI Response Area */}
-        <div
-          ref={scrollContainerRef}
-          className="flex flex-col min-w-0 relative bg-white overflow-y-auto scroll-smooth"
-          style={{ width: activeSource ? `${splitRatio}%` : '100%', transition: activeSource ? 'none' : 'width 0.3s ease' }}
-        >
-        {/* Ambient background effects (Simplified) */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-          <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-500/[0.02] rounded-full blur-[120px]" />
-        </div>
-
-        {/* Top Header / Bar */}
-        {/* Top Header / Bar (ChatGPT Style) */}
-        <header
-          className="relative z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200/80 sticky top-0 px-4 sm:px-6 py-2.5 flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all"
-              aria-label="Open menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="hidden md:flex p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all"
-              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              <PanelLeft className="w-4 h-4" />
-            </button>
-
-            {/* Model Pill (ChatGPT Style) */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-slate-100 text-slate-800 text-sm font-semibold cursor-default transition-colors">
-              <span className="font-bold">GridMind 4.0</span>
-              <span className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">RAG</span>
+        {/* Main content + PDF split container */}
+        <div ref={containerRef} className="flex-1 flex min-w-0 relative">
+          {/* Left: AI Response Area */}
+          <div
+            ref={scrollContainerRef}
+            className="flex flex-col min-w-0 relative bg-white overflow-y-auto scroll-smooth"
+            style={{ width: activeSource ? `${splitRatio}%` : '100%', transition: activeSource ? 'none' : 'width 0.3s ease' }}
+          >
+            {/* Ambient background effects (Simplified) */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+              <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-500/[0.02] rounded-full blur-[120px]" />
             </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-            {/* New Chat Button */}
-            <button
-              onClick={handleNewInquiry}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-sm transition-all active:scale-95"
-              title="Start New Inquiry"
-            >
-              <SquarePen className="w-3.5 h-3.5 text-slate-600" />
-              <span className="hidden sm:inline">New Chat</span>
-            </button>
-
-            <div className="hidden md:block ml-1 border-l border-slate-200 pl-3">
-              <LiveStats />
-            </div>
-          </div>
-        </header>
-
-        {/* ── MOBILE LIVE STATS BAR ── */}
-        <div className="md:hidden bg-slate-50 border-b border-slate-200 px-4 py-1.5 flex justify-center sticky top-[53px] z-40">
-          <LiveStats />
-        </div>
-
-        {/* ── CHAT CONTAINER (ChatGPT Style) ── */}
-        <div className="flex-1 flex flex-col justify-between overflow-y-auto">
+            {/* ── CHAT CONTAINER (ChatGPT Style) ── */}
+            <div className="flex-1 flex flex-col justify-between overflow-y-auto">
           {/* Main conversation scroll area */}
           <div className="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-6 flex flex-col">
             {/* Graceful Limit Alert */}
@@ -936,39 +1239,37 @@ export default function Home() {
                   Ask any question across 4,200+ indexed documents, tariff orders, and CEA technical standards.
                 </p>
 
-                {/* ChatGPT-style 2x2 Suggestion Cards */}
+                {/* Header row with Shuffle control */}
+                <div className="flex items-center justify-between w-full mb-3 px-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    Suggested Inquiries
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const shuffled = [...SAMPLE_QUESTIONS_POOL].sort(() => 0.5 - Math.random());
+                      setSampleCards(shuffled.slice(0, 4));
+                    }}
+                    className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-semibold px-2.5 py-1 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer group"
+                    title="Load 4 new random questions"
+                  >
+                    <RefreshCcw className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300" />
+                    <span>Shuffle</span>
+                  </button>
+                </div>
+
+                {/* ChatGPT-style 2x2 Suggestion Cards (Dynamically Randomized) */}
                 <div className="grid sm:grid-cols-2 gap-3 w-full text-left">
-                  {[
-                    {
-                      title: "Theft & Inspection Procedure",
-                      desc: "Section 135 unauthorized extraction steps",
-                      query: "What is the procedure for Section 135 unauthorized extraction?",
-                    },
-                    {
-                      title: "Supply Restoration Norms",
-                      desc: "Restoration time for a blown transformer fuse",
-                      query: "What is the restoration time for a blown transformer fuse in urban areas?",
-                    },
-                    {
-                      title: "Single-Phase Load Ceiling",
-                      desc: "Maximum connected load permitted on 230V",
-                      query: "What is the maximum connected load permitted on single-phase 230V?",
-                    },
-                    {
-                      title: "Delayed Payment Surcharge",
-                      desc: "Tariff order interest rate calculation",
-                      query: "What is the Delayed Payment Surcharge rate under the 2024-25 tariff order?",
-                    },
-                  ].map((card, idx) => (
+                  {sampleCards.map((card, idx) => (
                     <button
-                      key={idx}
+                      key={`${card.title}-${idx}`}
                       onClick={() => {
                         setQuery(card.query);
                         handleSubmit(card.query);
                       }}
-                      className="p-4 rounded-2xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-slate-300 text-left transition-all group flex flex-col justify-between"
+                      className="p-4 rounded-2xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-slate-300 text-left transition-all group flex flex-col justify-between cursor-pointer shadow-2xs hover:shadow-xs active:scale-[0.99]"
                     >
-                      <span className="text-xs font-semibold text-slate-800 group-hover:text-slate-950">{card.title}</span>
+                      <span className="text-xs font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">{card.title}</span>
                       <span className="text-[12px] text-slate-500 mt-1 line-clamp-1 group-hover:text-slate-600">{card.desc}</span>
                     </button>
                   ))}
@@ -1171,6 +1472,7 @@ export default function Home() {
             </div>
           </>
         )}
+      </div>
       </div>
 
       {/* Fullscreen PDF Viewer Modal */}
@@ -1668,42 +1970,54 @@ function VerbositySlider({
   userTier?: string;
   onUpgradeClick?: () => void;
 }) {
+  const handleCycle = () => {
+    const next = value >= 5 ? 1 : value + 1;
+    onChange(next);
+  };
+
   return (
-    <div className="flex items-center gap-4 px-1 py-1 flex-1">
-      <div className="flex items-center gap-2.5 shrink-0">
-        <Cpu className="w-3.5 h-3.5 text-blue-600" />
-        <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest w-20 text-center">
+    <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-200/70 hover:bg-slate-200 transition-all select-none border border-slate-300/60 shadow-2xs">
+      {/* Clickable Switch Button */}
+      <button
+        type="button"
+        onClick={handleCycle}
+        className="flex items-center gap-1.5 text-slate-700 hover:text-slate-950 transition-colors cursor-pointer group"
+        title={`Synthesis Depth: ${VERBOSITY_LABELS[value - 1]} (Click to switch)`}
+      >
+        <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600 shrink-0 group-hover:scale-110 transition-transform" />
+        <span className="text-[11px] font-bold text-slate-800 min-w-[54px] text-left">
           {VERBOSITY_LABELS[value - 1]}
         </span>
-      </div>
-      <div className="relative flex-1 flex items-center h-6 group">
-        <div className="absolute inset-x-0 h-1 rounded-full bg-slate-300" />
+      </button>
+
+      {/* Interactive 5-Step Switch Track with clickable step buttons */}
+      <div className="relative w-20 sm:w-24 h-5 flex items-center">
+        {/* Track background */}
+        <div className="absolute inset-x-0 h-1.5 rounded-full bg-slate-300" />
+        {/* Active progress bar */}
         <div
-          className="absolute left-0 h-1 rounded-full bg-blue-600 transition-all duration-300"
+          className="absolute left-0 h-1.5 rounded-full bg-blue-600 transition-all duration-200"
           style={{ width: `${((value - 1) / 4) * 100}%` }}
         />
-        <div className="absolute inset-x-0 flex justify-between px-0.5 pointer-events-none">
-          {[1, 2, 3, 4, 5].map((step) => {
-            return (
-              <div
-                key={step}
-                className={`relative w-2.5 h-2.5 rounded-full transition-all duration-200 border-2 ${step <= value
-                  ? "bg-blue-600 border-blue-500 shadow-sm shadow-blue-600/20"
-                  : "bg-slate-300 border-slate-400"
-                  }`}
-              />
-            );
-          })}
+        {/* Clickable Step Markers */}
+        <div className="absolute inset-x-0 flex justify-between px-0.5 z-20">
+          {[1, 2, 3, 4, 5].map((step) => (
+            <button
+              key={step}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange(step);
+              }}
+              className={`w-3 h-3 rounded-full transition-all duration-150 border-2 -my-1 cursor-pointer hover:scale-125 focus:outline-none ${
+                step <= value
+                  ? "bg-blue-600 border-white shadow-xs"
+                  : "bg-slate-300 border-white hover:bg-slate-400"
+              }`}
+              title={`${VERBOSITY_LABELS[step - 1]} (${step}/5) - Click to set`}
+            />
+          ))}
         </div>
-        <input
-          type="range"
-          min={1}
-          max={5}
-          step={1}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="absolute inset-0 w-full opacity-0 cursor-pointer z-10"
-        />
       </div>
     </div>
   );
