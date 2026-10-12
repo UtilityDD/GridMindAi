@@ -167,7 +167,8 @@ GridMind AI operates on a 100% free multi-provider LLM infrastructure with autom
   - Built-in Reader Mode (sequential PDF.js) and Markdown support (`ReactMarkdown`) provide multi-format flexibility.
 - **Smart Proxy & Normalization ([pdf-proxy/route.ts](file:///c:/Dipankar/GridMindAi/frontend/src/app/api/pdf-proxy/route.ts))**:
   - Automatically resolves DNS routing anomalies (e.g., `www.tssawbseb.com` lacking an A-record, resolving seamlessly to `tssawbseb.com`).
-  - Normalizes GitHub repository links (`/blob/` -> `raw.githubusercontent.com`).
+  - **Fuzzy Repository Tree Matcher (`github-gridmind-files.json`)**: Eliminates 404 and 503 errors when ingested chunks contain sanitized filenames with underscores (such as `Miscellaneous_Provisions_Regulations__2013__Principal_Regulation_.pdf`). Matches alphanumeric character signatures against the 776 repository files and routes directly to the raw binary file.
+  - **503/429 Protection**: Bypasses GitHub's HTML blob page endpoints (which trigger bot-detection 503/429 status codes) and downloads directly from `raw.githubusercontent.com`.
   - Emits proper `Content-Type: application/pdf`, `Content-Disposition: inline`, and CORS headers (`*`) to ensure immediate preview without download-forcing behavior.
 - **Quick-Action Toolbar**:
   - Single-click **Open in New Tab** (`ExternalLink`) and **Download** (`Download`) options so users always have unrestricted access to original documents.

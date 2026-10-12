@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import gridMindRepoFiles from "@/lib/github-gridmind-files.json";
 
 export const dynamic = "force-dynamic";
 
@@ -16,15 +17,31 @@ function setResolvedUrlCache(key: string, value: string) {
   }
 }
 
+function cleanFilenameForMatching(name: string): string {
+  return decodeURIComponent(name)
+    .toLowerCase()
+    .replace(/\.pdf$/i, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function findGridMindRepoMatch(filename: string): string | null {
+  const targetClean = cleanFilenameForMatching(filename);
+  if (!targetClean) return null;
+
+  for (const path of gridMindRepoFiles as string[]) {
+    const fileClean = cleanFilenameForMatching(path);
+    if (fileClean === targetClean) {
+      return path;
+    }
+  }
+  return null;
+}
+
 function normalizeGitHubPdfUrl(url: string): string {
   try {
     const parsed = new URL(url);
-    if (parsed.hostname === "github.com" && parsed.pathname.includes("/blob/")) {
-      const rawPath = parsed.pathname.replace("/blob/", "/");
-      return `https://raw.githubusercontent.com${rawPath}${parsed.search}`;
-    }
-    if (parsed.hostname === "github.com" && parsed.pathname.includes("/raw/")) {
-      const rawPath = parsed.pathname.replace("/raw/", "/");
+    if (parsed.hostname === "github.com" && (parsed.pathname.includes("/blob/") || parsed.pathname.includes("/raw/"))) {
+      const rawPath = parsed.pathname.replace("/blob/", "/").replace("/raw/", "/");
       return `https://raw.githubusercontent.com${rawPath}${parsed.search}`;
     }
   } catch {
@@ -75,38 +92,62 @@ function buildCandidateUrls(rawUrl: string): string[] {
   const cached = RESOLVED_URL_CACHE.get(rawUrl);
   if (cached) add(cached);
 
-  // Fix www.tssawbseb.com DNS issue (domain only responds on root without www)
+  // 1. Check if this is a smartlinemanapp/GridMind repo document
+  if (rawUrl.includes("smartlinemanapp/GridMind")) {
+    const parts = rawUrl.split("/");
+    const lastPart = parts[parts.length - 1]?.split("?")[0]?.split("#")[0] || "";
+    
+    // Fuzzy match against known repository tree files
+    const matchedPath = findGridMindRepoMatch(lastPart);
+    if (matchedPath) {
+      add(`https://raw.githubusercontent.com/smartlinemanapp/GridMind/main/${encodeURIComponent(matchedPath).replace(/%2F/g, "/")}`);
+    }
+
+    // Try underscore-to-space converted variation
+    if (lastPart.includes("_")) {
+      const spaceVariation = lastPart.replace(/_+/g, " ");
+      const matchSpace = findGridMindRepoMatch(spaceVariation);
+      if (matchSpace) {
+        add(`https://raw.githubusercontent.com/smartlinemanapp/GridMind/main/${encodeURIComponent(matchSpace).replace(/%2F/g, "/")}`);
+      }
+      add(`https://raw.githubusercontent.com/smartlinemanapp/GridMind/main/${encodeURIComponent(spaceVariation)}`);
+    }
+  }
+
+  // 2. Fix www.tssawbseb.com DNS anomaly (domain only responds on root without www)
   if (rawUrl.includes("www.tssawbseb.com")) {
     add(rawUrl.replace("www.tssawbseb.com", "tssawbseb.com"));
     add(rawUrl.replace("www.tssawbseb.com", "tssawbseb.com").replace("http://", "https://"));
   }
 
-  // GitHub conversions
+  // 3. GitHub direct raw conversions
   const normalized = normalizeGitHubPdfUrl(rawUrl);
   add(normalized);
 
-  if (rawUrl.includes("github.com")) {
-    try {
-      const u = new URL(rawUrl);
-      u.searchParams.set("raw", "1");
-      add(u.toString());
-    } catch {}
+  // 4. Underscore-to-space fallback on raw URL
+  if (normalized.includes("_")) {
+    add(normalized.replace(/_+/g, "%20"));
   }
 
-  // HTTPS <-> HTTP fallbacks
+  // 5. HTTPS <-> HTTP fallbacks
   if (rawUrl.startsWith("http://")) {
     add(rawUrl.replace("http://", "https://"));
   } else if (rawUrl.startsWith("https://")) {
     add(rawUrl.replace("https://", "http://"));
   }
 
-  add(rawUrl);
+  // Only add rawUrl if it's not a github blob (since blob HTML returns 503/429)
+  if (!rawUrl.includes("github.com") || !rawUrl.includes("/blob/")) {
+    add(rawUrl);
+  }
+
   return candidates;
 }
 
 /**
  * GridMind Document & PDF Proxy
  * Bypasses CORS, handles remote domain quirks (like tssawbseb.com DNS),
+ * fuzzy-matches repository file paths to avoid 404/503 errors,
  * and serves clean inline streams with no arbitrary restrictions.
  */
 export async function GET(req: NextRequest) {
@@ -126,18 +167,19 @@ export async function GET(req: NextRequest) {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             Accept: isMarkdownRequested ? "text/plain,text/markdown,*/*" : "application/pdf,*/*",
           },
-          signal: AbortSignal.timeout(20000),
+          signal: AbortSignal.timeout(15000),
         });
 
         if (!res.ok) {
           lastError = `Remote source returned status ${res.status}`;
+          // If 503, 429, or 404, continue to next candidate URL without giving up
           continue;
         }
 
         const fetchedContentType = (res.headers.get("Content-Type") || "").toLowerCase();
         const data = await res.arrayBuffer();
 
-        // Check if remote returned HTML error page
+        // Check if remote returned HTML error page instead of PDF
         const initialText = new TextDecoder().decode(new Uint8Array(data.slice(0, 300))).trimStart().toLowerCase();
         const isHtml = fetchedContentType.includes("text/html") || initialText.startsWith("<htm") || initialText.startsWith("<!do");
 
