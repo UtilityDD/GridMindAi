@@ -35,9 +35,23 @@ This guide covers subscription management, admin controls, environment variables
 - Accessible directly via the sidebar navigation (*Admin Console* link with a Shield icon) or at `/admin`.
 - Allows administrators to:
   - View all registered accounts, join dates, and today's query usage.
+  - Review accounts under the **"Awaiting Approval"** filter tab.
+  - **1-Click Approve & Activate**: Instant green "Approve" button for any pending user (`is_enabled = false`), instantly promoting them to `basic` and enabling full access.
   - Change any user's tier (*Basic, Basic+, Advance, Pro, Administrator*).
   - Set custom daily limits per user.
-  - Toggle account status (*Active* / *Disabled*).
+  - Toggle account status (*Active* / *Pending Approval* / *Disabled*).
+
+### 🛡️ User Onboarding & Access Control Workflow
+1. **Google Authentication**:
+   - Because WBSEDCL employees use Outlook webmail, colleagues authenticate using their personal Google accounts (`@gmail.com`).
+2. **Default Pending State**:
+   - Every newly authenticated user (except `dipnkr.das@gmail.com`) is initialized with `is_enabled = false` in `public.profiles`.
+3. **Pending Holding Screen**:
+   - Unapproved users are greeted by an "Access Authorization Pending" screen displaying their signed-in email, pending status pill, "Check Status" refresh button, and "Sign Out" option.
+   - All backend AI queries (`/api/ask`) and profile endpoints (`/api/user/usage`) enforce `403 Forbidden` for disabled accounts.
+4. **Administrator 1-Click Activation**:
+   - The admin opens `/admin`, clicks the **"Awaiting Approval"** filter tab, and clicks **"Approve"** on the colleague's row.
+   - The user clicks "Check Status" or refreshes their browser and immediately enters the GridMind AI dashboard.
 
 ---
 

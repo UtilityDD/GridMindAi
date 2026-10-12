@@ -172,6 +172,64 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleQuickApprove = async (userId: string) => {
+    if (!session?.access_token) return;
+    setSavingId(userId);
+    try {
+      const draft = drafts[userId];
+      const targetTier = draft?.tier_id && draft.tier_id !== "free" ? draft.tier_id : "basic";
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          targetUserId: userId,
+          tierId: targetTier,
+          isEnabled: true,
+          customDailyLimit: draft?.custom_daily_limit ? Number(draft.custom_daily_limit) : null,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || "Approval failed");
+      }
+
+      setUsers((prev) =>
+        prev.map((u) => {
+          if (u.id === userId) {
+            const matchedTier = TIERS.find((t) => t.id === targetTier);
+            return {
+              ...u,
+              tier_id: targetTier,
+              tier_name: matchedTier?.label || targetTier,
+              is_enabled: true,
+            };
+          }
+          return u;
+        })
+      );
+
+      setDrafts((prev) => ({
+        ...prev,
+        [userId]: {
+          ...(prev[userId] || {}),
+          tier_id: targetTier,
+          is_enabled: true,
+        },
+      }));
+
+      showToast("User approved & activated!");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Approval failed";
+      showToast(msg);
+    } finally {
+      setSavingId(null);
+    }
+  };
+
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
       const matchesSearch =
@@ -346,18 +404,18 @@ export default function AdminUsersPage() {
             <span className="text-[11px] text-slate-500">High bandwidth tiers</span>
           </div>
 
-          {/* Restricted Accounts */}
+          {/* Restricted Accounts / Awaiting Approval */}
           <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-all flex flex-col gap-1">
             <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider">Restricted</span>
-              <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center">
+              <span className="text-[11px] font-bold uppercase tracking-wider">Awaiting Approval</span>
+              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center">
                 <Ban className="w-4 h-4" />
               </div>
             </div>
-            <span className="text-2xl sm:text-3xl font-extrabold text-rose-600 tracking-tight font-mono">
+            <span className="text-2xl sm:text-3xl font-extrabold text-amber-600 tracking-tight font-mono">
               {stats.restricted}
             </span>
-            <span className="text-[11px] text-slate-500">Access disabled</span>
+            <span className="text-[11px] text-slate-500">Pending activation</span>
           </div>
         </div>
 
@@ -382,7 +440,7 @@ export default function AdminUsersPage() {
               { id: "free", label: "Basic", count: users.filter((u) => u.tier_id === "free" || u.tier_id === "basic").length },
               { id: "pro", label: "Pro", count: users.filter((u) => u.tier_id === "pro").length },
               { id: "admin", label: "Admin", count: users.filter((u) => u.tier_id === "admin").length },
-              { id: "restricted", label: "Restricted", count: stats.restricted },
+              { id: "restricted", label: "Awaiting Approval", count: stats.restricted },
             ].map((f) => (
               <button
                 key={f.id}
@@ -566,7 +624,7 @@ export default function AdminUsersPage() {
                             className={`px-3 py-1 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border inline-flex items-center gap-1.5 ${
                               draft.is_enabled
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-                                : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
+                                : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
                             }`}
                           >
                             {draft.is_enabled ? (
@@ -576,34 +634,49 @@ export default function AdminUsersPage() {
                               </>
                             ) : (
                               <>
-                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                                <span>Disabled</span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                <span>Pending Approval</span>
                               </>
                             )}
                           </button>
                         </td>
 
-                        {/* Action: Save Button */}
+                        {/* Action Buttons: 1-Click Approve & Save */}
                         <td className="py-4 px-6 text-right">
-                          <button
-                            type="button"
-                            disabled={!isModified || savingId === u.id}
-                            onClick={() => handleUpdateUser(u.id)}
-                            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ml-auto ${
-                              isModified
-                                ? "bg-slate-900 hover:bg-slate-800 text-white shadow-sm active:scale-95"
-                                : "bg-slate-100 text-slate-400 border border-slate-200/60 cursor-not-allowed"
-                            }`}
-                          >
-                            {savingId === u.id ? (
-                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <>
-                                {isModified && <Check className="w-3.5 h-3.5 text-emerald-400" />}
-                                <span>Save</span>
-                              </>
+                          <div className="flex items-center justify-end gap-2">
+                            {!u.is_enabled && (
+                              <button
+                                type="button"
+                                disabled={savingId === u.id}
+                                onClick={() => handleQuickApprove(u.id)}
+                                className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all flex items-center gap-1.5 active:scale-95 disabled:opacity-50"
+                                title="1-Click Approve & Grant Access"
+                              >
+                                <UserCheck className="w-3.5 h-3.5" />
+                                <span>Approve</span>
+                              </button>
                             )}
-                          </button>
+
+                            <button
+                              type="button"
+                              disabled={!isModified || savingId === u.id}
+                              onClick={() => handleUpdateUser(u.id)}
+                              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                                isModified
+                                  ? "bg-slate-900 hover:bg-slate-800 text-white shadow-sm active:scale-95"
+                                  : "bg-slate-100 text-slate-400 border border-slate-200/60 cursor-not-allowed"
+                              }`}
+                            >
+                              {savingId === u.id ? (
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <>
+                                  {isModified && <Check className="w-3.5 h-3.5 text-emerald-400" />}
+                                  <span>Save</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

@@ -40,6 +40,9 @@ import {
   Paperclip,
   Globe,
   SlidersHorizontal,
+  ShieldAlert,
+  LogOut,
+  RefreshCw,
 } from "lucide-react";
 
 import { useAuth } from "@/components/AuthProvider";
@@ -81,6 +84,8 @@ interface UsageData {
   hasCustomLimit?: boolean;
   isTrialExpired?: boolean;
   daysUntilExpiry?: number;
+  isEnabled?: boolean;
+  isAdmin?: boolean;
 }
 
 const ALL_INTERESTING_QUERIES = [
@@ -913,6 +918,61 @@ export default function Home() {
           else setShowLogin(true);
         }}
       />
+    );
+  }
+
+  // User is logged in, but their account has not yet been approved by the Administrator
+  if (user && session && usage && usage.isEnabled === false && !usage.isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 font-sans text-slate-800">
+        <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200/90 p-8 shadow-xl text-center animate-in fade-in zoom-in-95 duration-300">
+          <div className="w-16 h-16 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-center mx-auto mb-5 text-amber-600">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-black text-slate-900 tracking-tight mb-1">
+            Access Authorization Pending
+          </h2>
+          <p className="text-[11px] uppercase font-bold tracking-widest text-slate-400 mb-6">
+            WBSEDCL Strategic Intelligence
+          </p>
+
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6 text-left space-y-2.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-500 font-medium">Logged-in Account:</span>
+              <span className="font-semibold text-slate-800 truncate max-w-[200px]" title={user.email}>
+                {user.email}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-500 font-medium">Account Status:</span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                🟡 Awaiting Approval
+              </span>
+            </div>
+          </div>
+
+          <p className="text-xs text-slate-600 leading-relaxed mb-6">
+            Your Google account has been registered. Access to operative regulatory circulars, statutory engineering retrieval, and the AI console is reserved for authorized personnel. Please contact the Administrator (<span className="font-bold text-slate-900">Dipankar Das</span>) to activate your account.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => refreshUsage()}
+              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Check Status
+            </button>
+            <button
+              onClick={() => signOut()}
+              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-all active:scale-95"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 

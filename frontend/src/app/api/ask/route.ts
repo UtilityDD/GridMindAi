@@ -43,10 +43,9 @@ export async function POST(req: NextRequest) {
     if (!profileError && profileData) {
       userTier = profileData.tier_id;
 
-      // 0. Check if account is enabled
       if (!isAdmin && profileData.is_enabled === false) {
         return NextResponse.json(
-          { detail: "Your account has been restricted. Please contact support for assistance." },
+          { detail: "Your account is pending administrator approval. Please contact the administrator (Dipankar Das) to activate your access." },
           { status: 403 }
         );
       }

@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
         // Fetch profile and tier limits
         let { data: profile, error: profileError } = await getSupabaseAdmin()
             .from("profiles")
-            .select("tier_id, custom_daily_limit, custom_monthly_limit, created_at, user_tiers(id, daily_limit, monthly_limit)")
+            .select("tier_id, is_enabled, custom_daily_limit, custom_monthly_limit, created_at, user_tiers(id, daily_limit, monthly_limit)")
             .eq("id", userId)
             .single();
 
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
                 // Re-fetch upgraded profile
                 const { data: updatedProfile } = await getSupabaseAdmin()
                     .from("profiles")
-                    .select("tier_id, custom_daily_limit, custom_monthly_limit, created_at, user_tiers(id, daily_limit, monthly_limit)")
+                    .select("tier_id, is_enabled, custom_daily_limit, custom_monthly_limit, created_at, user_tiers(id, daily_limit, monthly_limit)")
                     .eq("id", userId)
                     .single();
                 if (updatedProfile) {
@@ -76,7 +76,31 @@ export async function GET(req: NextRequest) {
         }
 
         if (profileError || !profile) {
-            console.log("Profile not found, using defaults");
+            console.log("Profile not found, creating user profile");
+            const defaultEnabled = userIsAdmin ? true : false;
+            try {
+                await getSupabaseAdmin()
+                    .from("profiles")
+                    .upsert(
+                        {
+                            id: userId,
+                            tier_id: userIsAdmin ? "admin" : "free",
+                            is_enabled: defaultEnabled,
+                        },
+                        { onConflict: "id" }
+                    );
+
+                const { data: createdProfile } = await getSupabaseAdmin()
+                    .from("profiles")
+                    .select("tier_id, is_enabled, custom_daily_limit, custom_monthly_limit, created_at, user_tiers(id, daily_limit, monthly_limit)")
+                    .eq("id", userId)
+                    .single();
+                if (createdProfile) {
+                    profile = createdProfile;
+                }
+            } catch (createErr) {
+                console.error("Error auto-creating profile:", createErr);
+            }
         }
 
         interface TierInfo {
@@ -158,7 +182,8 @@ export async function GET(req: NextRequest) {
             registeredAt: profile?.created_at || new Date().toISOString(),
             isTrialExpired,
             daysUntilExpiry,
-            isAdmin: userIsAdmin
+            isAdmin: userIsAdmin,
+            isEnabled: userIsAdmin ? true : Boolean(profile?.is_enabled)
         });
     } catch {
         return NextResponse.json({ detail: "Internal server error during usage check" }, { status: 500 });

@@ -106,6 +106,13 @@ export default function LoginPage({ onBack }: LoginPageProps = {}) {
             <ArrowRight className="h-4 w-4 text-slate-600 transition group-hover:translate-x-0.5" />
           </button>
 
+          {/* Authorization Notice */}
+          <div className="mt-3 px-1 text-center">
+            <p className="text-[11px] leading-relaxed text-slate-500">
+              Access is restricted to authorized personnel. New Google sign-ins are activated upon administrator approval.
+            </p>
+          </div>
+
           {/* Error / message */}
           <AnimatePresence>
             {(error || message) && (
